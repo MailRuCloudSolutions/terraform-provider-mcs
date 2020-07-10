@@ -22,6 +22,11 @@ type Status struct {
 	ACTIVE       string
 	SHUTOFF      string
 	SHUTDOWN     string
+	RESIZE       string
+	DETACH       string
+	UPDATING     string
+	GROW         string
+	SHRINK       string
 }
 
 var config = &mapstructure.DecoderConfig{
@@ -35,6 +40,26 @@ func MapStructureDecoder(strct interface{}, v *map[string]interface{}, config *m
 	err := decoder.Decode(*v)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// ValidateUserDatabases validates user databases info
+func ValidateUserDatabases(d *[]interface{}, u *[]interface{}) error {
+	dbstore := make(map[string]bool, len(*d))
+	for _, db := range *d {
+		mdb := db.(map[string]interface{})
+		dbstore[mdb["name"].(string)] = true
+	}
+
+	for _, usr := range *u {
+		musr := usr.(map[string]interface{})
+		for _, db := range musr["databases"].([]interface{}) {
+			mdb := db.(map[string]interface{})
+			if !dbstore[mdb["name"].(string)] {
+				return fmt.Errorf("")
+			}
+		}
 	}
 	return nil
 }

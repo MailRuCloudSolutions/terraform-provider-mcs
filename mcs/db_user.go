@@ -1,0 +1,74 @@
+package mcs
+
+import (
+	"fmt"
+
+	db "github.com/gophercloud/gophercloud/openstack/db/v1/databases"
+	"github.com/gophercloud/gophercloud/openstack/db/v1/users"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+)
+
+func extractDatabaseUserDatabases(v []interface{}) (db.BatchCreateOpts, error) {
+	Batch := make(db.BatchCreateOpts, len(v))
+	for i, databaseName := range v {
+		var C db.CreateOpts
+		C.Name = databaseName.(string)
+		Batch[i] = C
+	}
+	return Batch, nil
+}
+
+func flattenDatabaseUserDatabases(v []db.Database) []interface{} {
+	databases := make([]interface{}, len(v))
+	for i, db := range v {
+		databases[i] = db.Name
+	}
+	return databases
+}
+
+func databaseUserStateRefreshFunc(client databaseClient, instanceID string, userName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		pages, err := userList(client, instanceID).AllPages()
+		if err != nil {
+			return nil, "", fmt.Errorf("unable to retrieve mcs database users: %s", err)
+		}
+
+		allUsers, err := users.ExtractUsers(pages)
+		if err != nil {
+			return nil, "", fmt.Errorf("unable to extract mcs database users: %s", err)
+		}
+
+		for _, v := range allUsers {
+			if v.Name == userName {
+				return v, "ACTIVE", nil
+			}
+		}
+
+		return nil, "BUILD", nil
+	}
+}
+
+func databaseUserExists(client databaseClient, instanceID string, userName string) (bool, users.User, error) {
+	var exists bool
+	var err error
+	var userObj users.User
+
+	pages, err := userList(client, instanceID).AllPages()
+	if err != nil {
+		return exists, userObj, err
+	}
+
+	allUsers, err := users.ExtractUsers(pages)
+	if err != nil {
+		return exists, userObj, err
+	}
+
+	for _, v := range allUsers {
+		if v.Name == userName {
+			exists = true
+			return exists, v, nil
+		}
+	}
+
+	return false, userObj, err
+}
