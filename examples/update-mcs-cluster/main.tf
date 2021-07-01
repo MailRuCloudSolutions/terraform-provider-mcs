@@ -55,7 +55,7 @@ data "openstack_compute_flavor_v2" "k8s" {
 }
 
 data "mcs_kubernetes_clustertemplate" "ct" {
-  version = 16
+  version = 1.20.4
 }
 
 resource "mcs_kubernetes_cluster" "k8s-cluster" {
