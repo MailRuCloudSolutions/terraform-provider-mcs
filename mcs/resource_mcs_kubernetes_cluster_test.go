@@ -49,7 +49,7 @@ func checkClusterAttrs(resourceName string, cluster *ClusterCreateOpts) resource
 
 		checksStore := []resource.TestCheckFunc{
 			resource.TestCheckResourceAttr(resourceName, "name", cluster.Name),
-			resource.TestCheckResourceAttr(resourceName, "master_count", strconv.Itoa(int(cluster.MasterCount))),
+			resource.TestCheckResourceAttr(resourceName, "master_count", strconv.Itoa(cluster.MasterCount)),
 			resource.TestCheckResourceAttr(resourceName, "cluster_template_id", cluster.ClusterTemplateID),
 		}
 
