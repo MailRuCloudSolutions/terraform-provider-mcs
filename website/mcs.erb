@@ -1,0 +1,51 @@
+
+<% wrap_layout :inner do %>
+  <% content_for :sidebar do %>
+    <div class="docs-sidebar hidden-print affix-top" role="complementary">
+      <ul class="nav docs-sidenav">
+
+        <li<%= sidebar_current("docs-mcs-index") %>>
+          <a href="/terraform/docs/providers/mcs/index.html">MCS Provider</a>
+        </li>
+
+        <li<%= sidebar_current("docs-mcs-examples") %>>
+          <a href="#">Usage examples</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-create-kubernetes-cluster") %>>
+              <a href="/terraform/docs/providers/mcs/e/create_kubernetes_cluster.html">create_kubernetes_cluster</a>
+            </li>
+          </ul>
+        </li>
+
+        <li<%= sidebar_current("docs-mcs-resources") %>>
+          <a href="#">MCS Kubernetes Resources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-mcs-kubernetes-cluster") %>>
+              <a href="/terraform/docs/providers/mcs/r/mcs_kubernetes_cluster.html">mcs_kubernetes_cluster</a>
+            </li>
+            <li<%= sidebar_current("docs-mcs-kubernetes-node-group") %>>
+              <a href="/terraform/docs/providers/mcs/r/mcs_kubernetes_node_group.html">mcs_kubernetes_node_group</a>
+            </li>
+          </ul>
+        </li>
+
+        <li<%= sidebar_current("docs-mcs-datasources") %>>
+          <a href="#">MCS Kubernetes Data sources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-mcs-kubernetes-cluster") %>>
+              <a href="/terraform/docs/providers/mcs/d/mcs_kubernetes_cluster.html">mcs_kubernetes_cluster</a>
+            </li>
+            <li<%= sidebar_current("docs-mcs-kubernetes-node-group") %>>
+              <a href="/terraform/docs/providers/mcs/d/mcs_kubernetes_node_group.html">mcs_kubernetes_node_group</a>
+            </li>
+            <li<%= sidebar_current("docs-mcs-kubernetes-clustertemplate") %>>
+              <a href="/terraform/docs/providers/mcs/d/mcs_kubernetes_clustertemplate.html">mcs_kubernetes_clustertemplate</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= yield %>
+<% end %>
