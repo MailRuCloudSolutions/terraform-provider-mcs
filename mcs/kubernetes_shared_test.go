@@ -73,15 +73,15 @@ func TestExtractNodeGroupLabelsList(t *testing.T) {
 		},
 	}
 	expectedLabels := []NodeGroupLabel{
-		NodeGroupLabel{
+		{
 			Key:   "bar",
 			Value: "baz",
 		},
-		NodeGroupLabel{
+		{
 			Key:   "foo",
 			Value: "bar",
 		},
-		NodeGroupLabel{
+		{
 			Key: "label_without_value",
 		},
 	}
@@ -109,12 +109,12 @@ func TestExtractNodeGroupTaintsList(t *testing.T) {
 	}
 
 	expectedTaints := []NodeGroupTaint{
-		NodeGroupTaint{
+		{
 			Key:    "key1",
 			Value:  "val1",
 			Effect: "effect1",
 		},
-		NodeGroupTaint{
+		{
 			Key:    "key2",
 			Value:  "val2",
 			Effect: "effect2",
