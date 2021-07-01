@@ -1,4 +1,6 @@
-name: golangci-lint
+
+---
+name: CI
 on:
   push:
     tags:
@@ -7,31 +9,76 @@ on:
       - master
   pull_request:
 jobs:
-  golangci:
-    name: lint
+  # Check if there any dirty change for go mod tidy
+  go-mod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check go mod
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod
+  # We already run the current golangci-lint in tests, but here we test
+  # our GitHub action with the latest stable golangci-lint.
+  golangci-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+      - name: lint
+        uses: golangci/golangci-lint-action@v2.5.2
         with:
-          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-          version: v1.41.1
+          version: latest
+          # skip cache because of flaky behaviors
+          skip-build-cache: true
+          skip-pkg-cache: true
 
-          # Optional: working directory, useful for monorepos
-          # working-directory: somedir
-
-          # Optional: golangci-lint command line arguments.
-          # args: --issues-exit-code=0
-
-          # Optional: show only new issues if it's a pull request. The default value is `false`.
-          # only-new-issues: true
-
-          # Optional: if set to true then the action will use pre-installed Go.
-          # skip-go-installation: true
-
-          # Optional: if set to true then the action don't cache or restore ~/go/pkg.
-          # skip-pkg-cache: true
-
-          # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
-          # skip-build-cache: true
+  tests-on-windows:
+    needs: golangci-lint # run after golangci-lint action to not produce duplicated errors
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16 # test only the latest go version to speed up CI
+      - name: Run tests
+        run: make.exe test
+        continue-on-error: true
+  tests-on-macos:
+    needs: golangci-lint # run after golangci-lint action to not produce duplicated errors
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16 # test only the latest go version to speed up CI
+      - name: Run tests
+        run: make test
+  tests-on-unix:
+    needs: golangci-lint # run after golangci-lint action to not produce duplicated errors
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        golang:
+          - 1.15
+          - 1.16
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.golang }}
+      - uses: actions/cache@v2.1.6
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.golang }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.golang }}-
+      - name: Run tests
+        run: make test
