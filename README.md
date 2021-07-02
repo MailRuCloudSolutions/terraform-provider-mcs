@@ -14,7 +14,7 @@ Using The Provider
 To use the provider, prepare configuration files based on examples from [here](https://github.com/MailRuCloudSolutions/terraform-provider-mcs/tree/master/examples)
 
 ```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-mcs/examples/create-mcs-cluster
+$ cd $GOPATH/src/github.com/MailRuCloudSolutions/terraform-provider-mcs/examples/create-mcs-cluster
 $ vim provider.tf
 $ terraform init
 $ terraform plan
