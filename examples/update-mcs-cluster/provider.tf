@@ -2,7 +2,6 @@ provider "mcs" {
     username          = "user@mail.ru"
     password          = "password"
     project_id        = "project_id"
-    auth_url          = "https://infra.mail.ru/identity/v3/"
 }
 
 provider "openstack" {
