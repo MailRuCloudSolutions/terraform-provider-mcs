@@ -15,12 +15,12 @@ import (
 
 // ContainerClient is interface to work with gopherclod requests
 type ContainerClient interface {
-	Get(url string, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
-	Post(url string, JSONBody interface{}, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
-	Patch(url string, JSONBody interface{}, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
+	Get(url string, jsonResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
+	Post(url string, jsonBody interface{}, jsonResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
+	Patch(url string, jsonBody interface{}, jsonResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
 	Delete(url string, opts *gophercloud.RequestOpts) (*http.Response, error)
 	Head(url string, opts *gophercloud.RequestOpts) (*http.Response, error)
-	Put(url string, JSONBody interface{}, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
+	Put(url string, jsonBody interface{}, jsonResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
 	ServiceURL(parts ...string) string
 }
 
