@@ -13,7 +13,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/containerinfra/v1/clustertemplates"
 )
 
-//ContainerClient is interface to work with gopherclod requests
+// ContainerClient is interface to work with gopherclod requests
 type ContainerClient interface {
 	Get(url string, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
 	Post(url string, JSONBody interface{}, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error)
@@ -34,7 +34,7 @@ func addMicroVersionHeader(reqOpts *gophercloud.RequestOpts) {
 	reqOpts.MoreHeaders = magnumAPIMicroVersionHeader
 }
 
-//Node ...
+// Node ...
 type Node struct {
 	Name        string     `json:"name"`
 	UUID        string     `json:"uuid"`
@@ -59,34 +59,34 @@ func flattenNodes(nodes []*Node) nodesFlatSchema {
 	return flatSchema
 }
 
-//NodeGroupClusterPatchOpts ...
+// NodeGroupClusterPatchOpts ...
 type NodeGroupClusterPatchOpts []NodeGroupPatchParams
 
-//NodeGroupPatchParams ...
+// NodeGroupPatchParams ...
 type NodeGroupPatchParams struct {
 	Path  string      `json:"path,omitempty"`
 	Value interface{} `json:"value,omitempty"`
 	Op    string      `json:"op,omitempty"`
 }
 
-//NodeGroupBatchDelParams ...
+// NodeGroupBatchDelParams ...
 type NodeGroupBatchDelParams struct {
 	Action  string   `json:"action,omitempty"`
 	Payload []string `json:"payload,omitempty"`
 }
 
-//NodeGroupBatchAddParams ...
+// NodeGroupBatchAddParams ...
 type NodeGroupBatchAddParams struct {
 	Action  string      `json:"action,omitempty"`
 	Payload []NodeGroup `json:"payload,omitempty"`
 }
 
-//NodeGroups ...
+// NodeGroups ...
 type NodeGroups struct {
 	NodeGroups []NodeGroup `json:"node_groups"`
 }
 
-//NodeGroup ...
+// NodeGroup ...
 type NodeGroup struct {
 	Name        string    `json:"name,omitempty"`
 	NodeCount   int       `json:"node_count,omitempty"`
@@ -105,20 +105,20 @@ type NodeGroup struct {
 	State       string    `json:"state,omitempty"`
 }
 
-//NodeGroupLabel ...
+// NodeGroupLabel ...
 type NodeGroupLabel struct {
 	Key   string `json:"key"`
 	Value string `json:"value,omitempty"`
 }
 
-//NodeGroupTaint ...
+// NodeGroupTaint ...
 type NodeGroupTaint struct {
 	Key    string `json:"key,omitempty"`
 	Value  string `json:"value,omitempty"`
 	Effect string `json:"effect,omitempty"`
 }
 
-//NodeGroupCreateOpts ...
+// NodeGroupCreateOpts ...
 type NodeGroupCreateOpts struct {
 	ClusterID   string           `json:"cluster_id" required:"true"`
 	Name        string           `json:"name"`
@@ -133,13 +133,13 @@ type NodeGroupCreateOpts struct {
 	Autoscaling bool             `json:"autoscaling_enabled,omitempty"`
 }
 
-//NodeGroupScaleOpts ...
+// NodeGroupScaleOpts ...
 type NodeGroupScaleOpts struct {
 	Delta    int    `json:"delta" required:"true"`
 	Rollback string `json:"rollback,omitempty"`
 }
 
-//ClusterCreateOpts ...
+// ClusterCreateOpts ...
 type ClusterCreateOpts struct {
 	ClusterTemplateID    string            `json:"cluster_template_id" required:"true"`
 	Keypair              string            `json:"keypair,omitempty"`
@@ -157,19 +157,19 @@ type ClusterCreateOpts struct {
 	RegistryAuthPassword string            `json:"registry_auth_password,omitempty"`
 }
 
-//ClusterActionsBaseOpts ...
+// ClusterActionsBaseOpts ...
 type ClusterActionsBaseOpts struct {
 	Action  string      `json:"action" required:"true"`
 	Payload interface{} `json:"payload,omitempty"`
 }
 
-//ClusterUpgradeOpts ...
+// ClusterUpgradeOpts ...
 type ClusterUpgradeOpts struct {
 	ClusterTemplateID string `json:"cluster_template_id" required:"true"`
 	RollingEnabled    bool   `json:"rolling_enabled"`
 }
 
-//Cluster ...
+// Cluster ...
 type Cluster struct {
 	APIAddress           string             `json:"api_address"`
 	ClusterTemplateID    string             `json:"cluster_template_id"`
@@ -203,18 +203,18 @@ type Cluster struct {
 	RegistryAuthPassword string             `json:"registry_auth_password"`
 }
 
-//ClusterTemplate ...
+// ClusterTemplate ...
 type ClusterTemplate struct {
 	clustertemplates.ClusterTemplate
 	Version string `json:"version"`
 }
 
-//ClusterTemplates ...
+// ClusterTemplates ...
 type ClusterTemplates struct {
 	ClusterTemplates []*ClusterTemplate `json:"clustertemplates"`
 }
 
-//OptsBuilder ...
+// OptsBuilder ...
 type OptsBuilder interface {
 	Map() (map[string]interface{}, error)
 }
