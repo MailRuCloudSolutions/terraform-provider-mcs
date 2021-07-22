@@ -11,21 +11,21 @@ import (
 
 const testAccURL = "https://acctest.mcs.ru"
 
-//DummyConfigFixture is fixture for real Config struct
+// DummyConfigFixture is fixture for real Config struct
 var DummyConfigFixture = &DummyConfig{}
 
-//DummyConfig is mock for Config
+// DummyConfig is mock for Config
 type DummyConfig struct {
 	mock.Mock
 }
 
-//LoadAndValidate ...
+// LoadAndValidate ...
 func (d *DummyConfig) LoadAndValidate() error {
 	args := d.Called()
 	return args.Error(0)
 }
 
-//ContainerInfraV1Client ...
+// ContainerInfraV1Client ...
 func (d *DummyConfig) ContainerInfraV1Client(region string) (ContainerClient, error) {
 	args := d.Called(region)
 	if r, ok := args.Get(0).(ContainerClient); ok {
@@ -34,22 +34,22 @@ func (d *DummyConfig) ContainerInfraV1Client(region string) (ContainerClient, er
 	return nil, args.Error(0)
 }
 
-//GetRegion ...
+// GetRegion ...
 func (d *DummyConfig) GetRegion() string {
 	args := d.Called()
 	return args.String(0)
 }
 
-//ContainerClientFixture ...
+// ContainerClientFixture ...
 type ContainerClientFixture struct {
 	mock.Mock
 }
 
-//Get ...
-func (c *ContainerClientFixture) Get(url string, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error) {
-	args := c.Called(url, JSONResponse, opts)
+// Get ...
+func (c *ContainerClientFixture) Get(url string, jsonResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error) {
+	args := c.Called(url, jsonResponse, opts)
 	if r, ok := args.Get(0).(*http.Response); ok {
-		if err := json.NewDecoder(r.Body).Decode(JSONResponse); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(jsonResponse); err != nil {
 			return r, args.Error(1)
 		}
 		return r, args.Error(1)
@@ -57,11 +57,11 @@ func (c *ContainerClientFixture) Get(url string, JSONResponse interface{}, opts 
 	return nil, args.Error(0)
 }
 
-//Post ...
-func (c *ContainerClientFixture) Post(url string, JSONBody interface{}, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error) {
-	args := c.Called(url, JSONBody, JSONResponse, opts)
+// Post ...
+func (c *ContainerClientFixture) Post(url string, jsonBody interface{}, jsonResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error) {
+	args := c.Called(url, jsonBody, jsonResponse, opts)
 	if r, ok := args.Get(0).(*http.Response); ok {
-		if err := json.NewDecoder(r.Body).Decode(JSONResponse); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(jsonResponse); err != nil {
 			return r, args.Error(1)
 		}
 		return r, args.Error(1)
@@ -70,11 +70,11 @@ func (c *ContainerClientFixture) Post(url string, JSONBody interface{}, JSONResp
 
 }
 
-//Patch ...
-func (c *ContainerClientFixture) Patch(url string, JSONBody interface{}, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error) {
-	args := c.Called(url, JSONBody, JSONResponse, opts)
+// Patch ...
+func (c *ContainerClientFixture) Patch(url string, jsonBody interface{}, jsonResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error) {
+	args := c.Called(url, jsonBody, jsonResponse, opts)
 	if r, ok := args.Get(0).(*http.Response); ok {
-		if err := json.NewDecoder(r.Body).Decode(JSONResponse); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(jsonResponse); err != nil {
 			return r, args.Error(1)
 		}
 		return r, args.Error(1)
@@ -82,7 +82,7 @@ func (c *ContainerClientFixture) Patch(url string, JSONBody interface{}, JSONRes
 	return nil, args.Error(0)
 }
 
-//Delete ...
+// Delete ...
 func (c *ContainerClientFixture) Delete(url string, opts *gophercloud.RequestOpts) (*http.Response, error) {
 	args := c.Called(url, opts)
 	if r, ok := args.Get(0).(*http.Response); ok {
@@ -91,7 +91,7 @@ func (c *ContainerClientFixture) Delete(url string, opts *gophercloud.RequestOpt
 	return nil, args.Error(0)
 }
 
-//Head ...
+// Head ...
 func (c *ContainerClientFixture) Head(url string, opts *gophercloud.RequestOpts) (*http.Response, error) {
 	args := c.Called(url, opts)
 	if r, ok := args.Get(0).(*http.Response); ok {
@@ -100,22 +100,22 @@ func (c *ContainerClientFixture) Head(url string, opts *gophercloud.RequestOpts)
 	return nil, args.Error(0)
 }
 
-//Put ...
-func (c *ContainerClientFixture) Put(url string, JSONBody interface{}, JSONResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error) {
-	args := c.Called(url, JSONBody, JSONResponse, opts)
+// Put ...
+func (c *ContainerClientFixture) Put(url string, jsonBody interface{}, jsonResponse interface{}, opts *gophercloud.RequestOpts) (*http.Response, error) {
+	args := c.Called(url, jsonBody, jsonResponse, opts)
 	if r, ok := args.Get(0).(*http.Response); ok {
 		return r, args.Error(1)
 	}
 	return nil, args.Error(0)
 }
 
-//ServiceURL ...
+// ServiceURL ...
 func (c *ContainerClientFixture) ServiceURL(parts ...string) string {
 	args := c.Called(parts)
 	return args.String(0) + "/" + strings.Join(parts, "/")
 }
 
-//FakeBody is struct that implements ReadCloser interface; use it for http.Response.Body mock
+// FakeBody is struct that implements ReadCloser interface; use it for http.Response.Body mock
 type FakeBody struct {
 	body   []byte
 	length int

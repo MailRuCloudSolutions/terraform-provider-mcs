@@ -224,7 +224,7 @@ func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Retrieved mcs_kubernetes_node_group %s: %#v", d.Id(), s)
 
-	//Get and check labels list.
+	// Get and check labels list.
 	rawLabels := d.Get("labels").([]interface{})
 	labels, err := extractNodeGroupLabelsList(rawLabels)
 	if err != nil {
@@ -235,7 +235,7 @@ func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("unable to set mcs_kubernetes_node_group labels: %s", err)
 	}
 
-	//Get and check taints list.
+	// Get and check taints list.
 	rawTaints := d.Get("taints").([]interface{})
 	taints, err := extractNodeGroupTaintsList(rawTaints)
 	if err != nil {

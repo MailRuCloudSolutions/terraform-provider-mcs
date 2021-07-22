@@ -16,7 +16,7 @@ const (
 	defaultUsersDomainName  = "users"
 )
 
-//Config is interface to work with gophercloud.Config calls
+// Config is interface to work with gophercloud.Config calls
 type Config interface {
 	LoadAndValidate() error
 	ContainerInfraV1Client(region string) (ContainerClient, error)
@@ -28,12 +28,12 @@ type ConfigImpl struct {
 	auth.Config
 }
 
-//GetRegion is implementation of GetRegion method
+// GetRegion is implementation of GetRegion method
 func (c *ConfigImpl) GetRegion() string {
 	return c.Region
 }
 
-//ContainerInfraV1Client is implementation of ContainerInfraV1Client method
+// ContainerInfraV1Client is implementation of ContainerInfraV1Client method
 func (c *ConfigImpl) ContainerInfraV1Client(region string) (ContainerClient, error) {
 	return c.Config.ContainerInfraV1Client(region)
 }

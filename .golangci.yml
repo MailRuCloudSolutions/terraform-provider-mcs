@@ -21,6 +21,8 @@ linters:
     - unused
     - varcheck
     - vet
+    - gocritic
+    - stylecheck
 
 linters-settings:
   errcheck:
