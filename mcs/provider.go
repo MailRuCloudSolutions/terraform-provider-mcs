@@ -20,6 +20,7 @@ const (
 type Config interface {
 	LoadAndValidate() error
 	ContainerInfraV1Client(region string) (ContainerClient, error)
+	DatabaseV1Client(region string) (ContainerClient, error)
 	GetRegion() string
 }
 
@@ -38,8 +39,13 @@ func (c *ConfigImpl) ContainerInfraV1Client(region string) (ContainerClient, err
 	return c.Config.ContainerInfraV1Client(region)
 }
 
+// DatabaseV1Client is implementation of DatabaseV1Client method
+func (c *ConfigImpl) DatabaseV1Client(region string) (ContainerClient, error) {
+	return c.Config.DatabaseV1Client(region)
+}
+
 func newConfig(d *schema.ResourceData, terraformVersion string) (Config, error) {
-	if os.Getenv("TF_ACC") != "" {
+	if os.Getenv("TF_ACC") != "" && os.Getenv("TF_ACC_DBAAS") == "" {
 		return DummyConfigFixture, nil
 	}
 	config := &ConfigImpl{
@@ -156,11 +162,19 @@ func Provider() terraform.ResourceProvider {
 			"mcs_kubernetes_clustertemplate": dataSourceKubernetesClusterTemplate(),
 			"mcs_kubernetes_cluster":         dataSourceKubernetesCluster(),
 			"mcs_kubernetes_node_group":      dataSourceKubernetesNodeGroup(),
+			"mcs_db_instance":                dataSourceDatabaseInstance(),
+			"mcs_db_user":                    dataSourceDatabaseUser(),
+			"mcs_db_database":                dataSourceDatabaseDatabase(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"mcs_kubernetes_cluster":    resourceKubernetesCluster(),
-			"mcs_kubernetes_node_group": resourceKubernetesNodeGroup(),
+			"mcs_kubernetes_cluster":     resourceKubernetesCluster(),
+			"mcs_kubernetes_node_group":  resourceKubernetesNodeGroup(),
+			"mcs_db_instance":            resourceDatabaseInstance(),
+			"mcs_db_user":                resourceDatabaseUser(),
+			"mcs_db_database":            resourceDatabaseDatabase(),
+			"mcs_db_cluster":             resourceDatabaseCluster(),
+			"mcs_db_cluster_with_shards": resourceDatabaseClusterWithShards(),
 		},
 	}
 

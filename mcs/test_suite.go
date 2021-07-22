@@ -34,7 +34,16 @@ func (d *DummyConfig) ContainerInfraV1Client(region string) (ContainerClient, er
 	return nil, args.Error(0)
 }
 
-// GetRegion ...
+// DatabaseV1Client returns dummy DatabaseV1Client
+func (d *DummyConfig) DatabaseV1Client(region string) (ContainerClient, error) {
+	args := d.Called(region)
+	if r, ok := args.Get(0).(ContainerClient); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(0)
+}
+
+// Get Region ...
 func (d *DummyConfig) GetRegion() string {
 	args := d.Called()
 	return args.String(0)

@@ -34,6 +34,19 @@ func init() {
 	}
 }
 
+func testAccPreCheckDatabase(t *testing.T) {
+	Vars := map[string]interface{}{
+		"OS_NETWORK_ID":           OSNetworkID,
+		"OS_DB_DATASTORE_VERSION": OSDBDatastoreVersion,
+		"OS_DB_DATASTORE_TYPE":    OSDBDatastoreType,
+	}
+	for k, v := range Vars {
+		if v == "" {
+			t.Fatalf("'%s' must be set for acceptance test", k)
+		}
+	}
+}
+
 func testAccPreCheckKubernetes(t *testing.T) {
 	Vars := map[string]interface{}{
 		"CLUSTER_TEMPLATE_ID": ClusterTemplateID,
