@@ -2,7 +2,7 @@ terraform {
   required_providers {
     mcs = {
       source  = "MailRuCloudSolutions/mcs"
-      version = "0.2.7"
+      version = "~> 0.3.0"
     }
     openstack = {
       source = "terraform-provider-openstack/openstack"
@@ -46,7 +46,7 @@ resource "mcs_db_database" "db-database" {
 
 resource "mcs_db_user" "db-user" {
   name        = "testuser"
-  password    = "password"
+  password    = var.db-user-password
 
   instance_id = mcs_db_instance.db-instance.id
 

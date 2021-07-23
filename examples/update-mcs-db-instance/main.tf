@@ -2,7 +2,7 @@ terraform {
   required_providers {
     mcs = {
       source  = "MailRuCloudSolutions/mcs"
-      version = "0.2.7"
+      version = "~> 0.3.0"
     }
     openstack = {
       source = "terraform-provider-openstack/openstack"
