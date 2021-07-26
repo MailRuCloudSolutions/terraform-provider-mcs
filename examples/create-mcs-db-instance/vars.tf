@@ -1,6 +1,6 @@
 variable "public-key-file" {
   type    = string
-  default = "~/.ssh/schirevko"
+  default = "~/.ssh/id_rsa.pub"
 }
 
 variable "db-instance-flavor" {
