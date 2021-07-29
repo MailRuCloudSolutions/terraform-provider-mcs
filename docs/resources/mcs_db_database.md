@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: db_database"
-sidebar_current: "docs-db-database"
 subcategory: ""
 description: |-
   Manages a db database.

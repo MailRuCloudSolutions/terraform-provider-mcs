@@ -24,7 +24,7 @@ type ContainerClient interface {
 	ServiceURL(parts ...string) string
 }
 
-const magnumAPIMicroVersion = "1.16"
+const magnumAPIMicroVersion = "1.19"
 
 var magnumAPIMicroVersionHeader = map[string]string{
 	"MCS-API-Version": fmt.Sprintf("container-infra %s", magnumAPIMicroVersion),
@@ -34,8 +34,8 @@ func addMicroVersionHeader(reqOpts *gophercloud.RequestOpts) {
 	reqOpts.MoreHeaders = magnumAPIMicroVersionHeader
 }
 
-// Node ...
-type Node struct {
+// node ...
+type node struct {
 	Name        string     `json:"name"`
 	UUID        string     `json:"uuid"`
 	NodeGroupID string     `json:"node_group_id"`
@@ -45,7 +45,7 @@ type Node struct {
 
 type nodesFlatSchema []map[string]interface{}
 
-func flattenNodes(nodes []*Node) nodesFlatSchema {
+func flattenNodes(nodes []*node) nodesFlatSchema {
 	flatSchema := nodesFlatSchema{}
 	for _, node := range nodes {
 		flatSchema = append(flatSchema, map[string]interface{}{
@@ -59,35 +59,29 @@ func flattenNodes(nodes []*Node) nodesFlatSchema {
 	return flatSchema
 }
 
-// NodeGroupClusterPatchOpts ...
-type NodeGroupClusterPatchOpts []NodeGroupPatchParams
+// nodeGroupClusterPatchOpts ...
+type nodeGroupClusterPatchOpts []nodeGroupPatchParams
 
-// NodeGroupPatchParams ...
-type NodeGroupPatchParams struct {
+// nodeGroupPatchParams ...
+type nodeGroupPatchParams struct {
 	Path  string      `json:"path,omitempty"`
 	Value interface{} `json:"value,omitempty"`
 	Op    string      `json:"op,omitempty"`
 }
 
-// NodeGroupBatchDelParams ...
-type NodeGroupBatchDelParams struct {
-	Action  string   `json:"action,omitempty"`
-	Payload []string `json:"payload,omitempty"`
-}
-
-// NodeGroupBatchAddParams ...
-type NodeGroupBatchAddParams struct {
+// nodeGroupBatchAddParams ...
+type nodeGroupBatchAddParams struct {
 	Action  string      `json:"action,omitempty"`
-	Payload []NodeGroup `json:"payload,omitempty"`
+	Payload []nodeGroup `json:"payload,omitempty"`
 }
 
-// NodeGroups ...
-type NodeGroups struct {
-	NodeGroups []NodeGroup `json:"node_groups"`
+// nodeGroups ...
+type nodeGroups struct {
+	NodeGroups []nodeGroup `json:"node_groups"`
 }
 
-// NodeGroup ...
-type NodeGroup struct {
+// nodeGroup ...
+type nodeGroup struct {
 	Name        string    `json:"name,omitempty"`
 	NodeCount   int       `json:"node_count,omitempty"`
 	MaxNodes    int       `json:"max_nodes,omitempty"`
@@ -101,29 +95,29 @@ type NodeGroup struct {
 	UUID        string    `json:"uuid,omitempty"`
 	CreatedAt   time.Time `json:"created_at,omitempty"`
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
-	Nodes       []*Node   `json:"nodes,omitempty"`
+	Nodes       []*node   `json:"nodes,omitempty"`
 	State       string    `json:"state,omitempty"`
 }
 
-// NodeGroupLabel ...
-type NodeGroupLabel struct {
+// nodeGroupLabel ...
+type nodeGroupLabel struct {
 	Key   string `json:"key"`
 	Value string `json:"value,omitempty"`
 }
 
-// NodeGroupTaint ...
-type NodeGroupTaint struct {
+// nodeGroupTaint ...
+type nodeGroupTaint struct {
 	Key    string `json:"key,omitempty"`
 	Value  string `json:"value,omitempty"`
 	Effect string `json:"effect,omitempty"`
 }
 
-// NodeGroupCreateOpts ...
-type NodeGroupCreateOpts struct {
+// nodeGroupCreateOpts contains options to create node group.
+type nodeGroupCreateOpts struct {
 	ClusterID   string           `json:"cluster_id" required:"true"`
 	Name        string           `json:"name"`
-	Labels      []NodeGroupLabel `json:"labels,omitempty"`
-	Taints      []NodeGroupTaint `json:"taints,omitempty"`
+	Labels      []nodeGroupLabel `json:"labels,omitempty"`
+	Taints      []nodeGroupTaint `json:"taints,omitempty"`
 	NodeCount   int              `json:"node_count,omitempty"`
 	MaxNodes    int              `json:"max_nodes,omitempty"`
 	MinNodes    int              `json:"min_nodes,omitempty"`
@@ -133,14 +127,14 @@ type NodeGroupCreateOpts struct {
 	Autoscaling bool             `json:"autoscaling_enabled,omitempty"`
 }
 
-// NodeGroupScaleOpts ...
-type NodeGroupScaleOpts struct {
+// nodeGroupScaleOpts contaions options to scale node group
+type nodeGroupScaleOpts struct {
 	Delta    int    `json:"delta" required:"true"`
 	Rollback string `json:"rollback,omitempty"`
 }
 
-// ClusterCreateOpts ...
-type ClusterCreateOpts struct {
+// clusterCreateOpts contains options to create cluster
+type clusterCreateOpts struct {
 	ClusterTemplateID    string            `json:"cluster_template_id" required:"true"`
 	Keypair              string            `json:"keypair,omitempty"`
 	Labels               map[string]string `json:"labels,omitempty"`
@@ -155,22 +149,23 @@ type ClusterCreateOpts struct {
 	APILBFIP             string            `json:"api_lb_fip,omitempty"`
 	IngressFloatingIP    string            `json:"ingress_floating_ip,omitempty"`
 	RegistryAuthPassword string            `json:"registry_auth_password,omitempty"`
+	AvailabilityZone     string            `json:"availability_zone,omitempty"`
 }
 
-// ClusterActionsBaseOpts ...
-type ClusterActionsBaseOpts struct {
+// clusterActionsBaseOpts ...
+type clusterActionsBaseOpts struct {
 	Action  string      `json:"action" required:"true"`
 	Payload interface{} `json:"payload,omitempty"`
 }
 
-// ClusterUpgradeOpts ...
-type ClusterUpgradeOpts struct {
+// clusterUpgradeOpts ...
+type clusterUpgradeOpts struct {
 	ClusterTemplateID string `json:"cluster_template_id" required:"true"`
 	RollingEnabled    bool   `json:"rolling_enabled"`
 }
 
-// Cluster ...
-type Cluster struct {
+// cluster ...
+type cluster struct {
 	APIAddress           string             `json:"api_address"`
 	ClusterTemplateID    string             `json:"cluster_template_id"`
 	CreateTimeout        int                `json:"create_timeout"`
@@ -201,85 +196,80 @@ type Cluster struct {
 	APILBFIP             string             `json:"api_lb_fip"`
 	IngressFloatingIP    string             `json:"ingress_floating_ip"`
 	RegistryAuthPassword string             `json:"registry_auth_password"`
+	AvailabilityZone     string             `json:"availability_zone"`
 }
 
-// ClusterTemplate ...
-type ClusterTemplate struct {
+// clusterTemplate ...
+type clusterTemplate struct {
 	clustertemplates.ClusterTemplate
 	Version string `json:"version"`
 }
 
-// ClusterTemplates ...
-type ClusterTemplates struct {
-	ClusterTemplates []*ClusterTemplate `json:"clustertemplates"`
+// clusterTemplates ...
+type clusterTemplates struct {
+	ClusterTemplates []*clusterTemplate `json:"clustertemplates"`
 }
 
-// OptsBuilder ...
-type OptsBuilder interface {
+// optsBuilder ...
+type optsBuilder interface {
 	Map() (map[string]interface{}, error)
 }
 
-// PatchOptsBuilder ...
-type PatchOptsBuilder interface {
+// patchOptsBuilder ...
+type patchOptsBuilder interface {
 	PatchMap() ([]map[string]interface{}, error)
 }
 
 // Map ...
-func (opts *ClusterCreateOpts) Map() (map[string]interface{}, error) {
+func (opts *clusterCreateOpts) Map() (map[string]interface{}, error) {
 	cluster, err := gophercloud.BuildRequestBody(*opts, "")
 	return cluster, err
 }
 
 // Map ...
-func (opts *ClusterActionsBaseOpts) Map() (map[string]interface{}, error) {
+func (opts *clusterActionsBaseOpts) Map() (map[string]interface{}, error) {
 	cluster, err := gophercloud.BuildRequestBody(*opts, "")
 	return cluster, err
 }
 
 // Map ...
-func (opts *NodeGroupCreateOpts) Map() (map[string]interface{}, error) {
+func (opts *nodeGroupCreateOpts) Map() (map[string]interface{}, error) {
 	cluster, err := gophercloud.BuildRequestBody(*opts, "")
 	return cluster, err
 }
 
 // Map ...
-func (opts *NodeGroup) Map() (map[string]interface{}, error) {
+func (opts *nodeGroup) Map() (map[string]interface{}, error) {
 	body, err := gophercloud.BuildRequestBody(*opts, "")
 	return body, err
 }
 
 // Map ...
-func (opts *NodeGroupScaleOpts) Map() (map[string]interface{}, error) {
+func (opts *nodeGroupScaleOpts) Map() (map[string]interface{}, error) {
 	body, err := gophercloud.BuildRequestBody(*opts, "")
 	return body, err
 }
 
 // Map ...
-func (opts *ClusterUpgradeOpts) Map() (map[string]interface{}, error) {
+func (opts *clusterUpgradeOpts) Map() (map[string]interface{}, error) {
 	body, err := gophercloud.BuildRequestBody(*opts, "")
 	return body, err
 }
 
 // Map ...
-func (opts *NodeGroupBatchAddParams) Map() (map[string]interface{}, error) {
+func (opts *nodeGroupBatchAddParams) Map() (map[string]interface{}, error) {
 	batch, err := gophercloud.BuildRequestBody(*opts, "")
 	return batch, err
 }
 
 // Map ...
-func (opts *NodeGroupBatchDelParams) Map() (map[string]interface{}, error) {
-	body, err := gophercloud.BuildRequestBody(*opts, "")
-	return body, err
-}
-
-// Map ...
-func (opts *NodeGroupPatchParams) Map() (map[string]interface{}, error) {
+func (opts *nodeGroupPatchParams) Map() (map[string]interface{}, error) {
 	body, err := gophercloud.BuildRequestBody(*opts, "")
 	return body, err
 }
 
 // PatchMap ...
-func (opts *NodeGroupClusterPatchOpts) PatchMap() ([]map[string]interface{}, error) {
+func (opts *nodeGroupClusterPatchOpts) PatchMap() ([]map[string]interface{}, error) {
 	var lb []map[string]interface{}
 	for _, opt := range *opts {
 		b, err := opt.Map()
@@ -361,8 +351,8 @@ func (r NodeGroupScaleResult) Extract() (string, error) {
 }
 
 // Extract ...
-func (r ClusterResult) Extract() (*Cluster, error) {
-	var s *Cluster
+func (r ClusterResult) Extract() (*cluster, error) {
+	var s *cluster
 	err := r.ExtractInto(&s)
 	return s, err
 }
@@ -375,29 +365,29 @@ func (r KubeConfigResult) Extract() (*string, error) {
 }
 
 // Extract ...
-func (r ClusterTemplateResult) Extract() (*ClusterTemplate, error) {
-	var s *ClusterTemplate
+func (r ClusterTemplateResult) Extract() (*clusterTemplate, error) {
+	var s *clusterTemplate
 	err := r.ExtractInto(&s)
 	return s, err
 }
 
 // Extract ...
-func (r ClusterTemplateListResult) Extract() (*ClusterTemplates, error) {
-	var s *ClusterTemplates
+func (r ClusterTemplateListResult) Extract() (*clusterTemplates, error) {
+	var s *clusterTemplates
 	err := r.ExtractInto(&s)
 	return s, err
 }
 
 // Extract ...
-func (r NodeGroupsResult) Extract() (*NodeGroups, error) {
-	var s *NodeGroups
+func (r NodeGroupsResult) Extract() (*nodeGroups, error) {
+	var s *nodeGroups
 	err := r.ExtractInto(&s)
 	return s, err
 }
 
 // Extract ...
-func (r NodeGroupResult) Extract() (*NodeGroup, error) {
-	var s *NodeGroup
+func (r NodeGroupResult) Extract() (*nodeGroup, error) {
+	var s *nodeGroup
 	err := r.ExtractInto(&s)
 	return s, err
 }
@@ -414,7 +404,7 @@ func ClusterTemplateGet(client ContainerClient, id string) (r ClusterTemplateRes
 }
 
 // CreateCluster ...
-func CreateCluster(client ContainerClient, opts OptsBuilder) (r clusters.CreateResult) {
+func CreateCluster(client ContainerClient, opts optsBuilder) (r clusters.CreateResult) {
 	log.Printf("CREATE cluster")
 	b, err := opts.Map()
 	if err != nil {
@@ -431,7 +421,7 @@ func CreateCluster(client ContainerClient, opts OptsBuilder) (r clusters.CreateR
 }
 
 // ClusterUpgrade ...
-func ClusterUpgrade(client ContainerClient, id string, opts OptsBuilder) (r clusters.UpdateResult) {
+func ClusterUpgrade(client ContainerClient, id string, opts optsBuilder) (r clusters.UpdateResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -447,7 +437,7 @@ func ClusterUpgrade(client ContainerClient, id string, opts OptsBuilder) (r clus
 }
 
 // ClusterUpdateMasters ...
-func ClusterUpdateMasters(client ContainerClient, id string, opts OptsBuilder) (r clusters.UpdateResult) {
+func ClusterUpdateMasters(client ContainerClient, id string, opts optsBuilder) (r clusters.UpdateResult) {
 	log.Printf("UPDATE masters for cluster %s", id)
 	b, err := opts.Map()
 	if err != nil {
@@ -464,7 +454,7 @@ func ClusterUpdateMasters(client ContainerClient, id string, opts OptsBuilder) (
 }
 
 // ClusterSwitchState ...
-func ClusterSwitchState(client ContainerClient, id string, opts OptsBuilder) (r clusters.UpdateResult) {
+func ClusterSwitchState(client ContainerClient, id string, opts optsBuilder) (r clusters.UpdateResult) {
 	reqBody, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -491,7 +481,7 @@ func NodeGroupGet(client ContainerClient, id string) (r NodeGroupResult) {
 }
 
 // NodeGroupScale ...
-func NodeGroupScale(client ContainerClient, id string, opts OptsBuilder) (r NodeGroupResult) {
+func NodeGroupScale(client ContainerClient, id string, opts optsBuilder) (r NodeGroupResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -507,7 +497,7 @@ func NodeGroupScale(client ContainerClient, id string, opts OptsBuilder) (r Node
 }
 
 // NodeGroupCreate ...
-func NodeGroupCreate(client ContainerClient, opts OptsBuilder) (r NodeGroupResult) {
+func NodeGroupCreate(client ContainerClient, opts optsBuilder) (r NodeGroupResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -551,7 +541,7 @@ func K8sConfigGet(client ContainerClient, id string) (string, error) {
 }
 
 // NodeGroupPatch ...
-func NodeGroupPatch(client ContainerClient, id string, opts PatchOptsBuilder) (r NodeGroupScaleResult) {
+func NodeGroupPatch(client ContainerClient, id string, opts patchOptsBuilder) (r NodeGroupScaleResult) {
 	b, err := opts.PatchMap()
 	if err != nil {
 		r.Err = err

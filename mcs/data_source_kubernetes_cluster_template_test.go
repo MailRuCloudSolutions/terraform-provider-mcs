@@ -10,9 +10,9 @@ import (
 
 func TestAccKubernetesClusterTemplateDataSource_basic(t *testing.T) {
 
-	version := "1.16.4"
-	name := "Kubernetes-centos-v1.16.4-mcs.1"
-	uuid := ClusterTemplateID
+	version := "1.20.4"
+	name := "Kubernetes-centos-v1.20.4-mcs.1"
+	uuid := clusterTemplateID
 	resourceName := "data.mcs_kubernetes_clustertemplate.template"
 
 	resource.Test(t, resource.TestCase{

@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: kubernetes_node_group"
-sidebar_current: "docs-kubernetes-node-group"
 description: |-
   Get information on clusters node group.
 ---

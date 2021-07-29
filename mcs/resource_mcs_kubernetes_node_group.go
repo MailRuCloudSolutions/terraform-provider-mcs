@@ -138,13 +138,13 @@ func resourceKubernetesNodeGroup() *schema.Resource {
 }
 
 func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	createOpts := NodeGroupCreateOpts{
+	createOpts := nodeGroupCreateOpts{
 		ClusterID:   d.Get("cluster_id").(string),
 		FlavorID:    d.Get("flavor_id").(string),
 		MaxNodes:    d.Get("max_nodes").(int),
@@ -189,7 +189,7 @@ func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error creating mcs_kubernetes_node_group: %s", err)
 	}
 
-	// Store the Node Group ID.
+	// Store the node Group ID.
 	d.SetId(s.UUID)
 
 	stateConf := &resource.StateChangeConf{
@@ -211,7 +211,7 @@ func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
@@ -265,7 +265,7 @@ func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
@@ -285,7 +285,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("error retrieving kubernetes_node_group : %s", err)
 		}
-		scaleOpts := NodeGroupScaleOpts{
+		scaleOpts := nodeGroupScaleOpts{
 			Delta: d.Get("node_count").(int) - s.NodeCount,
 		}
 
@@ -302,10 +302,10 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	}
 
-	var patchOpts NodeGroupClusterPatchOpts
+	var patchOpts nodeGroupClusterPatchOpts
 
 	if d.HasChange("max_nodes") {
-		patchOpts = append(patchOpts, NodeGroupPatchParams{
+		patchOpts = append(patchOpts, nodeGroupPatchParams{
 			Path:  "/max_nodes",
 			Value: d.Get("max_nodes").(int),
 			Op:    "replace",
@@ -313,7 +313,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("min_nodes") {
-		patchOpts = append(patchOpts, NodeGroupPatchParams{
+		patchOpts = append(patchOpts, nodeGroupPatchParams{
 			Path:  "/min_nodes",
 			Value: d.Get("min_nodes").(int),
 			Op:    "replace",
@@ -321,7 +321,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("autoscaling_enabled") {
-		patchOpts = append(patchOpts, NodeGroupPatchParams{
+		patchOpts = append(patchOpts, nodeGroupPatchParams{
 			Path:  "/autoscaling_enabled",
 			Value: strconv.FormatBool(d.Get("autoscaling_enabled").(bool)),
 			Op:    "replace",
@@ -335,7 +335,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 			return err
 		}
 
-		patchOpts = append(patchOpts, NodeGroupPatchParams{
+		patchOpts = append(patchOpts, nodeGroupPatchParams{
 			Path:  "/labels",
 			Value: labels,
 			Op:    "replace",
@@ -349,7 +349,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 			return err
 		}
 
-		patchOpts = append(patchOpts, NodeGroupPatchParams{
+		patchOpts = append(patchOpts, nodeGroupPatchParams{
 			Path:  "/taints",
 			Value: taints,
 			Op:    "replace",
@@ -373,7 +373,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceKubernetesNodeGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)

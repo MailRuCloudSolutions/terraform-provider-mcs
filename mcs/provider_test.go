@@ -12,16 +12,15 @@ import (
 )
 
 var (
-	ClusterTemplateID    = os.Getenv("CLUSTER_TEMPLATE_ID")
-	NewClusterTemplateID = os.Getenv("NEW_CLUSTER_TEMPLATE_ID")
-	OSFlavorID           = os.Getenv("OS_FLAVOR_ID")
-	OSNewFlavorID        = os.Getenv("OS_NEW_FLAVOR_ID")
-	OSNetworkID          = os.Getenv("OS_NETWORK_ID")
-	OSSubnetworkID       = os.Getenv("OS_SUBNETWORK_ID")
-	OSRegionName         = os.Getenv("OS_REGION_NAME")
-	OSKeypairName        = os.Getenv("OS_KEYPAIR_NAME")
-	OSDBDatastoreVersion = os.Getenv("OS_DB_DATASTORE_VERSION")
-	OSDBDatastoreType    = os.Getenv("OS_DB_DATASTORE_TYPE")
+	clusterTemplateID    = os.Getenv("CLUSTER_TEMPLATE_ID")
+	osFlavorID           = os.Getenv("OS_FLAVOR_ID")
+	osNewFlavorID        = os.Getenv("OS_NEW_FLAVOR_ID")
+	osNetworkID          = os.Getenv("OS_NETWORK_ID")
+	osSubnetworkID       = os.Getenv("OS_SUBNETWORK_ID")
+	osRegionName         = os.Getenv("OS_REGION_NAME")
+	osKeypairName        = os.Getenv("OS_KEYPAIR_NAME")
+	osDBDatastoreVersion = os.Getenv("OS_DB_DATASTORE_VERSION")
+	osDBDatastoreType    = os.Getenv("OS_DB_DATASTORE_TYPE")
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
@@ -35,12 +34,12 @@ func init() {
 }
 
 func testAccPreCheckDatabase(t *testing.T) {
-	Vars := map[string]interface{}{
-		"OS_NETWORK_ID":           OSNetworkID,
-		"OS_DB_DATASTORE_VERSION": OSDBDatastoreVersion,
-		"OS_DB_DATASTORE_TYPE":    OSDBDatastoreType,
+	vars := map[string]interface{}{
+		"OS_NETWORK_ID":           osNetworkID,
+		"OS_DB_DATASTORE_VERSION": osDBDatastoreVersion,
+		"OS_DB_DATASTORE_TYPE":    osDBDatastoreType,
 	}
-	for k, v := range Vars {
+	for k, v := range vars {
 		if v == "" {
 			t.Fatalf("'%s' must be set for acceptance test", k)
 		}
@@ -48,14 +47,14 @@ func testAccPreCheckDatabase(t *testing.T) {
 }
 
 func testAccPreCheckKubernetes(t *testing.T) {
-	Vars := map[string]interface{}{
-		"CLUSTER_TEMPLATE_ID": ClusterTemplateID,
-		"OS_FLAVOR_ID":        OSFlavorID,
-		"OS_NETWORK_ID":       OSNetworkID,
-		"OS_SUBNETWORK_ID":    OSSubnetworkID,
-		"OS_KEYPAIR_NAME":     OSKeypairName,
+	vars := map[string]interface{}{
+		"CLUSTER_TEMPLATE_ID": clusterTemplateID,
+		"OS_FLAVOR_ID":        osFlavorID,
+		"OS_NETWORK_ID":       osNetworkID,
+		"OS_SUBNETWORK_ID":    osSubnetworkID,
+		"OS_KEYPAIR_NAME":     osKeypairName,
 	}
-	for k, v := range Vars {
+	for k, v := range vars {
 		if v == "" {
 			t.Fatalf("'%s' must be set for acceptance test", k)
 		}

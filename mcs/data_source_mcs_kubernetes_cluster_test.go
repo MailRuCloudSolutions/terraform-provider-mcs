@@ -14,8 +14,8 @@ func TestAccKubernetesClusterDataSourceBasic(t *testing.T) {
 	var clusterName = "testcluster" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)
 	datasourceName := "data.mcs_kubernetes_cluster." + clusterName
 
-	createClusterFixture := clusterFixture(clusterName, ClusterTemplateID, OSFlavorID,
-		OSKeypairName, OSNetworkID, OSSubnetworkID, 1)
+	createClusterFixture := clusterFixture(clusterName, clusterTemplateID, osFlavorID,
+		osKeypairName, osNetworkID, osSubnetworkID, 1)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheckKubernetes(t) },
@@ -34,7 +34,7 @@ func TestAccKubernetesClusterDataSourceBasic(t *testing.T) {
 					testAccCheckKubernetesClusterDataSourceID(datasourceName),
 					resource.TestCheckResourceAttr(datasourceName, "name", clusterName),
 					resource.TestCheckResourceAttr(datasourceName, "master_count", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "cluster_template_id", ClusterTemplateID),
+					resource.TestCheckResourceAttr(datasourceName, "cluster_template_id", clusterTemplateID),
 				),
 			},
 		},

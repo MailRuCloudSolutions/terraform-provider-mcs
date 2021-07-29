@@ -13,19 +13,19 @@ import (
 func TestClusterCreateOpts(t *testing.T) {
 
 	labels := map[string]string{
-		"availability_zone":        "DP1",
-		"cluster_node_volume_type": "dp1",
+		"cluster_node_volume_type": "ms1",
 		"container_infra_prefix":   "registry.infra.mail.ru:5010/",
 	}
 
 	mcount := 2
 
-	createOpts := ClusterCreateOpts{
+	createOpts := clusterCreateOpts{
 		ClusterTemplateID: "95663bae-6763-4a53-9424-831975285cc1",
 		Keypair:           "default",
 		Labels:            labels,
 		MasterFlavorID:    "Basic-1-2-20",
 		Name:              "k8s-cluster",
+		AvailabilityZone:  "MS1",
 		MasterCount:       mcount,
 		NetworkID:         "95663bae-6763-4a53-9424-831975285cc1",
 		SubnetID:          "95663bae-6763-4a53-9424-831975285cc1",
@@ -35,13 +35,13 @@ func TestClusterCreateOpts(t *testing.T) {
 	b, _ := createOpts.Map()
 
 	assert.IsType(t, map[string]interface{}{}, b["labels"])
-	assert.Len(t, b["labels"], 3)
-	assert.Len(t, b, 9)
+	assert.Len(t, b["labels"], 2)
+	assert.Len(t, b, 10)
 }
 
 func TestPatchOpts(t *testing.T) {
 
-	patchOpts := NodeGroupClusterPatchOpts{
+	patchOpts := nodeGroupClusterPatchOpts{
 		{
 			Path:  "/max_nodes",
 			Value: 10,
@@ -67,7 +67,7 @@ func TestPatchOpts(t *testing.T) {
 
 func TestAddBatchOpts(t *testing.T) {
 
-	addGroups := []NodeGroup{
+	addGroups := []nodeGroup{
 		{
 			Name:     "test1",
 			FlavorID: "95663bae-6763-4a53-9424-831975285cc1",
@@ -78,7 +78,7 @@ func TestAddBatchOpts(t *testing.T) {
 		},
 	}
 
-	addbatchOpts := NodeGroupBatchAddParams{
+	addbatchOpts := nodeGroupBatchAddParams{
 		Action:  "batch_add_ng",
 		Payload: addGroups,
 	}

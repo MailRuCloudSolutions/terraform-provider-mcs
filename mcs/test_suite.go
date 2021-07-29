@@ -11,22 +11,21 @@ import (
 
 const testAccURL = "https://acctest.mcs.ru"
 
-// DummyConfigFixture is fixture for real Config struct
-var DummyConfigFixture = &DummyConfig{}
-
-// DummyConfig is mock for Config
-type DummyConfig struct {
+// dummyConfig is mock for Config
+type dummyConfig struct {
 	mock.Mock
 }
 
+var _ configer = &dummyConfig{}
+
 // LoadAndValidate ...
-func (d *DummyConfig) LoadAndValidate() error {
+func (d *dummyConfig) LoadAndValidate() error {
 	args := d.Called()
 	return args.Error(0)
 }
 
 // ContainerInfraV1Client ...
-func (d *DummyConfig) ContainerInfraV1Client(region string) (ContainerClient, error) {
+func (d *dummyConfig) ContainerInfraV1Client(region string) (ContainerClient, error) {
 	args := d.Called(region)
 	if r, ok := args.Get(0).(ContainerClient); ok {
 		return r, args.Error(1)
@@ -35,7 +34,7 @@ func (d *DummyConfig) ContainerInfraV1Client(region string) (ContainerClient, er
 }
 
 // DatabaseV1Client returns dummy DatabaseV1Client
-func (d *DummyConfig) DatabaseV1Client(region string) (ContainerClient, error) {
+func (d *dummyConfig) DatabaseV1Client(region string) (ContainerClient, error) {
 	args := d.Called(region)
 	if r, ok := args.Get(0).(ContainerClient); ok {
 		return r, args.Error(1)
@@ -43,8 +42,8 @@ func (d *DummyConfig) DatabaseV1Client(region string) (ContainerClient, error) {
 	return nil, args.Error(0)
 }
 
-// Get Region ...
-func (d *DummyConfig) GetRegion() string {
+// GetRegion is a dummy method to return region.
+func (d *dummyConfig) GetRegion() string {
 	args := d.Called()
 	return args.String(0)
 }

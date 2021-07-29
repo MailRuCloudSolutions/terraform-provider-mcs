@@ -224,7 +224,7 @@ func resourceDatabaseClusterWithShards() *schema.Resource {
 }
 
 func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
@@ -340,7 +340,7 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceDatabaseClusterWithShardsRead(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
@@ -360,7 +360,7 @@ func resourceDatabaseClusterWithShardsRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
@@ -454,7 +454,7 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceDatabaseClusterWithShardsDelete(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)

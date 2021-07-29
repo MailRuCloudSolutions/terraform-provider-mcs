@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: mcs_kubernetes_clustertemplate"
-sidebar_current: "docs-mcs-kubernetes-clustertemplate"
 description: |-
   Get information on an MCS kubernetes cluster template.
 ---
@@ -25,7 +24,7 @@ output "example_template_id" {
 
 ```hcl
 data "mcs_kubernetes_clustertemplate" "example_template_by_version" {
-  version = "1.16.4"
+  version = "1.20.4"
 }
 
 output "example_template_id" {

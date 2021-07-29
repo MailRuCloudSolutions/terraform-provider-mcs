@@ -11,16 +11,16 @@ import (
 )
 
 func TestAccKubernetesNodeGroupDataSource_basic(t *testing.T) {
-	var cluster Cluster
-	var nodeGroup NodeGroup
+	var cluster cluster
+	var nodeGroup nodeGroup
 
 	clusterName := "testcluster" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)
-	createClusterFixture := clusterFixture(clusterName, ClusterTemplateID, OSFlavorID,
-		OSKeypairName, OSNetworkID, OSSubnetworkID, 1)
+	createClusterFixture := clusterFixture(clusterName, clusterTemplateID, osFlavorID,
+		osKeypairName, osNetworkID, osSubnetworkID, 1)
 	clusterResourceName := "mcs_kubernetes_cluster." + clusterName
 
 	nodeGroupName := "testng" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)
-	nodeGroupFixture := nodeGroupFixture(nodeGroupName, OSFlavorID, 1, 3, 1, false)
+	nodeGroupFixture := nodeGroupFixture(nodeGroupName, osFlavorID, 1, 3, 1, false)
 	nodeGroupResourceName := "mcs_kubernetes_node_group." + nodeGroupName
 	nodeGroupDataSourceName := "data.mcs_kubernetes_node_group." + nodeGroupName
 

@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: db_cluster_with_shards"
-sidebar_current: "docs-db-cluster-with-shards"
 subcategory: ""
 description: |-
   Manages a db cluster with shards.

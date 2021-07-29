@@ -62,17 +62,17 @@ func testAccCheckDatabaseInstanceExists(n string, instance *instanceResp) resour
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("no id is set")
 		}
 
-		config := testAccProvider.Meta().(Config)
-		DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+		config := testAccProvider.Meta().(configer)
+		DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 		if err != nil {
-			return fmt.Errorf("Error creating OpenStack compute client: %s", err)
+			return fmt.Errorf("error creating openstack compute client: %s", err)
 		}
 
 		found, err := instanceGet(DatabaseClient, rs.Primary.ID).extract()
@@ -81,7 +81,7 @@ func testAccCheckDatabaseInstanceExists(n string, instance *instanceResp) resour
 		}
 
 		if found.ID != rs.Primary.ID {
-			return fmt.Errorf("Instance not found")
+			return fmt.Errorf("instance not found")
 		}
 
 		*instance = *found
@@ -91,11 +91,11 @@ func testAccCheckDatabaseInstanceExists(n string, instance *instanceResp) resour
 }
 
 func testAccCheckDatabaseInstanceDestroy(s *terraform.State) error {
-	config := testAccProvider.Meta().(Config)
+	config := testAccProvider.Meta().(configer)
 
-	DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+	DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 	if err != nil {
-		return fmt.Errorf("Error creating OpenStack database client: %s", err)
+		return fmt.Errorf("error creating openstack database client: %s", err)
 	}
 
 	for _, rs := range s.RootModule().Resources {
@@ -104,7 +104,7 @@ func testAccCheckDatabaseInstanceDestroy(s *terraform.State) error {
 		}
 		_, err := instanceGet(DatabaseClient, rs.Primary.ID).extract()
 		if err == nil {
-			return fmt.Errorf("Instance still exists")
+			return fmt.Errorf("instance still exists")
 		}
 	}
 
@@ -116,30 +116,30 @@ func testAccCheckDatabaseRootUserExists(n string, instance *instanceResp) resour
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("no id is set")
 		}
 
-		config := testAccProvider.Meta().(Config)
-		DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+		config := testAccProvider.Meta().(configer)
+		DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 		if err != nil {
-			return fmt.Errorf("Error creating cloud database client: %s", err)
+			return fmt.Errorf("error creating cloud database client: %s", err)
 		}
 
 		isRootEnabledResult := instanceRootUserGet(DatabaseClient, rs.Primary.ID)
 		isRootEnabled, err := isRootEnabledResult.extract()
 		if err != nil {
-			return fmt.Errorf("Error checking if root user is enabled for instance: %s: %s", rs.Primary.ID, err)
+			return fmt.Errorf("error checking if root user is enabled for instance: %s: %s", rs.Primary.ID, err)
 		}
 
 		if isRootEnabled {
 			return nil
 		}
 
-		return fmt.Errorf("Root user %s does not exist", n)
+		return fmt.Errorf("root user %s does not exist", n)
 	}
 }
 
@@ -168,7 +168,7 @@ resource "mcs_db_instance" "basic" {
   }
 
 }
-`, OSFlavorID, OSDBDatastoreVersion, OSDBDatastoreType, OSNetworkID, OSKeypairName)
+`, osFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID, osKeypairName)
 
 var testAccDatabaseInstanceUpdate = fmt.Sprintf(`
 resource "mcs_db_instance" "basic" {
@@ -195,7 +195,7 @@ resource "mcs_db_instance" "basic" {
   }
 
 }
-`, OSNewFlavorID, OSDBDatastoreVersion, OSDBDatastoreType, OSNetworkID, OSKeypairName)
+`, osNewFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID, osKeypairName)
 
 var testAccDatabaseInstanceRootUser = fmt.Sprintf(`
 resource "mcs_db_instance" "basic" {
@@ -214,4 +214,4 @@ resource "mcs_db_instance" "basic" {
   }
   root_enabled = true
 }
-`, OSFlavorID, OSDBDatastoreVersion, OSDBDatastoreType, OSNetworkID)
+`, osFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)

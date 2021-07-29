@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: db_cluster"
-sidebar_current: "docs-db-cluster"
 subcategory: ""
 description: |-
   Manages a db cluster.

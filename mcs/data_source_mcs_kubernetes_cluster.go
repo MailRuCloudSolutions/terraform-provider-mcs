@@ -17,7 +17,6 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -28,27 +27,22 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"project_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"user_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"updated_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"api_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -57,54 +51,44 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"create_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"discovery_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"master_flavor": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"keypair": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-
 			"master_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"node_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"master_addresses": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"node_addresses": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"stack_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -145,6 +129,10 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"k8s_config": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -154,7 +142,7 @@ func dataSourceKubernetesCluster() *schema.Resource {
 }
 
 func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
@@ -193,6 +181,7 @@ func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("api_lb_fip", c.APILBFIP)
 	d.Set("ingress_floating_ip", c.IngressFloatingIP)
 	d.Set("registry_auth_password", c.RegistryAuthPassword)
+	d.Set("availability_zone", c.AvailabilityZone)
 
 	k8sConfig, err := K8sConfigGet(containerInfraClient, c.UUID)
 	if err != nil {

@@ -79,32 +79,32 @@ func testAccCheckDatabaseUserExists(n string, instance *instanceResp, user *user
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("no id is set")
 		}
 
 		parts := strings.SplitN(rs.Primary.ID, "/", 2)
 		if len(parts) != 2 {
-			return fmt.Errorf("Malformed user name: %s", rs.Primary.ID)
+			return fmt.Errorf("malformed user name: %s", rs.Primary.ID)
 		}
 
-		config := testAccProvider.Meta().(Config)
-		DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+		config := testAccProvider.Meta().(configer)
+		DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 		if err != nil {
-			return fmt.Errorf("Error creating cloud database client: %s", err)
+			return fmt.Errorf("error creating cloud database client: %s", err)
 		}
 
 		pages, err := userList(DatabaseClient, instance.ID).AllPages()
 		if err != nil {
-			return fmt.Errorf("Unable to retrieve users: %s", err)
+			return fmt.Errorf("unable to retrieve users: %s", err)
 		}
 
 		allUsers, err := users.ExtractUsers(pages)
 		if err != nil {
-			return fmt.Errorf("Unable to extract users: %s", err)
+			return fmt.Errorf("unable to extract users: %s", err)
 		}
 
 		for _, u := range allUsers {
@@ -114,7 +114,7 @@ func testAccCheckDatabaseUserExists(n string, instance *instanceResp, user *user
 			}
 		}
 
-		return fmt.Errorf("User %s does not exist", n)
+		return fmt.Errorf("user %s does not exist", n)
 	}
 }
 
@@ -122,18 +122,18 @@ func testAccCheckDatabaseUserDatabaseCount(n int, user *users.User) resource.Tes
 
 	return func(s *terraform.State) error {
 		if len(user.Databases) != n {
-			return fmt.Errorf("Wrong number of databases assigned to user: %s", user.Name)
+			return fmt.Errorf("wrong number of databases assigned to user: %s", user.Name)
 		}
 		return nil
 	}
 }
 
 func testAccCheckDatabaseUserDestroy(s *terraform.State) error {
-	config := testAccProvider.Meta().(Config)
+	config := testAccProvider.Meta().(configer)
 
-	DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+	DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 	if err != nil {
-		return fmt.Errorf("Error creating cloud database client: %s", err)
+		return fmt.Errorf("error creating cloud database client: %s", err)
 	}
 
 	for _, rs := range s.RootModule().Resources {
@@ -143,7 +143,7 @@ func testAccCheckDatabaseUserDestroy(s *terraform.State) error {
 
 		parts := strings.SplitN(rs.Primary.ID, "/", 2)
 		if len(parts) != 2 {
-			return fmt.Errorf("Malformed username: %s", rs.Primary.ID)
+			return fmt.Errorf("malformed username: %s", rs.Primary.ID)
 		}
 
 		pages, err := userList(DatabaseClient, parts[0]).AllPages()
@@ -153,7 +153,7 @@ func testAccCheckDatabaseUserDestroy(s *terraform.State) error {
 
 		allUsers, err := users.ExtractUsers(pages)
 		if err != nil {
-			return fmt.Errorf("Unable to extract users: %s", err)
+			return fmt.Errorf("unable to extract users: %s", err)
 		}
 
 		var exists bool
@@ -164,7 +164,7 @@ func testAccCheckDatabaseUserDestroy(s *terraform.State) error {
 		}
 
 		if exists {
-			return fmt.Errorf("User still exists")
+			return fmt.Errorf("user still exists")
 		}
 	}
 
@@ -206,7 +206,7 @@ resource "mcs_db_user" "basic" {
 	"${mcs_db_database.testdb1.name}"
   ]
 }
-`, OSFlavorID, OSDBDatastoreVersion, OSDBDatastoreType, OSNetworkID)
+`, osFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)
 
 var testAccDatabaseUserAddDatabase = fmt.Sprintf(`
 resource "mcs_db_instance" "basic" {
@@ -244,4 +244,4 @@ resource "mcs_db_user" "basic" {
 	  "${mcs_db_database.testdb1.name}"
   ]
 }
-`, OSFlavorID, OSDBDatastoreVersion, OSDBDatastoreType, OSNetworkID)
+`, osFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)

@@ -29,8 +29,8 @@ const clusterResourceFixture = `
 `
 
 func clusterFixture(name, clusterTemplateID, flavorID, keypair,
-	networkID, subnetID string, masterCount int) *ClusterCreateOpts {
-	return &ClusterCreateOpts{
+	networkID, subnetID string, masterCount int) *clusterCreateOpts {
+	return &clusterCreateOpts{
 		Name:              name,
 		MasterCount:       masterCount,
 		ClusterTemplateID: clusterTemplateID,
@@ -41,7 +41,7 @@ func clusterFixture(name, clusterTemplateID, flavorID, keypair,
 	}
 }
 
-func checkClusterAttrs(resourceName string, cluster *ClusterCreateOpts) resource.TestCheckFunc {
+func checkClusterAttrs(resourceName string, cluster *clusterCreateOpts) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if s.Empty() == true {
 			return fmt.Errorf("state not updated")
@@ -62,20 +62,21 @@ func TestAccKubernetesCluster_basic(t *testing.T) {
 	clusterUUID := uuid.NewV4().String()
 
 	// Mock config methods
-	DummyConfigFixture.On("LoadAndValidate").Return(nil)
-	DummyConfigFixture.On("ContainerInfraV1Client", "").Return(clientFixture, nil)
-	DummyConfigFixture.On("getRegion").Return("")
+	dummyConfig := &dummyConfig{}
+	dummyConfig.On("LoadAndValidate").Return(nil)
+	dummyConfig.On("ContainerInfraV1Client", "").Return(clientFixture, nil)
+	dummyConfig.On("getRegion").Return("")
 
 	// Create cluster fixtures
 	clusterName := "testcluster" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)
 	resourceName := "mcs_kubernetes_cluster." + clusterName
 
-	createClusterFixture := clusterFixture(clusterName, ClusterTemplateID, OSFlavorID,
-		OSKeypairName, OSNetworkID, OSSubnetworkID, 1)
+	createClusterFixture := clusterFixture(clusterName, clusterTemplateID, osFlavorID,
+		osKeypairName, osNetworkID, osSubnetworkID, 1)
 	jsonClusterFixture, _ := createClusterFixture.Map()
 
-	scaleFlavorClusterFixture := clusterFixture(clusterName, ClusterTemplateID, OSNewFlavorID,
-		OSKeypairName, OSNetworkID, OSSubnetworkID, 1)
+	scaleFlavorClusterFixture := clusterFixture(clusterName, clusterTemplateID, osNewFlavorID,
+		osKeypairName, osNetworkID, osSubnetworkID, 1)
 	scaleRequestFixture := map[string]interface{}{"action": "resize_masters", "payload": map[string]interface{}{"flavor": scaleFlavorClusterFixture.MasterFlavorID}}
 	jsonClusterScaleFixture, _ := scaleFlavorClusterFixture.Map()
 
@@ -96,7 +97,7 @@ func TestAccKubernetesCluster_basic(t *testing.T) {
 	// Check deleted
 	clientFixture.On("Get", testAccURL+"/clusters/"+clusterUUID, mock.Anything, getRequestOpts(200)).Return(gophercloud.ErrDefault404{}).Twice()
 
-	var cluster Cluster
+	var cluster cluster
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckKubernetes(t) },
@@ -121,7 +122,7 @@ func TestAccKubernetesCluster_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckKubernetesClusterExists(n string, cluster *Cluster) resource.TestCheckFunc {
+func testAccCheckKubernetesClusterExists(n string, cluster *cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, found, err := getClusterAndResource(n, s)
 		if err != nil {
@@ -155,14 +156,14 @@ func testAccCheckKubernetesClusterScaled(n string) resource.TestCheckFunc {
 	}
 }
 
-func getClusterAndResource(n string, s *terraform.State) (*terraform.ResourceState, *Cluster, error) {
+func getClusterAndResource(n string, s *terraform.State) (*terraform.ResourceState, *cluster, error) {
 	rs, ok := s.RootModule().Resources[n]
 	if !ok {
 		return nil, nil, fmt.Errorf("cluster not found: %s", n)
 	}
 
-	config := testAccProvider.Meta().(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(OSRegionName)
+	config := testAccProvider.Meta().(configer)
+	containerInfraClient, err := config.ContainerInfraV1Client(osRegionName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error creating container infra client: %s", err)
 	}
@@ -175,8 +176,8 @@ func getClusterAndResource(n string, s *terraform.State) (*terraform.ResourceSta
 }
 
 func testAccCheckKubernetesClusterDestroy(s *terraform.State) error {
-	config := testAccProvider.Meta().(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(OSRegionName)
+	config := testAccProvider.Meta().(configer)
+	containerInfraClient, err := config.ContainerInfraV1Client(osRegionName)
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
@@ -195,7 +196,7 @@ func testAccCheckKubernetesClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccKubernetesClusterBasic(createOpts *ClusterCreateOpts) string {
+func testAccKubernetesClusterBasic(createOpts *clusterCreateOpts) string {
 
 	return fmt.Sprintf(
 		clusterResourceFixture,

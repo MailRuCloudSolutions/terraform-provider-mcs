@@ -8,21 +8,21 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-func extractKubernetesGroupMap(nodeGroups []interface{}) ([]NodeGroup, error) {
-	filledNodeGroups := make([]NodeGroup, len(nodeGroups))
-	for i, nodeGroup := range nodeGroups {
-		g := nodeGroup.(map[string]interface{})
+func extractKubernetesGroupMap(nodeGroups []interface{}) ([]nodeGroup, error) {
+	filledNodeGroups := make([]nodeGroup, len(nodeGroups))
+	for i, ng := range nodeGroups {
+		g := ng.(map[string]interface{})
 		for k, v := range g {
 			if v == 0 {
 				delete(g, k)
 			}
 		}
-		var ng NodeGroup
-		err := mapStructureDecoder(&ng, &g, config)
+		var nodeGroup nodeGroup
+		err := mapStructureDecoder(&nodeGroup, &g, decoderConfig)
 		if err != nil {
 			return nil, err
 		}
-		filledNodeGroups[i] = ng
+		filledNodeGroups[i] = nodeGroup
 	}
 	return filledNodeGroups, nil
 }
@@ -39,10 +39,10 @@ func extractKubernetesLabelsMap(v map[string]interface{}) (map[string]string, er
 	return m, nil
 }
 
-func extractNodeGroupLabelsList(v []interface{}) ([]NodeGroupLabel, error) {
-	labels := make([]NodeGroupLabel, len(v))
+func extractNodeGroupLabelsList(v []interface{}) ([]nodeGroupLabel, error) {
+	labels := make([]nodeGroupLabel, len(v))
 	for i, label := range v {
-		var L NodeGroupLabel
+		var L nodeGroupLabel
 		err := mapstructure.Decode(label.(map[string]interface{}), &L)
 		if err != nil {
 			return nil, err
@@ -52,10 +52,10 @@ func extractNodeGroupLabelsList(v []interface{}) ([]NodeGroupLabel, error) {
 	return labels, nil
 }
 
-func extractNodeGroupTaintsList(v []interface{}) ([]NodeGroupTaint, error) {
-	taints := make([]NodeGroupTaint, len(v))
+func extractNodeGroupTaintsList(v []interface{}) ([]nodeGroupTaint, error) {
+	taints := make([]nodeGroupTaint, len(v))
 	for i, taint := range v {
-		var T NodeGroupTaint
+		var T nodeGroupTaint
 		err := mapstructure.Decode(taint.(map[string]interface{}), &T)
 		if err != nil {
 			return nil, err
@@ -65,7 +65,7 @@ func extractNodeGroupTaintsList(v []interface{}) ([]NodeGroupTaint, error) {
 	return taints, nil
 }
 
-func flattenNodeGroupLabelsList(v []NodeGroupLabel) []map[string]interface{} {
+func flattenNodeGroupLabelsList(v []nodeGroupLabel) []map[string]interface{} {
 	labels := make([]map[string]interface{}, len(v))
 	for i, label := range v {
 		m := map[string]interface{}{"key": label.Key, "value": label.Value}
@@ -74,7 +74,7 @@ func flattenNodeGroupLabelsList(v []NodeGroupLabel) []map[string]interface{} {
 	return labels
 }
 
-func flattenNodeGroupTaintsList(v []NodeGroupTaint) []map[string]interface{} {
+func flattenNodeGroupTaintsList(v []nodeGroupTaint) []map[string]interface{} {
 	taints := make([]map[string]interface{}, len(v))
 	for i, taint := range v {
 		m := map[string]interface{}{"key": taint.Key, "value": taint.Value, "effect": taint.Effect}
