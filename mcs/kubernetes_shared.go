@@ -18,7 +18,7 @@ func extractKubernetesGroupMap(nodeGroups []interface{}) ([]NodeGroup, error) {
 			}
 		}
 		var ng NodeGroup
-		err := MapStructureDecoder(&ng, &g, config)
+		err := mapStructureDecoder(&ng, &g, config)
 		if err != nil {
 			return nil, err
 		}
@@ -88,15 +88,14 @@ func kubernetesStateRefreshFunc(client ContainerClient, clusterID string) resour
 		c, err := ClusterGet(client, clusterID).Extract()
 		if err != nil {
 			if _, ok := err.(gophercloud.ErrDefault404); ok {
-				return c, status.DELETED, nil
+				return c, string(clusterStatusDeleted), nil
 			}
 			return nil, "", err
 		}
-		errorStatus := status.ERROR
-		if c.NewStatus == errorStatus {
+		if c.NewStatus == clusterStatusError {
 			err = fmt.Errorf("mcs_kubernetes_cluster is in an error state: %s", c.StatusReason)
-			return c, c.NewStatus, err
+			return c, string(c.NewStatus), err
 		}
-		return c, c.NewStatus, nil
+		return c, string(c.NewStatus), nil
 	}
 }

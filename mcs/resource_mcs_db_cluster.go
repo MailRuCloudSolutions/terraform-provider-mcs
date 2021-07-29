@@ -8,17 +8,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var dbClusterStatus = Status{
-	BUILD:    "BUILDING",
-	ACTIVE:   "NONE",
-	DELETED:  "DELETED",
-	ERROR:    "ERROR",
-	DELETING: "DELETING",
-	RESIZE:   "RESIZING_CLUSTER",
-	UPDATING: "UPDATING_CLUSTER",
-	GROW:     "GROWING_CLUSTER",
-	SHRINK:   "SHRINKING_CLUSTER",
-}
+type dbClusterStatus string
+
+var (
+	dbClusterStatusActive   dbClusterStatus = "NONE"
+	dbClusterStatusBuild    dbClusterStatus = "BUILDING"
+	dbClusterStatusDeleted  dbClusterStatus = "DELETED"
+	dbClusterStatusDeleting dbClusterStatus = "DELETING"
+	dbClusterStatusGrow     dbClusterStatus = "GROWING_CLUSTER"
+	dbClusterStatusResize   dbClusterStatus = "RESIZING_CLUSTER"
+	dbClusterStatusShrink   dbClusterStatus = "SHRINKING_CLUSTER"
+	dbClusterStatusUpdating dbClusterStatus = "UPDATING_CLUSTER"
+)
 
 func resourceDatabaseCluster() *schema.Resource {
 	return &schema.Resource{
@@ -28,8 +29,8 @@ func resourceDatabaseCluster() *schema.Resource {
 		Update: resourceDatabaseClusterUpdate,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DBCreateTimeout),
-			Delete: schema.DefaultTimeout(DBDeleteTimeout),
+			Create: schema.DefaultTimeout(dbCreateTimeout),
+			Delete: schema.DefaultTimeout(dbDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -244,7 +245,7 @@ func resourceDatabaseCluster() *schema.Resource {
 
 func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
@@ -336,12 +337,12 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Waiting for mcs_db_instance %s to become available", cluster.ID)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbClusterStatus.BUILD},
-		Target:     []string{dbClusterStatus.ACTIVE},
+		Pending:    []string{string(dbClusterStatusBuild)},
+		Target:     []string{string(dbClusterStatusActive)},
 		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, cluster.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	_, err = stateConf.WaitForState()
@@ -367,14 +368,14 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceDatabaseClusterRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	cluster, err := dbClusterGet(DatabaseV1Client, d.Id()).extract()
 	if err != nil {
-		return CheckDeleted(d, err, "Error retrieving mcs_db_cluster")
+		return checkDeleted(d, err, "Error retrieving mcs_db_cluster")
 	}
 
 	log.Printf("[DEBUG] Retrieved mcs_db_cluster %s: %#v", d.Id(), cluster)
@@ -387,18 +388,18 @@ func resourceDatabaseClusterRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbClusterStatus.BUILD},
-		Target:     []string{dbClusterStatus.ACTIVE},
+		Pending:    []string{string(dbClusterStatusBuild)},
+		Target:     []string{string(dbClusterStatusActive)},
 		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	if d.HasChange("configuration_id") {
@@ -446,8 +447,8 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		log.Printf("Resizing volume from mcs_db_cluster %s", d.Id())
 
-		stateConf.Pending = []string{dbClusterStatus.RESIZE}
-		stateConf.Target = []string{dbClusterStatus.ACTIVE}
+		stateConf.Pending = []string{string(dbClusterStatusResize)}
+		stateConf.Target = []string{string(dbClusterStatusActive)}
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
@@ -464,8 +465,8 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		log.Printf("Resizing flavor from mcs_db_cluster %s", d.Id())
 
-		stateConf.Pending = []string{dbClusterStatus.RESIZE}
-		stateConf.Target = []string{dbClusterStatus.ACTIVE}
+		stateConf.Pending = []string{string(dbClusterStatusResize)}
+		stateConf.Target = []string{string(dbClusterStatusActive)}
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
@@ -491,8 +492,8 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 
-		stateConf.Pending = []string{dbClusterStatus.UPDATING}
-		stateConf.Target = []string{dbClusterStatus.ACTIVE}
+		stateConf.Pending = []string{string(dbClusterStatusUpdating)}
+		stateConf.Target = []string{string(dbClusterStatusActive)}
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
@@ -524,8 +525,8 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 				return err
 			}
 
-			stateConf.Pending = []string{dbstatus.RESIZE}
-			stateConf.Target = []string{dbstatus.ACTIVE}
+			stateConf.Pending = []string{string(dbClusterStatusResize)}
+			stateConf.Target = []string{string(dbClusterStatusActive)}
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
@@ -596,8 +597,8 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("error growing mcs_db_cluster %s: %s", d.Id(), err)
 			}
-			stateConf.Pending = []string{dbClusterStatus.GROW}
-			stateConf.Target = []string{dbClusterStatus.ACTIVE}
+			stateConf.Pending = []string{string(dbClusterStatusGrow)}
+			stateConf.Target = []string{string(dbClusterStatusActive)}
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
@@ -606,7 +607,7 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		} else {
 			cluster, err := dbClusterGet(DatabaseV1Client, d.Id()).extract()
 			if err != nil {
-				return CheckDeleted(d, err, "Error retrieving mcs_db_cluster")
+				return checkDeleted(d, err, "Error retrieving mcs_db_cluster")
 			}
 			ids := make([]dbClusterShrinkOpts, old.(int)-new.(int))
 			for i := 0; i < len(ids); i++ {
@@ -622,8 +623,8 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("error growing mcs_db_cluster %s: %s", d.Id(), err)
 			}
-			stateConf.Pending = []string{dbClusterStatus.SHRINK}
-			stateConf.Target = []string{dbClusterStatus.ACTIVE}
+			stateConf.Pending = []string{string(dbClusterStatusShrink)}
+			stateConf.Target = []string{string(dbClusterStatusActive)}
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
@@ -637,23 +638,23 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceDatabaseClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	err = ClusterDelete(DatabaseV1Client, d.Id()).ExtractErr()
 	if err != nil {
-		return CheckDeleted(d, err, "Error deleting mcs_db_cluster")
+		return checkDeleted(d, err, "Error deleting mcs_db_cluster")
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbClusterStatus.ACTIVE, dbClusterStatus.DELETING},
-		Target:     []string{dbClusterStatus.DELETED},
+		Pending:    []string{string(dbClusterStatusActive), string(dbClusterStatusDeleting)},
+		Target:     []string{string(dbClusterStatusDeleted)},
 		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	_, err = stateConf.WaitForState()

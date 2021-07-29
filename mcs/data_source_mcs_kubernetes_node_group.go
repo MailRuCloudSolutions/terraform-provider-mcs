@@ -97,14 +97,14 @@ func dataSourceKubernetesNodeGroup() *schema.Resource {
 
 func dataSourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
 	nodeGroup, err := NodeGroupGet(containerInfraClient, d.Get("uuid").(string)).Extract()
 	if err != nil {
-		return CheckDeleted(d, err, "error retrieving mcs_kubernetes_node_group")
+		return checkDeleted(d, err, "error retrieving mcs_kubernetes_node_group")
 	}
 
 	log.Printf("[DEBUG] Retrieved mcs_kubernetes_node_group %s: %#v", d.Id(), nodeGroup)
@@ -122,10 +122,10 @@ func dataSourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{})
 	d.Set("nodes", flattenNodes(nodeGroup.Nodes))
 	d.Set("state", nodeGroup.State)
 
-	if err := d.Set("created_at", GetTimestamp(&nodeGroup.CreatedAt)); err != nil {
+	if err := d.Set("created_at", getTimestamp(&nodeGroup.CreatedAt)); err != nil {
 		log.Printf("[DEBUG] Unable to set mcs_kubernetes_node_group created_at: %s", err)
 	}
-	if err := d.Set("updated_at", GetTimestamp(&nodeGroup.UpdatedAt)); err != nil {
+	if err := d.Set("updated_at", getTimestamp(&nodeGroup.UpdatedAt)); err != nil {
 		log.Printf("[DEBUG] Unable to set mcs_kubernetes_node_group updated_at: %s", err)
 	}
 

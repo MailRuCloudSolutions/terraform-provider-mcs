@@ -163,7 +163,7 @@ func makeClusterCreateResponseFixture(uuid string) *http.Response {
 	return resp
 }
 
-func makeClusterGetResponseFixture(clusterGetFixture map[string]interface{}, uuid string, s string) *http.Response {
+func makeClusterGetResponseFixture(clusterGetFixture map[string]interface{}, uuid string, s clusterStatus) *http.Response {
 	newMap := map[string]interface{}{}
 	for k, v := range clusterGetFixture {
 		newMap[k] = v

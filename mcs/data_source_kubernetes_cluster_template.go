@@ -163,7 +163,7 @@ func dataSourceKubernetesClusterTemplate() *schema.Resource {
 
 func dataSourceKubernetesClusterTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack container infra client: %s", err)
 	}
@@ -213,7 +213,7 @@ func dataSourceKubernetesClusterTemplateRead(d *schema.ResourceData, meta interf
 		log.Printf("[DEBUG] Unable to set openstack_containerinfra_clustertemplate_v1 updated_at: %s", err)
 	}
 
-	d.Set("region", GetRegion(d, config))
+	d.Set("region", getRegion(d, config))
 
 	return nil
 }

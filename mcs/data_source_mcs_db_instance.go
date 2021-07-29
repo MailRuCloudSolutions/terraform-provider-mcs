@@ -118,14 +118,14 @@ func dataSourceDatabaseInstance() *schema.Resource {
 
 func dataSourceDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	instance, err := instanceGet(DatabaseV1Client, d.Get("id").(string)).extract()
 	if err != nil {
-		return CheckDeleted(d, err, "Error retrieving mcs_db_instance")
+		return checkDeleted(d, err, "Error retrieving mcs_db_instance")
 	}
 
 	d.SetId(instance.ID)
@@ -133,7 +133,7 @@ func dataSourceDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", instance.Name)
 	d.Set("flavor_id", instance.Flavor)
 	d.Set("datastore", instance.DataStore)
-	d.Set("region", GetRegion(d, config))
+	d.Set("region", getRegion(d, config))
 	d.Set("ip", instance.IP)
 	d.Set("status", instance.Status)
 

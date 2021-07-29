@@ -7,33 +7,36 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"gitlab.corp.mail.ru/infra/paas/terraform-provider-mcs/mcs/internal/valid"
 )
 
 // OperationCreate ...
 const (
-	OperationCreate          = 60
-	OperationUpdate          = 60
-	OperationDelete          = 30
-	CreateUpdateDelay        = 1
-	CreateUpdatePollInterval = 20
-	DeleteDelay              = 30
-	NodeGroupDeleteDelay     = 10
-	DeletePollInterval       = 10
+	operationCreate          = 60
+	operationUpdate          = 60
+	operationDelete          = 30
+	createUpdateDelay        = 1
+	createUpdatePollInterval = 20
+	deleteDelay              = 30
+	nodeGroupDeleteDelay     = 10
+	deletePollInterval       = 10
 )
 
-var status = Status{
-	DELETING:     "DELETING",
-	DELETED:      "DELETED",
-	RECONCILING:  "RECONCILING",
-	PROVISIONING: "PROVISIONING",
-	RUNNING:      "RUNNING",
-	ERROR:        "ERROR",
-	SHUTOFF:      "SHUTOFF",
-}
+type clusterStatus string
 
-var stateStatusMap = map[string]string{
-	status.RUNNING: "turn_on_cluster",
-	status.SHUTOFF: "turn_off_cluster",
+var (
+	clusterStatusDeleting     clusterStatus = "DELETING"
+	clusterStatusDeleted      clusterStatus = "DELETED"
+	clusterStatusReconciling  clusterStatus = "RECONCILING"
+	clusterStatusProvisioning clusterStatus = "PROVISIONING"
+	clusterStatusRunning      clusterStatus = "RUNNING"
+	clusterStatusError        clusterStatus = "ERROR"
+	clusterStatusShutoff      clusterStatus = "SHUTOFF"
+)
+
+var stateStatusMap = map[clusterStatus]string{
+	clusterStatusRunning: "turn_on_cluster",
+	clusterStatusShutoff: "turn_off_cluster",
 }
 
 func resourceKubernetesCluster() *schema.Resource {
@@ -47,9 +50,9 @@ func resourceKubernetesCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(OperationCreate * time.Minute),
-			Update: schema.DefaultTimeout(OperationUpdate * time.Minute),
-			Delete: schema.DefaultTimeout(OperationDelete * time.Minute),
+			Create: schema.DefaultTimeout(operationCreate * time.Minute),
+			Update: schema.DefaultTimeout(operationUpdate * time.Minute),
+			Delete: schema.DefaultTimeout(operationDelete * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -64,6 +67,13 @@ func resourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					name := val.(string)
+					if err := valid.ClusterName(name); err != nil {
+						errs = append(errs, err)
+					}
+					return
+				},
 			},
 
 			"project_id": {
@@ -212,7 +222,7 @@ func resourceKubernetesCluster() *schema.Resource {
 
 func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
@@ -257,12 +267,12 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(s)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{status.PROVISIONING},
-		Target:       []string{status.RUNNING},
+		Pending:      []string{string(clusterStatusProvisioning)},
+		Target:       []string{string(clusterStatusRunning)},
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, s),
 		Timeout:      d.Timeout(schema.TimeoutCreate),
-		Delay:        CreateUpdateDelay * time.Minute,
-		PollInterval: CreateUpdatePollInterval * time.Second,
+		Delay:        createUpdateDelay * time.Minute,
+		PollInterval: createUpdatePollInterval * time.Second,
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {
@@ -276,14 +286,14 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
 	cluster, err := ClusterGet(containerInfraClient, d.Id()).Extract()
 	if err != nil {
-		return CheckDeleted(d, err, "error retrieving mcs_kubernetes_cluster")
+		return checkDeleted(d, err, "error retrieving mcs_kubernetes_cluster")
 	}
 
 	log.Printf("[DEBUG] retrieved mcs_kubernetes_cluster %s: %#v", d.Id(), cluster)
@@ -331,10 +341,10 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("subnet_id", cluster.Labels["fixed_subnet"])
 	}
 
-	if err := d.Set("created_at", GetTimestamp(&cluster.CreatedAt)); err != nil {
+	if err := d.Set("created_at", getTimestamp(&cluster.CreatedAt)); err != nil {
 		log.Printf("[DEBUG] Unable to set mcs_kubernetes_cluster created_at: %s", err)
 	}
-	if err := d.Set("updated_at", GetTimestamp(&cluster.UpdatedAt)); err != nil {
+	if err := d.Set("updated_at", getTimestamp(&cluster.UpdatedAt)); err != nil {
 		log.Printf("[DEBUG] Unable to set mcs_kubernetes_cluster updated_at: %s", err)
 	}
 
@@ -343,7 +353,7 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 
 func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
@@ -351,10 +361,10 @@ func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, d.Id()),
 		Timeout:      d.Timeout(schema.TimeoutUpdate),
-		Delay:        CreateUpdateDelay * time.Minute,
-		PollInterval: CreateUpdatePollInterval * time.Second,
-		Pending:      []string{status.RECONCILING},
-		Target:       []string{status.RUNNING},
+		Delay:        createUpdateDelay * time.Minute,
+		PollInterval: createUpdatePollInterval * time.Second,
+		Pending:      []string{string(clusterStatusReconciling)},
+		Target:       []string{string(clusterStatusRunning)},
 	}
 
 	cluster, err := ClusterGet(containerInfraClient, d.Id()).Extract()
@@ -363,7 +373,7 @@ func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	switch cluster.NewStatus {
-	case status.SHUTOFF:
+	case clusterStatusShutoff:
 		changed, err := checkForStatus(d, containerInfraClient, cluster)
 		if err != nil {
 			return err
@@ -380,7 +390,7 @@ func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		} else {
 			return fmt.Errorf("changing cluster attributes is prohibited when cluster has SHUTOFF status")
 		}
-	case status.RUNNING:
+	case clusterStatusRunning:
 		err := checkForClusterTemplateID(d, containerInfraClient, stateConf)
 		if err != nil {
 			return err
@@ -449,24 +459,24 @@ func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient
 	turnOffConf := &resource.StateChangeConf{
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, d.Id()),
 		Timeout:      d.Timeout(schema.TimeoutUpdate),
-		Delay:        CreateUpdateDelay * time.Minute,
-		PollInterval: CreateUpdatePollInterval * time.Second,
-		Pending:      []string{status.RUNNING},
-		Target:       []string{status.SHUTOFF},
+		Delay:        createUpdateDelay * time.Minute,
+		PollInterval: createUpdatePollInterval * time.Second,
+		Pending:      []string{string(clusterStatusRunning)},
+		Target:       []string{string(clusterStatusShutoff)},
 	}
 
 	turnOnConf := &resource.StateChangeConf{
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, d.Id()),
 		Timeout:      d.Timeout(schema.TimeoutUpdate),
-		Delay:        CreateUpdateDelay * time.Minute,
-		PollInterval: CreateUpdatePollInterval * time.Second,
-		Pending:      []string{status.SHUTOFF},
-		Target:       []string{status.RUNNING},
+		Delay:        createUpdateDelay * time.Minute,
+		PollInterval: createUpdatePollInterval * time.Second,
+		Pending:      []string{string(clusterStatusShutoff)},
+		Target:       []string{string(clusterStatusRunning)},
 	}
 
 	if d.HasChange("status") {
-		currentStatus := d.Get("status").(string)
-		if cluster.NewStatus != status.RUNNING && cluster.NewStatus != status.SHUTOFF {
+		currentStatus := d.Get("status").(clusterStatus)
+		if cluster.NewStatus != clusterStatusRunning && cluster.NewStatus != clusterStatusShutoff {
 			return false, fmt.Errorf("turning on/off is prohibited due to cluster's status %s", cluster.NewStatus)
 		}
 		switchStateOpts := ClusterActionsBaseOpts{
@@ -479,9 +489,9 @@ func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient
 
 		var switchStateConf *resource.StateChangeConf
 		switch currentStatus {
-		case status.RUNNING:
+		case clusterStatusRunning:
 			switchStateConf = turnOnConf
-		case status.SHUTOFF:
+		case clusterStatusShutoff:
 			switchStateConf = turnOffConf
 		default:
 			return false, fmt.Errorf("unknown status provided: %s", currentStatus)
@@ -500,22 +510,22 @@ func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient
 
 func resourceKubernetesClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
 	if err := ClusterDelete(containerInfraClient, d.Id()).ExtractErr(); err != nil {
-		return CheckDeleted(d, err, "error deleting mcs_kubernetes_cluster")
+		return checkDeleted(d, err, "error deleting mcs_kubernetes_cluster")
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{status.DELETING},
-		Target:       []string{status.DELETED},
+		Pending:      []string{string(clusterStatusDeleting)},
+		Target:       []string{string(clusterStatusDeleted)},
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, d.Id()),
 		Timeout:      d.Timeout(schema.TimeoutDelete),
-		Delay:        DeleteDelay * time.Second,
-		PollInterval: DeletePollInterval * time.Second,
+		Delay:        deleteDelay * time.Second,
+		PollInterval: deletePollInterval * time.Second,
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {

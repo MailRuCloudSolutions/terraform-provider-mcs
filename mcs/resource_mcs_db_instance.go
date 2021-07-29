@@ -12,28 +12,30 @@ import (
 
 // Dbaas timeouts
 const (
-	DBInstanceDelay         = 10 * time.Second
-	DBInstanceMinTimeout    = 3 * time.Second
-	DBDatabaseDelay         = 10 * time.Second
-	DBDatabaseMinTimeout    = 3 * time.Second
-	DBUserDelay             = 10 * time.Second
-	DBUserMinTimeout        = 3 * time.Second
-	DBCreateTimeout         = 30 * time.Minute
-	DBDeleteTimeout         = 30 * time.Minute
-	DBUserCreateTimeout     = 10 * time.Minute
-	DBUserDeleteTimeout     = 10 * time.Minute
-	DBDatabaseCreateTimeout = 10 * time.Minute
-	DBDatabaseDeleteTimeout = 10 * time.Minute
+	dbInstanceDelay         = 10 * time.Second
+	dbInstanceMinTimeout    = 3 * time.Second
+	dbDatabaseDelay         = 10 * time.Second
+	dbDatabaseMinTimeout    = 3 * time.Second
+	dbUserDelay             = 10 * time.Second
+	dbUserMinTimeout        = 3 * time.Second
+	dbCreateTimeout         = 30 * time.Minute
+	dbDeleteTimeout         = 30 * time.Minute
+	dbUserCreateTimeout     = 10 * time.Minute
+	dbUserDeleteTimeout     = 10 * time.Minute
+	dbDatabaseCreateTimeout = 10 * time.Minute
+	dbDatabaseDeleteTimeout = 10 * time.Minute
 )
 
-var dbstatus = Status{
-	DELETED:  "DELETED",
-	BUILD:    "BUILD",
-	ACTIVE:   "ACTIVE",
-	SHUTDOWN: "SHUTDOWN",
-	RESIZE:   "RESIZE",
-	DETACH:   "DETACH",
-}
+type dbInstanceStatus string
+
+var (
+	dbInstanceStatusDeleted  dbInstanceStatus = "DELETED"
+	dbInstanceStatusBuild    dbInstanceStatus = "BUILD"
+	dbInstanceStatusActive   dbInstanceStatus = "ACTIVE"
+	dbInstanceStatusShutdown dbInstanceStatus = "SHUTDOWN"
+	dbInstanceStatusResize   dbInstanceStatus = "RESIZE"
+	dbInstanceStatusDetach   dbInstanceStatus = "DETACH"
+)
 
 func resourceDatabaseInstance() *schema.Resource {
 	return &schema.Resource{
@@ -43,8 +45,8 @@ func resourceDatabaseInstance() *schema.Resource {
 		Update: resourceDatabaseInstanceUpdate,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DBCreateTimeout),
-			Delete: schema.DefaultTimeout(DBDeleteTimeout),
+			Create: schema.DefaultTimeout(dbCreateTimeout),
+			Delete: schema.DefaultTimeout(dbDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -281,7 +283,7 @@ func resourceDatabaseInstance() *schema.Resource {
 
 func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
@@ -372,12 +374,12 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Waiting for mcs_db_instance %s to become available", instance.ID)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbstatus.BUILD},
-		Target:     []string{dbstatus.ACTIVE},
+		Pending:    []string{string(dbInstanceStatusBuild)},
+		Target:     []string{string(dbInstanceStatusActive)},
 		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, instance.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	_, err = stateConf.WaitForState()
@@ -419,14 +421,14 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	instance, err := instanceGet(DatabaseV1Client, d.Id()).extract()
 	if err != nil {
-		return CheckDeleted(d, err, "Error retrieving mcs_db_instance")
+		return checkDeleted(d, err, "Error retrieving mcs_db_instance")
 	}
 
 	log.Printf("[DEBUG] Retrieved mcs_db_instance %s: %#v", d.Id(), instance)
@@ -434,7 +436,7 @@ func resourceDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", instance.Name)
 	d.Set("flavor_id", instance.Flavor)
 	d.Set("datastore", instance.DataStore)
-	d.Set("region", GetRegion(d, config))
+	d.Set("region", getRegion(d, config))
 	if instance.ReplicaOf != nil {
 		d.Set("replica_of", instance.ReplicaOf.ID)
 	}
@@ -452,18 +454,18 @@ func resourceDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbstatus.BUILD},
-		Target:     []string{dbstatus.ACTIVE},
+		Pending:    []string{string(dbInstanceStatusBuild)},
+		Target:     []string{string(dbInstanceStatusActive)},
 		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	if d.HasChange("configuration_id") {
@@ -506,8 +508,8 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 		log.Printf("Resizing volume from mcs_db_instance %s", d.Id())
 
-		stateConf.Pending = []string{dbstatus.RESIZE}
-		stateConf.Target = []string{dbstatus.ACTIVE}
+		stateConf.Pending = []string{string(dbInstanceStatusResize)}
+		stateConf.Target = []string{string(dbInstanceStatusActive)}
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
@@ -524,8 +526,8 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 		log.Printf("Resizing flavor from mcs_db_instance %s", d.Id())
 
-		stateConf.Pending = []string{dbstatus.RESIZE}
-		stateConf.Target = []string{dbstatus.ACTIVE}
+		stateConf.Pending = []string{string(dbInstanceStatusResize)}
+		stateConf.Target = []string{string(dbInstanceStatusActive)}
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
@@ -544,8 +546,8 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 			log.Printf("Detach replica from mcs_db_instance %s", d.Id())
 
-			stateConf.Pending = []string{dbstatus.DETACH}
-			stateConf.Target = []string{dbstatus.ACTIVE}
+			stateConf.Pending = []string{string(dbInstanceStatusDetach)}
+			stateConf.Target = []string{string(dbInstanceStatusActive)}
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
@@ -594,8 +596,8 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 
-		stateConf.Pending = []string{dbstatus.BUILD}
-		stateConf.Target = []string{dbstatus.ACTIVE}
+		stateConf.Pending = []string{string(dbInstanceStatusBuild)}
+		stateConf.Target = []string{string(dbInstanceStatusActive)}
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
@@ -624,8 +626,8 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 				return err
 			}
 
-			stateConf.Pending = []string{dbstatus.RESIZE}
-			stateConf.Target = []string{dbstatus.ACTIVE}
+			stateConf.Pending = []string{string(dbInstanceStatusResize)}
+			stateConf.Target = []string{string(dbInstanceStatusActive)}
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
@@ -668,23 +670,23 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceDatabaseInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	err = instanceDelete(DatabaseV1Client, d.Id()).ExtractErr()
 	if err != nil {
-		return CheckDeleted(d, err, "Error deleting mcs_db_instance")
+		return checkDeleted(d, err, "Error deleting mcs_db_instance")
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbstatus.ACTIVE, dbstatus.SHUTDOWN},
-		Target:     []string{dbstatus.DELETED},
+		Pending:    []string{string(dbInstanceStatusActive), string(dbInstanceStatusShutdown)},
+		Target:     []string{string(dbInstanceStatusDeleted)},
 		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	_, err = stateConf.WaitForState()

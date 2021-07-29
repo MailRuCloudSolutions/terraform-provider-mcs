@@ -16,8 +16,8 @@ func resourceDatabaseClusterWithShards() *schema.Resource {
 		Update: resourceDatabaseClusterWithShardsUpdate,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DBCreateTimeout),
-			Delete: schema.DefaultTimeout(DBDeleteTimeout),
+			Create: schema.DefaultTimeout(dbCreateTimeout),
+			Delete: schema.DefaultTimeout(dbDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -225,7 +225,7 @@ func resourceDatabaseClusterWithShards() *schema.Resource {
 
 func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
@@ -310,12 +310,12 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Waiting for mcs_db_instance %s to become available", cluster.ID)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbClusterStatus.BUILD},
-		Target:     []string{dbClusterStatus.ACTIVE},
+		Pending:    []string{string(dbClusterStatusBuild)},
+		Target:     []string{string(dbClusterStatusActive)},
 		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, cluster.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	_, err = stateConf.WaitForState()
@@ -341,14 +341,14 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 
 func resourceDatabaseClusterWithShardsRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	cluster, err := dbClusterGet(DatabaseV1Client, d.Id()).extract()
 	if err != nil {
-		return CheckDeleted(d, err, "Error retrieving mcs_db_cluster")
+		return checkDeleted(d, err, "Error retrieving mcs_db_cluster")
 	}
 
 	log.Printf("[DEBUG] Retrieved mcs_db_cluster %s: %#v", d.Id(), cluster)
@@ -361,18 +361,18 @@ func resourceDatabaseClusterWithShardsRead(d *schema.ResourceData, meta interfac
 
 func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbClusterStatus.BUILD},
-		Target:     []string{dbClusterStatus.ACTIVE},
+		Pending:    []string{string(dbClusterStatusBuild)},
+		Target:     []string{string(dbClusterStatusActive)},
 		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	if d.HasChange("configuration_id") {
@@ -425,8 +425,8 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 			return err
 		}
 
-		stateConf.Pending = []string{dbClusterStatus.UPDATING}
-		stateConf.Target = []string{dbClusterStatus.ACTIVE}
+		stateConf.Pending = []string{string(dbClusterStatusUpdating)}
+		stateConf.Target = []string{string(dbClusterStatusActive)}
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
@@ -455,23 +455,23 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 
 func resourceDatabaseClusterWithShardsDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
 	err = ClusterDelete(DatabaseV1Client, d.Id()).ExtractErr()
 	if err != nil {
-		return CheckDeleted(d, err, "Error deleting mcs_db_cluster")
+		return checkDeleted(d, err, "Error deleting mcs_db_cluster")
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{dbClusterStatus.ACTIVE, dbClusterStatus.DELETING},
-		Target:     []string{dbClusterStatus.DELETED},
+		Pending:    []string{string(dbClusterStatusActive), string(dbClusterStatusDeleting)},
+		Target:     []string{string(dbClusterStatusDeleted)},
 		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      DBInstanceDelay,
-		MinTimeout: DBInstanceMinTimeout,
+		Delay:      dbInstanceDelay,
+		MinTimeout: dbInstanceMinTimeout,
 	}
 
 	_, err = stateConf.WaitForState()

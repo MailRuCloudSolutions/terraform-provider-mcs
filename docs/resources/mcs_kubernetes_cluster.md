@@ -28,7 +28,7 @@ resource "mcs_kubernetes_cluster_v1" "mycluster" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the cluster. Changing this creates a new cluster.
+* `name` - (Required) The name of the cluster. Changing this creates a new cluster. Should match the pattern `^[a-zA-Z][a-zA-Z0-9_.-]*$`.
 
 * `cluster_template_id` - (Required) The UUID of the Kubernetes cluster
     template. It can be obtained using the cluster_template data source

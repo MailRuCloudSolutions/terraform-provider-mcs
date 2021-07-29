@@ -31,7 +31,7 @@ func getClusterWithShardsDatastores() []string {
 func extractDatabaseInstanceDatastore(v []interface{}) (dataStore, error) {
 	var D dataStore
 	in := v[0].(map[string]interface{})
-	err := MapStructureDecoder(&D, &in, config)
+	err := mapStructureDecoder(&D, &in, config)
 	if err != nil {
 		return D, err
 	}

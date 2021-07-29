@@ -43,7 +43,7 @@ func dataSourceDatabaseDatabase() *schema.Resource {
 
 func dataSourceDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating mcs database client: %s", err)
 	}

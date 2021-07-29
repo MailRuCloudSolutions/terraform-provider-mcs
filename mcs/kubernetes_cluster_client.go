@@ -52,8 +52,8 @@ func flattenNodes(nodes []*Node) nodesFlatSchema {
 			"name":          node.Name,
 			"uuid":          node.UUID,
 			"node_group_id": node.NodeGroupID,
-			"created_at":    GetTimestamp(node.CreatedAt),
-			"updated_at":    GetTimestamp(node.UpdatedAt),
+			"created_at":    getTimestamp(node.CreatedAt),
+			"updated_at":    getTimestamp(node.UpdatedAt),
 		})
 	}
 	return flatSchema
@@ -187,8 +187,8 @@ type Cluster struct {
 	NodeCount            int                `json:"node_count"`
 	ProjectID            string             `json:"project_id"`
 	StackID              string             `json:"stack_id"`
-	Status               string             `json:"status"`
-	NewStatus            string             `json:"new_status"`
+	Status               clusterStatus      `json:"status"`
+	NewStatus            clusterStatus      `json:"new_status"`
 	StatusReason         string             `json:"status_reason"`
 	UUID                 string             `json:"uuid"`
 	UpdatedAt            time.Time          `json:"updated_at"`
