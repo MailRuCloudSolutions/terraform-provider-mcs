@@ -29,7 +29,7 @@ type ConfigImpl struct {
 	auth.Config
 }
 
-// GetRegion is implementation of GetRegion method
+// getRegion is implementation of getRegion method
 func (c *ConfigImpl) GetRegion() string {
 	return c.Region
 }

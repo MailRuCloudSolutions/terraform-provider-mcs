@@ -16,8 +16,8 @@ func resourceDatabaseUser() *schema.Resource {
 		Update: resourceDatabaseUserUpdate,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DBUserCreateTimeout),
-			Delete: schema.DefaultTimeout(DBUserDeleteTimeout),
+			Create: schema.DefaultTimeout(dbUserCreateTimeout),
+			Delete: schema.DefaultTimeout(dbUserDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -61,7 +61,7 @@ func resourceDatabaseUser() *schema.Resource {
 
 func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
@@ -104,8 +104,8 @@ func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error 
 		Target:     []string{"ACTIVE"},
 		Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, instanceID, userName),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      DBUserDelay,
-		MinTimeout: DBUserMinTimeout,
+		Delay:      dbUserDelay,
+		MinTimeout: dbUserMinTimeout,
 	}
 
 	_, err = stateConf.WaitForState()
@@ -121,7 +121,7 @@ func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating mcs database client: %s", err)
 	}
@@ -156,7 +156,7 @@ func resourceDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
@@ -175,8 +175,8 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 			Target:     []string{"ACTIVE"},
 			Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, instanceID, userName),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      DBUserDelay,
-			MinTimeout: DBUserMinTimeout,
+			Delay:      dbUserDelay,
+			MinTimeout: dbUserMinTimeout,
 		}
 
 		oldDatabases, newDatabases := d.GetChange("databases")
@@ -242,8 +242,8 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 			Target:     []string{"ACTIVE"},
 			Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, instanceID, userUpdateParams.User.Name),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      DBUserDelay,
-			MinTimeout: DBUserMinTimeout,
+			Delay:      dbUserDelay,
+			MinTimeout: dbUserMinTimeout,
 		}
 		err = userUpdate(DatabaseV1Client, instanceID, userName, &userUpdateParams).ExtractErr()
 		if err != nil {
@@ -261,7 +261,7 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceDatabaseUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating mcs database client: %s", err)
 	}

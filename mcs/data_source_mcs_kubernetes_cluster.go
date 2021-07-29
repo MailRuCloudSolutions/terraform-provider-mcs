@@ -155,7 +155,7 @@ func dataSourceKubernetesCluster() *schema.Resource {
 
 func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
@@ -212,7 +212,7 @@ func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] unable to set updated_at for mcs_kubernetes_cluster %s: %s", c.UUID, err)
 	}
 
-	d.Set("region", GetRegion(d, config))
+	d.Set("region", getRegion(d, config))
 
 	return nil
 }

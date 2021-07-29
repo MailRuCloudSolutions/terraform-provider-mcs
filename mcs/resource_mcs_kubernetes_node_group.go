@@ -21,9 +21,9 @@ func resourceKubernetesNodeGroup() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(OperationCreate * time.Minute),
-			Update: schema.DefaultTimeout(OperationUpdate * time.Minute),
-			Delete: schema.DefaultTimeout(OperationDelete * time.Minute),
+			Create: schema.DefaultTimeout(operationCreate * time.Minute),
+			Update: schema.DefaultTimeout(operationUpdate * time.Minute),
+			Delete: schema.DefaultTimeout(operationDelete * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -139,7 +139,7 @@ func resourceKubernetesNodeGroup() *schema.Resource {
 
 func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
@@ -193,12 +193,12 @@ func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{})
 	d.SetId(s.UUID)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{status.RECONCILING},
-		Target:       []string{status.RUNNING},
+		Pending:      []string{string(clusterStatusReconciling)},
+		Target:       []string{string(clusterStatusRunning)},
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, s.ClusterID),
 		Timeout:      d.Timeout(schema.TimeoutCreate),
-		Delay:        CreateUpdateDelay * time.Minute,
-		PollInterval: CreateUpdatePollInterval * time.Second,
+		Delay:        createUpdateDelay * time.Minute,
+		PollInterval: createUpdatePollInterval * time.Second,
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {
@@ -212,14 +212,14 @@ func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{})
 
 func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
 	s, err := NodeGroupGet(containerInfraClient, d.Id()).Extract()
 	if err != nil {
-		return CheckDeleted(d, err, "error retrieving mcs_kubernetes_node_group")
+		return checkDeleted(d, err, "error retrieving mcs_kubernetes_node_group")
 	}
 
 	log.Printf("[DEBUG] Retrieved mcs_kubernetes_node_group %s: %#v", d.Id(), s)
@@ -254,10 +254,10 @@ func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("autoscaling_enabled", s.Autoscaling)
 	d.Set("cluster_id", s.ClusterID)
 
-	if err := d.Set("created_at", GetTimestamp(&s.CreatedAt)); err != nil {
+	if err := d.Set("created_at", getTimestamp(&s.CreatedAt)); err != nil {
 		log.Printf("[DEBUG] Unable to set mcs_kubernetes_node_group created_at: %s", err)
 	}
-	if err := d.Set("updated_at", GetTimestamp(&s.UpdatedAt)); err != nil {
+	if err := d.Set("updated_at", getTimestamp(&s.UpdatedAt)); err != nil {
 		log.Printf("[DEBUG] Unable to set mcs_kubernetes_node_group updated_at: %s", err)
 	}
 
@@ -266,7 +266,7 @@ func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) e
 
 func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
@@ -274,10 +274,10 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, d.Get("cluster_id").(string)),
 		Timeout:      d.Timeout(schema.TimeoutUpdate),
-		Delay:        CreateUpdateDelay * time.Minute,
-		PollInterval: CreateUpdatePollInterval * time.Second,
-		Pending:      []string{status.RECONCILING},
-		Target:       []string{status.RUNNING},
+		Delay:        createUpdateDelay * time.Minute,
+		PollInterval: createUpdatePollInterval * time.Second,
+		Pending:      []string{string(clusterStatusReconciling)},
+		Target:       []string{string(clusterStatusRunning)},
 	}
 
 	if d.HasChange("node_count") {
@@ -374,22 +374,22 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 
 func resourceKubernetesNodeGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	containerInfraClient, err := config.ContainerInfraV1Client(GetRegion(d, config))
+	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
 	if err := NodeGroupDelete(containerInfraClient, d.Id()).ExtractErr(); err != nil {
-		return CheckDeleted(d, err, "error deleting mcs_kubernetes_node_group")
+		return checkDeleted(d, err, "error deleting mcs_kubernetes_node_group")
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{status.RECONCILING},
-		Target:       []string{status.RUNNING},
+		Pending:      []string{string(clusterStatusReconciling)},
+		Target:       []string{string(clusterStatusRunning)},
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, d.Get("cluster_id").(string)),
 		Timeout:      d.Timeout(schema.TimeoutDelete),
-		Delay:        NodeGroupDeleteDelay * time.Second,
-		PollInterval: DeletePollInterval * time.Second,
+		Delay:        nodeGroupDeleteDelay * time.Second,
+		PollInterval: deletePollInterval * time.Second,
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {

@@ -64,7 +64,7 @@ func TestAccKubernetesCluster_basic(t *testing.T) {
 	// Mock config methods
 	DummyConfigFixture.On("LoadAndValidate").Return(nil)
 	DummyConfigFixture.On("ContainerInfraV1Client", "").Return(clientFixture, nil)
-	DummyConfigFixture.On("GetRegion").Return("")
+	DummyConfigFixture.On("getRegion").Return("")
 
 	// Create cluster fixtures
 	clusterName := "testcluster" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)
@@ -86,11 +86,11 @@ func TestAccKubernetesCluster_basic(t *testing.T) {
 	// Create cluster
 	clientFixture.On("Post", testAccURL+"/clusters", jsonClusterFixture, mock.Anything, getRequestOpts(202)).Return(makeClusterCreateResponseFixture(clusterUUID), nil)
 	// Check it's status
-	clientFixture.On("Get", testAccURL+"/clusters/"+clusterUUID, mock.Anything, getRequestOpts(200)).Return(makeClusterGetResponseFixture(jsonClusterFixture, clusterUUID, status.RUNNING), nil).Times(6)
+	clientFixture.On("Get", testAccURL+"/clusters/"+clusterUUID, mock.Anything, getRequestOpts(200)).Return(makeClusterGetResponseFixture(jsonClusterFixture, clusterUUID, clusterStatusRunning), nil).Times(6)
 	// Update cluster
-	clientFixture.On("Post", testAccURL+"/clusters/"+clusterUUID+"/actions", scaleRequestFixture, mock.Anything, getRequestOpts(200, 202)).Return(makeClusterGetResponseFixture(jsonClusterScaleFixture, clusterUUID, status.RUNNING), nil)
+	clientFixture.On("Post", testAccURL+"/clusters/"+clusterUUID+"/actions", scaleRequestFixture, mock.Anything, getRequestOpts(200, 202)).Return(makeClusterGetResponseFixture(jsonClusterScaleFixture, clusterUUID, clusterStatusRunning), nil)
 	// Check it's status
-	clientFixture.On("Get", testAccURL+"/clusters/"+clusterUUID, mock.Anything, getRequestOpts(200)).Return(makeClusterGetResponseFixture(jsonClusterScaleFixture, clusterUUID, status.RUNNING), nil).Times(5)
+	clientFixture.On("Get", testAccURL+"/clusters/"+clusterUUID, mock.Anything, getRequestOpts(200)).Return(makeClusterGetResponseFixture(jsonClusterScaleFixture, clusterUUID, clusterStatusRunning), nil).Times(5)
 	// Delete cluster
 	clientFixture.On("Delete", testAccURL+"/clusters/"+clusterUUID, getRequestOpts()).Return(makeClusterDeleteResponseFixture(), nil)
 	// Check deleted

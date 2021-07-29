@@ -15,8 +15,8 @@ func resourceDatabaseDatabase() *schema.Resource {
 		Delete: resourceDatabaseDatabaseDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(DBDatabaseCreateTimeout),
-			Delete: schema.DefaultTimeout(DBDatabaseDeleteTimeout),
+			Create: schema.DefaultTimeout(dbDatabaseCreateTimeout),
+			Delete: schema.DefaultTimeout(dbDatabaseDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -49,7 +49,7 @@ func resourceDatabaseDatabase() *schema.Resource {
 
 func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
@@ -87,8 +87,8 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 		Target:     []string{"ACTIVE"},
 		Refresh:    databaseDatabaseStateRefreshFunc(DatabaseV1Client, instanceID, databaseName),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      DBDatabaseDelay,
-		MinTimeout: DBDatabaseMinTimeout,
+		Delay:      dbDatabaseDelay,
+		MinTimeout: dbDatabaseMinTimeout,
 	}
 
 	_, err = stateConf.WaitForState()
@@ -104,7 +104,7 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating mcs database client: %s", err)
 	}
@@ -134,7 +134,7 @@ func resourceDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceDatabaseDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(Config)
-	DatabaseV1Client, err := config.DatabaseV1Client(GetRegion(d, config))
+	DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating mcs database client: %s", err)
 	}
