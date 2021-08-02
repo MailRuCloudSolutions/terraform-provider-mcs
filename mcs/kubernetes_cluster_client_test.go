@@ -118,7 +118,7 @@ func TestK8sConfigGet(t *testing.T) {
 	k8sconfigFixture(t, "123")
 
 	serviceClient := fake.ServiceClient()
-	config, err := K8sConfigGet(serviceClient, "123")
+	config, err := k8sConfigGet(serviceClient, "123")
 	assert.NoError(t, err)
 	assert.EqualValues(t, "example", config)
 }
@@ -130,6 +130,6 @@ func TestK8sConfigGetError(t *testing.T) {
 	k8sconfigFixture(t, "notfound")
 
 	serviceClient := fake.ServiceClient()
-	_, err := K8sConfigGet(serviceClient, "notfound")
+	_, err := k8sConfigGet(serviceClient, "notfound")
 	assert.Error(t, err)
 }

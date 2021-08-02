@@ -102,7 +102,7 @@ func dataSourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	nodeGroup, err := NodeGroupGet(containerInfraClient, d.Get("uuid").(string)).Extract()
+	nodeGroup, err := nodeGroupGet(containerInfraClient, d.Get("uuid").(string)).Extract()
 	if err != nil {
 		return checkDeleted(d, err, "error retrieving mcs_kubernetes_node_group")
 	}

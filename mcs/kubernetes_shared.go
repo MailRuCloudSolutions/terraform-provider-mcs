@@ -85,7 +85,7 @@ func flattenNodeGroupTaintsList(v []nodeGroupTaint) []map[string]interface{} {
 
 func kubernetesStateRefreshFunc(client ContainerClient, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		c, err := ClusterGet(client, clusterID).Extract()
+		c, err := clusterGet(client, clusterID).Extract()
 		if err != nil {
 			if _, ok := err.(gophercloud.ErrDefault404); ok {
 				return c, string(clusterStatusDeleted), nil

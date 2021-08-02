@@ -173,7 +173,7 @@ func dataSourceKubernetesClusterTemplateRead(d *schema.ResourceData, meta interf
 	}
 	templateIdentifier := d.Get(templateIdentifierKey).(string)
 	var ct *clusterTemplate
-	ct, err = ClusterTemplateGet(containerInfraClient, templateIdentifier).Extract()
+	ct, err = clusterTemplateGet(containerInfraClient, templateIdentifier).Extract()
 	if err != nil {
 		return fmt.Errorf("error getting mcs_kubernetes_clustertemplate %s: %s", templateIdentifier, err)
 	}

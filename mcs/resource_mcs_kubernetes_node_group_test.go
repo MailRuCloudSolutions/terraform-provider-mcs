@@ -193,7 +193,7 @@ func getNgAndResource(n string, s *terraform.State) (*terraform.ResourceState, *
 		return nil, nil, fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	found, err := NodeGroupGet(containerInfraClient, rs.Primary.ID).Extract()
+	found, err := nodeGroupGet(containerInfraClient, rs.Primary.ID).Extract()
 	if err != nil {
 		return nil, nil, err
 	}
