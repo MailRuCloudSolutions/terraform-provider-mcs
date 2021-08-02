@@ -16,39 +16,41 @@ const (
 	defaultUsersDomainName  = "users"
 )
 
-// Config is interface to work with gophercloud.Config calls
-type Config interface {
+// configer is interface to work with gophercloud.Config calls
+type configer interface {
 	LoadAndValidate() error
 	ContainerInfraV1Client(region string) (ContainerClient, error)
 	DatabaseV1Client(region string) (ContainerClient, error)
 	GetRegion() string
 }
 
-// ConfigImpl uses openstackbase.ConfigImpl as the base/foundation of this provider's
-type ConfigImpl struct {
+// config uses openstackbase.Config as the base/foundation of this provider's
+type config struct {
 	auth.Config
 }
 
-// getRegion is implementation of getRegion method
-func (c *ConfigImpl) GetRegion() string {
+var _ configer = &config{}
+
+// GetRegion is implementation of getRegion method
+func (c *config) GetRegion() string {
 	return c.Region
 }
 
 // ContainerInfraV1Client is implementation of ContainerInfraV1Client method
-func (c *ConfigImpl) ContainerInfraV1Client(region string) (ContainerClient, error) {
+func (c *config) ContainerInfraV1Client(region string) (ContainerClient, error) {
 	return c.Config.ContainerInfraV1Client(region)
 }
 
 // DatabaseV1Client is implementation of DatabaseV1Client method
-func (c *ConfigImpl) DatabaseV1Client(region string) (ContainerClient, error) {
+func (c *config) DatabaseV1Client(region string) (ContainerClient, error) {
 	return c.Config.DatabaseV1Client(region)
 }
 
-func newConfig(d *schema.ResourceData, terraformVersion string) (Config, error) {
+func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error) {
 	if os.Getenv("TF_ACC") != "" && os.Getenv("TF_ACC_DBAAS") == "" {
-		return DummyConfigFixture, nil
+		return &dummyConfig{}, nil
 	}
-	config := &ConfigImpl{
+	config := &config{
 		auth.Config{
 			CACertFile:       d.Get("cacert_file").(string),
 			ClientCertFile:   d.Get("cert").(string),
@@ -73,18 +75,17 @@ func newConfig(d *schema.ResourceData, terraformVersion string) (Config, error) 
 	} else {
 		config.IdentityEndpoint = defaultIdentityEndpoint
 	}
-	err := initWithUsername(d, config)
-	if err != nil {
+	if err := initWithUsername(d, config); err != nil {
 		return nil, err
 	}
+
 	if err := config.LoadAndValidate(); err != nil {
 		return nil, err
 	}
-
 	return config, nil
 }
 
-func initWithUsername(d *schema.ResourceData, config *ConfigImpl) error {
+func initWithUsername(d *schema.ResourceData, config *config) error {
 	config.UserDomainName = defaultUsersDomainName
 
 	v, ok := d.GetOk("username")

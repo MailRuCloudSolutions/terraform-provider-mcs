@@ -216,12 +216,24 @@ func resourceKubernetesCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					zone := val.(string)
+					if err := valid.AvailabilityZone(zone); err != nil {
+						errs = append(errs, err)
+					}
+					return
+				},
+			},
 		},
 	}
 }
 
 func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
@@ -234,7 +246,7 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	createOpts := ClusterCreateOpts{
+	createOpts := clusterCreateOpts{
 		ClusterTemplateID:    d.Get("cluster_template_id").(string),
 		MasterFlavorID:       d.Get("master_flavor").(string),
 		Keypair:              d.Get("keypair").(string),
@@ -248,6 +260,7 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 		APILBFIP:             d.Get("api_lb_fip").(string),
 		IngressFloatingIP:    d.Get("ingress_floating_ip").(string),
 		RegistryAuthPassword: d.Get("registry_auth_password").(string),
+		AvailabilityZone:     d.Get("availability_zone").(string),
 	}
 
 	if masterCount, ok := d.GetOk("master_count"); ok {
@@ -263,7 +276,7 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error creating mcs_kubernetes_cluster: %s", err)
 	}
 
-	// Store the Cluster ID.
+	// Store the cluster ID.
 	d.SetId(s)
 
 	stateConf := &resource.StateChangeConf{
@@ -285,7 +298,7 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
@@ -328,6 +341,7 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("api_lb_fip", cluster.APILBFIP)
 	d.Set("ingress_floating_ip", cluster.IngressFloatingIP)
 	d.Set("registry_auth_password", cluster.RegistryAuthPassword)
+	d.Set("availability_zone", cluster.AvailabilityZone)
 
 	// Allow to read old api clusters
 	if cluster.NetworkID != "" {
@@ -352,7 +366,7 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
@@ -412,7 +426,7 @@ func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) e
 
 func checkForClusterTemplateID(d *schema.ResourceData, containerInfraClient ContainerClient, stateConf *resource.StateChangeConf) error {
 	if d.HasChange("cluster_template_id") {
-		upgradeOpts := ClusterUpgradeOpts{
+		upgradeOpts := clusterUpgradeOpts{
 			ClusterTemplateID: d.Get("cluster_template_id").(string),
 			RollingEnabled:    true,
 		}
@@ -433,7 +447,7 @@ func checkForClusterTemplateID(d *schema.ResourceData, containerInfraClient Cont
 
 func checkForMasterFlavor(d *schema.ResourceData, containerInfraClient ContainerClient, stateConf *resource.StateChangeConf) error {
 	if d.HasChange("master_flavor") {
-		upgradeOpts := ClusterActionsBaseOpts{
+		upgradeOpts := clusterActionsBaseOpts{
 			Action: "resize_masters",
 			Payload: map[string]string{
 				"flavor": d.Get("master_flavor").(string),
@@ -454,7 +468,7 @@ func checkForMasterFlavor(d *schema.ResourceData, containerInfraClient Container
 	return nil
 }
 
-func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient, cluster *Cluster) (bool, error) {
+func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient, cluster *cluster) (bool, error) {
 
 	turnOffConf := &resource.StateChangeConf{
 		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, d.Id()),
@@ -479,7 +493,7 @@ func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient
 		if cluster.NewStatus != clusterStatusRunning && cluster.NewStatus != clusterStatusShutoff {
 			return false, fmt.Errorf("turning on/off is prohibited due to cluster's status %s", cluster.NewStatus)
 		}
-		switchStateOpts := ClusterActionsBaseOpts{
+		switchStateOpts := clusterActionsBaseOpts{
 			Action: stateStatusMap[currentStatus],
 		}
 		_, err := ClusterSwitchState(containerInfraClient, d.Id(), &switchStateOpts).Extract()
@@ -509,7 +523,7 @@ func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient
 }
 
 func resourceKubernetesClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)

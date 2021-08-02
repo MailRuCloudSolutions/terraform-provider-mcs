@@ -260,7 +260,7 @@ func (r commonClusterResult) extract() (*dbClusterResp, error) {
 var dbClustersAPIPath = "clusters"
 
 // dbClusterCreate performs request to create database cluster
-func dbClusterCreate(client databaseClient, opts OptsBuilder) (r createClusterResult) {
+func dbClusterCreate(client databaseClient, opts optsBuilder) (r createClusterResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -286,7 +286,7 @@ func dbClusterGet(client databaseClient, id string) (r getClusterResult) {
 }
 
 // dbClusterAction performs request to perform an action on the database cluster
-func dbClusterAction(client databaseClient, id string, opts OptsBuilder) (r clusterActionResult) {
+func dbClusterAction(client databaseClient, id string, opts optsBuilder) (r clusterActionResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -301,7 +301,7 @@ func dbClusterAction(client databaseClient, id string, opts OptsBuilder) (r clus
 }
 
 // dbClusterUpdateAutoExpand performs request to update database cluster autoresize parameters
-func dbClusterUpdateAutoExpand(client databaseClient, id string, opts OptsBuilder) (r clusterActionResult) {
+func dbClusterUpdateAutoExpand(client databaseClient, id string, opts optsBuilder) (r clusterActionResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err

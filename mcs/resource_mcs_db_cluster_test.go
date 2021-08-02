@@ -42,17 +42,17 @@ func testAccCheckDatabaseClusterExists(n string, cluster *dbClusterResp) resourc
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("no id is set")
 		}
 
-		config := testAccProvider.Meta().(Config)
-		DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+		config := testAccProvider.Meta().(configer)
+		DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 		if err != nil {
-			return fmt.Errorf("Error creating OpenStack compute client: %s", err)
+			return fmt.Errorf("error creating openstack compute client: %s", err)
 		}
 
 		found, err := dbClusterGet(DatabaseClient, rs.Primary.ID).extract()
@@ -61,7 +61,7 @@ func testAccCheckDatabaseClusterExists(n string, cluster *dbClusterResp) resourc
 		}
 
 		if found.ID != rs.Primary.ID {
-			return fmt.Errorf("Cluster not found")
+			return fmt.Errorf("cluster not found")
 		}
 
 		*cluster = *found
@@ -71,11 +71,11 @@ func testAccCheckDatabaseClusterExists(n string, cluster *dbClusterResp) resourc
 }
 
 func testAccCheckDatabaseClusterDestroy(s *terraform.State) error {
-	config := testAccProvider.Meta().(Config)
+	config := testAccProvider.Meta().(configer)
 
-	DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+	DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 	if err != nil {
-		return fmt.Errorf("Error creating OpenStack database client: %s", err)
+		return fmt.Errorf("error creating openstack database client: %s", err)
 	}
 
 	for _, rs := range s.RootModule().Resources {
@@ -84,7 +84,7 @@ func testAccCheckDatabaseClusterDestroy(s *terraform.State) error {
 		}
 		_, err := dbClusterGet(DatabaseClient, rs.Primary.ID).extract()
 		if err == nil {
-			return fmt.Errorf("Cluster still exists")
+			return fmt.Errorf("cluster still exists")
 		}
 	}
 
@@ -109,7 +109,7 @@ var testAccDatabaseClusterBasic = fmt.Sprintf(`
 	
    availability_zone = "MS1"
  }
-`, OSFlavorID, OSDBDatastoreVersion, OSDBDatastoreType, OSNetworkID)
+`, osFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)
 
 var testAccDatabaseClusterUpdate = fmt.Sprintf(`
 resource "mcs_db_cluster" "basic" {
@@ -129,4 +129,4 @@ resource "mcs_db_cluster" "basic" {
 	 
 	availability_zone = "MS1"
   }
-`, OSNewFlavorID, OSDBDatastoreVersion, OSDBDatastoreType, OSNetworkID)
+`, osNewFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)

@@ -484,7 +484,7 @@ func (r isRootUserEnabledResult) extract() (bool, error) {
 var instancesAPIPath = "instances"
 
 // instanceCreate performs request to create database instance
-func instanceCreate(client databaseClient, opts OptsBuilder) (r createInstanceResult) {
+func instanceCreate(client databaseClient, opts optsBuilder) (r createInstanceResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -510,7 +510,7 @@ func instanceGet(client databaseClient, id string) (r getInstanceResult) {
 }
 
 // instanceDetachReplica performs request to detach replica of database instance
-func instanceDetachReplica(client databaseClient, id string, opts OptsBuilder) (r instances.ActionResult) {
+func instanceDetachReplica(client databaseClient, id string, opts optsBuilder) (r instances.ActionResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -526,7 +526,7 @@ func instanceDetachReplica(client databaseClient, id string, opts OptsBuilder) (
 }
 
 // instanceUpdateAutoExpand performs request to update database instance autoresize parameters
-func instanceUpdateAutoExpand(client databaseClient, id string, opts OptsBuilder) (r instances.ActionResult) {
+func instanceUpdateAutoExpand(client databaseClient, id string, opts optsBuilder) (r instances.ActionResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -561,7 +561,7 @@ func instanceDetachConfigurationGroup(client databaseClient, id string) (r confi
 }
 
 // instanceAttachConfigurationGroup performs request to attach configuration group to database instance
-func instanceAttachConfigurationGroup(client databaseClient, id string, opts OptsBuilder) (r configurationResult) {
+func instanceAttachConfigurationGroup(client databaseClient, id string, opts optsBuilder) (r configurationResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -577,7 +577,7 @@ func instanceAttachConfigurationGroup(client databaseClient, id string, opts Opt
 }
 
 // instanceAction performs request to perform an action on the database instance
-func instanceAction(client databaseClient, id string, opts OptsBuilder) (r actionResult) {
+func instanceAction(client databaseClient, id string, opts optsBuilder) (r actionResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -592,7 +592,7 @@ func instanceAction(client databaseClient, id string, opts OptsBuilder) (r actio
 }
 
 // instanceRootUserEnable performs request to enable root user on database instance
-func instanceRootUserEnable(client databaseClient, id string, opts OptsBuilder) (r createRootUserResult) {
+func instanceRootUserEnable(client databaseClient, id string, opts optsBuilder) (r createRootUserResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -671,7 +671,7 @@ func userDelete(client databaseClient, id string, userName string) (r userDelete
 }
 
 // userUpdate performs request to update database user
-func userUpdate(client databaseClient, id string, name string, opts OptsBuilder) (r updateUserResult) {
+func userUpdate(client databaseClient, id string, name string, opts optsBuilder) (r updateUserResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -687,7 +687,7 @@ func userUpdate(client databaseClient, id string, name string, opts OptsBuilder)
 }
 
 // userUpdateDatabases performs request to update database user databases
-func userUpdateDatabases(client databaseClient, id string, name string, opts OptsBuilder) (r updateUserDatabasesResult) {
+func userUpdateDatabases(client databaseClient, id string, name string, opts optsBuilder) (r updateUserDatabasesResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err

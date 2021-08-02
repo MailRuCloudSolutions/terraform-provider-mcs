@@ -2,11 +2,15 @@ package valid
 
 import (
 	"errors"
+	"strings"
 
 	"gitlab.corp.mail.ru/infra/paas/terraform-provider-mcs/mcs/internal/util/textutil"
 )
 
-var ErrInvalidClusterName = errors.New("invalid cluster name")
+var (
+	ErrInvalidClusterName     = errors.New("invalid cluster name")
+	ErrInvalidAvailablityZone = errors.New("invalid availability zone")
+)
 
 // ClusterName validates name of cluster.
 // Value should match the pattern ^[a-zA-Z][a-zA-Z0-9_.-]*$
@@ -25,5 +29,18 @@ func ClusterName(name string) error {
 		}
 	}
 
+	return nil
+}
+
+var availabilityAvailabilityZones = map[string]struct{}{
+	"dp1": {},
+	"ms1": {},
+}
+
+// AvailabilityZone validates provided availability zone.
+func AvailabilityZone(name string) error {
+	if _, ok := availabilityAvailabilityZones[strings.ToLower(name)]; !ok {
+		return ErrInvalidAvailablityZone
+	}
 	return nil
 }

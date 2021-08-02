@@ -30,9 +30,9 @@ func TestAccDatabaseClusterWithShards_basic(t *testing.T) {
 }
 
 func testAccCheckDatabaseClusterWithShardsDestroy(s *terraform.State) error {
-	config := testAccProvider.Meta().(Config)
+	config := testAccProvider.Meta().(configer)
 
-	DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+	DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 	if err != nil {
 		return fmt.Errorf("Error creating OpenStack database client: %s", err)
 	}
@@ -43,7 +43,7 @@ func testAccCheckDatabaseClusterWithShardsDestroy(s *terraform.State) error {
 		}
 		_, err := dbClusterGet(DatabaseClient, rs.Primary.ID).extract()
 		if err == nil {
-			return fmt.Errorf("Cluster still exists")
+			return fmt.Errorf("cluster still exists")
 		}
 	}
 
@@ -82,4 +82,4 @@ var testAccDatabaseClusterWithShardsBasic = fmt.Sprintf(`
 	  availability_zone = "MS1"
 	}
  }
-`, OSDBDatastoreVersion, OSDBDatastoreType, OSFlavorID, OSNetworkID, OSFlavorID, OSNetworkID)
+`, osDBDatastoreVersion, osDBDatastoreType, osFlavorID, osNetworkID, osFlavorID, osNetworkID)

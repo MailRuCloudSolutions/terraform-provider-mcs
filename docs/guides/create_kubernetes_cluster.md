@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "MCS: create_kubernetes_cluster"
-sidebar_current: "docs-create-kubernetes-cluster"
 description: |-
   Creating Kubernetes Cluster with Terraform.
 ---

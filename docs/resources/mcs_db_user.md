@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: db_user"
-sidebar_current: "docs-db-user"
 subcategory: ""
 description: |-
   Manages a db user.

@@ -10,7 +10,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var config = &mapstructure.DecoderConfig{
+var decoderConfig = &mapstructure.DecoderConfig{
 	TagName: "json",
 }
 
@@ -18,11 +18,7 @@ var config = &mapstructure.DecoderConfig{
 func mapStructureDecoder(strct interface{}, v *map[string]interface{}, config *mapstructure.DecoderConfig) error {
 	config.Result = strct
 	decoder, _ := mapstructure.NewDecoder(config)
-	err := decoder.Decode(*v)
-	if err != nil {
-		return err
-	}
-	return nil
+	return decoder.Decode(*v)
 }
 
 // getTimestamp ...
@@ -47,7 +43,7 @@ func checkDeleted(d *schema.ResourceData, err error, msg string) error {
 // getRegion returns the region that was specified in the resource. If a
 // region was not set, the provider-level region is checked. The provider-level
 // region can either be set by the region argument or by OS_REGION_NAME.
-func getRegion(d *schema.ResourceData, config Config) string {
+func getRegion(d *schema.ResourceData, config configer) string {
 	if v, ok := d.GetOk("region"); ok {
 		return v.(string)
 	}

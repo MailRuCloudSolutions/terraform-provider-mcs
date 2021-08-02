@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: db_instance"
-sidebar_current: "docs-db-instance"
 subcategory: ""
 description: |-
   Manages a db instance.

@@ -96,7 +96,7 @@ func dataSourceKubernetesNodeGroup() *schema.Resource {
 }
 
 func dataSourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(Config)
+	config := meta.(configer)
 	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)

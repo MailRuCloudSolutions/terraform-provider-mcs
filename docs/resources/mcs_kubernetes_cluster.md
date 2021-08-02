@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: kubernetes_cluster"
-sidebar_current: "docs-kubernetes-cluster"
 description: |-
   Manages a kubernetes cluster.
 ---
@@ -21,6 +20,7 @@ resource "mcs_kubernetes_cluster_v1" "mycluster" {
       master_count        = 1
       network_id          = example_network_id
       subnet_id           = example_subnet_id
+      availability_zone   = "MS1"
 }
 ```
 
@@ -63,6 +63,8 @@ The following arguments are supported:
 
 * `registry_auth_password` - (Optional) Docker registry access password.
 
+* `availability_zone` - (Required) Zones available for cluster. `DP1` and `MS1` zones are available. **New since v0.3.3**
+
 ## Attributes
 
 This resource exports the following attributes:
@@ -92,6 +94,7 @@ This resource exports the following attributes:
 * `api_lb_fip` - API LoadBalancer fip.
 * `ingress_floating_ip` - Floating IP created for ingress service.
 * `registry_auth_password` - Docker registry access password.
+* `availability_zone` - Availability zone of the cluster. **New since v0.3.3**
 
 ## Import
 

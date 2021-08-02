@@ -1,7 +1,6 @@
 ---
 layout: "mcs"
 page_title: "mcs: kubernetes_cluster"
-sidebar_current: "docs-kubernetes-cluster"
 description: |-
   Get information on cluster.
 ---

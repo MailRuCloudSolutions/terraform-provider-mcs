@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func nodeGroupFixture(name, flavorID string, count, max, min int, autoscaling bool) *NodeGroupCreateOpts {
-	return &NodeGroupCreateOpts{
+func nodeGroupFixture(name, flavorID string, count, max, min int, autoscaling bool) *nodeGroupCreateOpts {
+	return &nodeGroupCreateOpts{
 		Name:        name,
 		FlavorID:    flavorID,
 		NodeCount:   count,
@@ -35,20 +35,20 @@ const nodeGroupResourceFixture = `
 		}`
 
 func TestAccKubernetesNodeGroup_basic(t *testing.T) {
-	var cluster Cluster
-	var nodeGroup NodeGroup
+	var cluster cluster
+	var nodeGroup nodeGroup
 
 	clusterName := "testcluster" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)
-	createClusterFixture := clusterFixture(clusterName, ClusterTemplateID, OSFlavorID,
-		OSKeypairName, OSNetworkID, OSSubnetworkID, 1)
+	createClusterFixture := clusterFixture(clusterName, clusterTemplateID, osFlavorID,
+		osKeypairName, osNetworkID, osSubnetworkID, 1)
 	clusterResourceName := "mcs_kubernetes_cluster." + clusterName
 
 	nodeGroupName := "testng" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)
-	ngFixture := nodeGroupFixture(nodeGroupName, OSFlavorID, 1, 5, 1, false)
+	ngFixture := nodeGroupFixture(nodeGroupName, osFlavorID, 1, 5, 1, false)
 	nodeGroupResourceName := "mcs_kubernetes_node_group." + nodeGroupName
 
-	ngNodeCountScaleFixture := nodeGroupFixture(nodeGroupName, OSFlavorID, 2, 5, 1, false)
-	ngPatchOptsFixture := nodeGroupFixture(nodeGroupName, OSFlavorID, 2, 4, 2, true)
+	ngNodeCountScaleFixture := nodeGroupFixture(nodeGroupName, osFlavorID, 2, 5, 1, false)
+	ngPatchOptsFixture := nodeGroupFixture(nodeGroupName, osFlavorID, 2, 4, 2, true)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckKubernetes(t) },
@@ -81,7 +81,7 @@ func TestAccKubernetesNodeGroup_basic(t *testing.T) {
 	})
 }
 
-func checkNodeGroupAttrs(resourceName string, nodeGroup *NodeGroupCreateOpts) resource.TestCheckFunc {
+func checkNodeGroupAttrs(resourceName string, nodeGroup *nodeGroupCreateOpts) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if s.Empty() == true {
 			return fmt.Errorf("state not updated")
@@ -100,7 +100,7 @@ func checkNodeGroupAttrs(resourceName string, nodeGroup *NodeGroupCreateOpts) re
 	}
 }
 
-func checkNodeGroupPatchAttrs(resourceName string, nodeGroup *NodeGroupCreateOpts) resource.TestCheckFunc {
+func checkNodeGroupPatchAttrs(resourceName string, nodeGroup *nodeGroupCreateOpts) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if s.Empty() == true {
 			return fmt.Errorf("state not updated")
@@ -116,7 +116,7 @@ func checkNodeGroupPatchAttrs(resourceName string, nodeGroup *NodeGroupCreateOpt
 	}
 }
 
-func testAccCheckKubernetesNodeGroupExists(n, clusterResourceName string, nodeGroup *NodeGroup) resource.TestCheckFunc {
+func testAccCheckKubernetesNodeGroupExists(n, clusterResourceName string, nodeGroup *nodeGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, found, err := getNgAndResource(n, s)
 		if err != nil {
@@ -181,14 +181,14 @@ func testAccCheckKubernetesNodeGroupPatched(n string) resource.TestCheckFunc {
 	}
 }
 
-func getNgAndResource(n string, s *terraform.State) (*terraform.ResourceState, *NodeGroup, error) {
+func getNgAndResource(n string, s *terraform.State) (*terraform.ResourceState, *nodeGroup, error) {
 	rs, ok := s.RootModule().Resources[n]
 	if !ok {
 		return nil, nil, fmt.Errorf("node group not found: %s", n)
 	}
 
-	config := testAccProvider.Meta().(*ConfigImpl)
-	containerInfraClient, err := config.ContainerInfraV1Client(OSRegionName)
+	config := testAccProvider.Meta().(*config)
+	containerInfraClient, err := config.ContainerInfraV1Client(osRegionName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error creating container infra client: %s", err)
 	}
@@ -200,7 +200,7 @@ func getNgAndResource(n string, s *terraform.State) (*terraform.ResourceState, *
 	return rs, found, nil
 }
 
-func testAccKubernetesNodeGroupBasic(clusterName, clusterResource string, fixture *NodeGroupCreateOpts) string {
+func testAccKubernetesNodeGroupBasic(clusterName, clusterResource string, fixture *nodeGroupCreateOpts) string {
 
 	return fmt.Sprintf(
 		nodeGroupResourceFixture,

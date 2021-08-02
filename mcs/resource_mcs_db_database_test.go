@@ -50,8 +50,8 @@ func testAccCheckDatabaseDatabaseExists(n string, instance *instanceResp, databa
 			return fmt.Errorf("Malformed database name: %s", rs.Primary.ID)
 		}
 
-		config := testAccProvider.Meta().(Config)
-		DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+		config := testAccProvider.Meta().(configer)
+		DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 		if err != nil {
 			return fmt.Errorf("Error creating cloud database client: %s", err)
 		}
@@ -78,9 +78,9 @@ func testAccCheckDatabaseDatabaseExists(n string, instance *instanceResp, databa
 }
 
 func testAccCheckDatabaseDatabaseDestroy(s *terraform.State) error {
-	config := testAccProvider.Meta().(Config)
+	config := testAccProvider.Meta().(configer)
 
-	DatabaseClient, err := config.DatabaseV1Client(OSRegionName)
+	DatabaseClient, err := config.DatabaseV1Client(osRegionName)
 	if err != nil {
 		return fmt.Errorf("Error creating cloud database client: %s", err)
 	}
@@ -141,4 +141,4 @@ resource "mcs_db_database" "basic" {
   name        = "basic"
   instance_id = "${mcs_db_instance.basic.id}"
 }
-`, OSFlavorID, OSDBDatastoreVersion, OSDBDatastoreType, OSNetworkID)
+`, osFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)

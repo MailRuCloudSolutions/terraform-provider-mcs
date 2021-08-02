@@ -40,8 +40,8 @@ func TestExpandKubernetesGroupMap(t *testing.T) {
 	}
 	groups = append(groups, group)
 
-	var expectedGroups []NodeGroup
-	expgroup := NodeGroup{
+	var expectedGroups []nodeGroup
+	expgroup := nodeGroup{
 		Name:       "test",
 		NodeCount:  ncount,
 		MaxNodes:   maxn,
@@ -72,7 +72,7 @@ func TestExtractNodeGroupLabelsList(t *testing.T) {
 			"key": "label_without_value",
 		},
 	}
-	expectedLabels := []NodeGroupLabel{
+	expectedLabels := []nodeGroupLabel{
 		{
 			Key:   "bar",
 			Value: "baz",
@@ -108,7 +108,7 @@ func TestExtractNodeGroupTaintsList(t *testing.T) {
 		},
 	}
 
-	expectedTaints := []NodeGroupTaint{
+	expectedTaints := []nodeGroupTaint{
 		{
 			Key:    "key1",
 			Value:  "val1",

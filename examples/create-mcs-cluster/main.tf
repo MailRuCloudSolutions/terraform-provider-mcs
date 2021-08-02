@@ -72,8 +72,5 @@ resource "mcs_kubernetes_cluster" "k8s-cluster" {
   network_id = openstack_networking_network_v2.k8s.id
   subnet_id = openstack_networking_subnet_v2.k8s-subnetwork.id
   floating_ip_enabled = true
-
-  labels = {
-    availability_zone = "DP1"
-  }
+  availability_zone = "MS1"
 }
