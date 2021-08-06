@@ -129,12 +129,6 @@ func resourceKubernetesCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"node_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: false,
-				Computed: true,
-			},
 			"master_addresses": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -315,7 +309,6 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("master_flavor", cluster.MasterFlavorID)
 	d.Set("keypair", cluster.KeyPair)
 	d.Set("master_count", cluster.MasterCount)
-	d.Set("node_count", cluster.NodeCount)
 	d.Set("master_addresses", cluster.MasterAddresses)
 	d.Set("node_addresses", cluster.NodeAddresses)
 	d.Set("stack_id", cluster.StackID)
