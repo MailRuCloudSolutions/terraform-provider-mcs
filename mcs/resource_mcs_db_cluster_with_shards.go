@@ -460,7 +460,7 @@ func resourceDatabaseClusterWithShardsDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error creating OpenStack database client: %s", err)
 	}
 
-	err = ClusterDelete(DatabaseV1Client, d.Id()).ExtractErr()
+	err = clusterDelete(DatabaseV1Client, d.Id()).ExtractErr()
 	if err != nil {
 		return checkDeleted(d, err, "Error deleting mcs_db_cluster")
 	}

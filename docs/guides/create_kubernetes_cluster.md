@@ -1,8 +1,8 @@
 ---
 layout: "mcs"
-page_title: "MCS: create_kubernetes_cluster"
+page_title: "Getting Started with the MCS Provider"
 description: |-
-  Creating Kubernetes Cluster with Terraform.
+  Getting Started with the MCS Provider
 ---
 
 # Create Kubernetes Cluster with Terraform

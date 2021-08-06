@@ -184,7 +184,7 @@ func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("node_count parameter must be > 0")
 	}
 
-	s, err := NodeGroupCreate(containerInfraClient, &createOpts).Extract()
+	s, err := nodeGroupCreate(containerInfraClient, &createOpts).Extract()
 	if err != nil {
 		return fmt.Errorf("error creating mcs_kubernetes_node_group: %s", err)
 	}
@@ -217,7 +217,7 @@ func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	s, err := NodeGroupGet(containerInfraClient, d.Id()).Extract()
+	s, err := nodeGroupGet(containerInfraClient, d.Id()).Extract()
 	if err != nil {
 		return checkDeleted(d, err, "error retrieving mcs_kubernetes_node_group")
 	}
@@ -281,7 +281,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("node_count") {
-		s, err := NodeGroupGet(containerInfraClient, d.Id()).Extract()
+		s, err := nodeGroupGet(containerInfraClient, d.Id()).Extract()
 		if err != nil {
 			return fmt.Errorf("error retrieving kubernetes_node_group : %s", err)
 		}
@@ -289,7 +289,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 			Delta: d.Get("node_count").(int) - s.NodeCount,
 		}
 
-		_, err = NodeGroupScale(containerInfraClient, d.Id(), &scaleOpts).Extract()
+		_, err = nodeGroupScale(containerInfraClient, d.Id(), &scaleOpts).Extract()
 		if err != nil {
 			return fmt.Errorf("error scaling mcs_kubernetes_node_group : %s", err)
 		}
@@ -357,7 +357,7 @@ func resourceKubernetesNodeGroupUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if len(patchOpts) > 0 {
-		_, err := NodeGroupPatch(containerInfraClient, d.Id(), &patchOpts).Extract()
+		_, err := nodeGroupPatch(containerInfraClient, d.Id(), &patchOpts).Extract()
 		if err != nil {
 			return fmt.Errorf("error updating mcs_kubernetes_node_group : %s", err)
 		}
@@ -379,7 +379,7 @@ func resourceKubernetesNodeGroupDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	if err := NodeGroupDelete(containerInfraClient, d.Id()).ExtractErr(); err != nil {
+	if err := nodeGroupDelete(containerInfraClient, d.Id()).ExtractErr(); err != nil {
 		return checkDeleted(d, err, "error deleting mcs_kubernetes_node_group")
 	}
 

@@ -152,7 +152,7 @@ func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	clusterIdentifier := d.Get(clusterIdentifierName).(string)
-	c, err := ClusterGet(containerInfraClient, clusterIdentifier).Extract()
+	c, err := clusterGet(containerInfraClient, clusterIdentifier).Extract()
 	if err != nil {
 		return fmt.Errorf("error getting mcs_kubernetes_cluster %s: %s", clusterIdentifier, err)
 	}
@@ -183,7 +183,7 @@ func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("registry_auth_password", c.RegistryAuthPassword)
 	d.Set("availability_zone", c.AvailabilityZone)
 
-	k8sConfig, err := K8sConfigGet(containerInfraClient, c.UUID)
+	k8sConfig, err := k8sConfigGet(containerInfraClient, c.UUID)
 	if err != nil {
 		log.Printf("[DEBUG] error getting k8s config for cluster %s: %s", c.UUID, err)
 		d.Set("k8s_config", "error")

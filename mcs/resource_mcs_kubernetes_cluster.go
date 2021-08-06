@@ -62,7 +62,6 @@ func resourceKubernetesCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -75,56 +74,47 @@ func resourceKubernetesCluster() *schema.Resource {
 					return
 				},
 			},
-
 			"project_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Computed: true,
 			},
-
 			"user_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Computed: true,
 			},
-
 			"created_at": {
 				Type:     schema.TypeString,
 				ForceNew: false,
 				Computed: true,
 			},
-
 			"updated_at": {
 				Type:     schema.TypeString,
 				ForceNew: false,
 				Computed: true,
 			},
-
 			"api_address": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Computed: true,
 			},
-
 			"cluster_template_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: false,
 			},
-
 			"master_flavor": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
 				Computed: true,
 			},
-
 			"keypair": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 			},
-
 			"labels": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -133,33 +123,28 @@ func resourceKubernetesCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-
 			"master_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-
 			"node_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: false,
 				Computed: true,
 			},
-
 			"master_addresses": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Computed: true,
 			},
-
 			"node_addresses": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Computed: true,
 			},
-
 			"stack_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -271,7 +256,7 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 		createOpts.MasterCount = mCount
 	}
 
-	s, err := CreateCluster(containerInfraClient, &createOpts).Extract()
+	s, err := createCluster(containerInfraClient, &createOpts).Extract()
 	if err != nil {
 		return fmt.Errorf("error creating mcs_kubernetes_cluster: %s", err)
 	}
@@ -304,7 +289,7 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	cluster, err := ClusterGet(containerInfraClient, d.Id()).Extract()
+	cluster, err := clusterGet(containerInfraClient, d.Id()).Extract()
 	if err != nil {
 		return checkDeleted(d, err, "error retrieving mcs_kubernetes_cluster")
 	}
@@ -381,7 +366,7 @@ func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		Target:       []string{string(clusterStatusRunning)},
 	}
 
-	cluster, err := ClusterGet(containerInfraClient, d.Id()).Extract()
+	cluster, err := clusterGet(containerInfraClient, d.Id()).Extract()
 	if err != nil {
 		return fmt.Errorf("error retrieving cluster: %s", err)
 	}
@@ -431,7 +416,7 @@ func checkForClusterTemplateID(d *schema.ResourceData, containerInfraClient Cont
 			RollingEnabled:    true,
 		}
 
-		_, err := ClusterUpgrade(containerInfraClient, d.Id(), &upgradeOpts).Extract()
+		_, err := clusterUpgrade(containerInfraClient, d.Id(), &upgradeOpts).Extract()
 		if err != nil {
 			return fmt.Errorf("error upgrade cluster : %s", err)
 		}
@@ -454,7 +439,7 @@ func checkForMasterFlavor(d *schema.ResourceData, containerInfraClient Container
 			},
 		}
 
-		_, err := ClusterUpdateMasters(containerInfraClient, d.Id(), &upgradeOpts).Extract()
+		_, err := clusterUpdateMasters(containerInfraClient, d.Id(), &upgradeOpts).Extract()
 		if err != nil {
 			return fmt.Errorf("error updating cluster's falvor : %s", err)
 		}
@@ -496,7 +481,7 @@ func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient
 		switchStateOpts := clusterActionsBaseOpts{
 			Action: stateStatusMap[currentStatus],
 		}
-		_, err := ClusterSwitchState(containerInfraClient, d.Id(), &switchStateOpts).Extract()
+		_, err := clusterSwitchState(containerInfraClient, d.Id(), &switchStateOpts).Extract()
 		if err != nil {
 			return false, fmt.Errorf("error during switching state: %s", err)
 		}
@@ -529,7 +514,7 @@ func resourceKubernetesClusterDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	if err := ClusterDelete(containerInfraClient, d.Id()).ExtractErr(); err != nil {
+	if err := clusterDelete(containerInfraClient, d.Id()).ExtractErr(); err != nil {
 		return checkDeleted(d, err, "error deleting mcs_kubernetes_cluster")
 	}
 

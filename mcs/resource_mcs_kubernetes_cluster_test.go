@@ -168,7 +168,7 @@ func getClusterAndResource(n string, s *terraform.State) (*terraform.ResourceSta
 		return nil, nil, fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	found, err := ClusterGet(containerInfraClient, rs.Primary.ID).Extract()
+	found, err := clusterGet(containerInfraClient, rs.Primary.ID).Extract()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -187,7 +187,7 @@ func testAccCheckKubernetesClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := ClusterGet(containerInfraClient, rs.Primary.ID).Extract()
+		_, err := clusterGet(containerInfraClient, rs.Primary.ID).Extract()
 		if err == nil {
 			return fmt.Errorf("сluster still exists")
 		}
