@@ -22,6 +22,9 @@ $ terraform plan
 
 Provider development
 ---------------------
+To start improve it grab the repository, build it and install into local registry repository.
+Builds for MacOS, Windows and Linux are available.
+The example is for MacOS.
 ```sh
 $ mkdir -p $GOPATH/src/github.com/MailRuCloudSolutions
 $ cd $GOPATH/src/github.com/MailRuCloudSolutions
