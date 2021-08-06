@@ -75,10 +75,6 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"node_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"master_addresses": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -168,7 +164,6 @@ func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("master_flavor", c.MasterFlavorID)
 	d.Set("keypair", c.KeyPair)
 	d.Set("master_count", c.MasterCount)
-	d.Set("node_count", c.NodeCount)
 	d.Set("master_addresses", c.MasterAddresses)
 	d.Set("node_addresses", c.NodeAddresses)
 	d.Set("stack_id", c.StackID)

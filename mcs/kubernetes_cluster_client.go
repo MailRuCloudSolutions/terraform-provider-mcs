@@ -164,7 +164,6 @@ type cluster struct {
 	MasterCount          int                `json:"master_count"`
 	Name                 string             `json:"name"`
 	NodeAddresses        []string           `json:"node_addresses"`
-	NodeCount            int                `json:"node_count"`
 	ProjectID            string             `json:"project_id"`
 	StackID              string             `json:"stack_id"`
 	Status               clusterStatus      `json:"status"`

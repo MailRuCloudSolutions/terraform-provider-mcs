@@ -55,7 +55,6 @@ attributes are exported:
 * `labels` - The list of key value pairs representing additional properties of
                  the cluster.
 * `master_count` - The number of master nodes for the cluster.
-* `node_count` -  The number of nodes for the cluster.
 * `master_addresses` - IP addresses of the master node of the cluster.
 * `node_addresses` - IP addresses of the node of the cluster.
 * `stack_id` - UUID of the Orchestration service stack.
