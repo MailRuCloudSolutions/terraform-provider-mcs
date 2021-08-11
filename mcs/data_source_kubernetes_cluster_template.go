@@ -27,33 +27,27 @@ func dataSourceKubernetesClusterTemplate() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"project_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"user_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"updated_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"apiserver_port": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -62,97 +56,78 @@ func dataSourceKubernetesClusterTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"dns_nameserver": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"docker_storage_driver": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"docker_volume_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"external_network_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"flavor": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"master_flavor": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"floating_ip_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"image": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"insecure_registry": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"keypair_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-
 			"master_lb_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"network_driver": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"no_proxy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"public": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"registry_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"server_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tls_disabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"volume_driver": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -205,6 +180,7 @@ func dataSourceKubernetesClusterTemplateRead(d *schema.ResourceData, meta interf
 	d.Set("volume_driver", ct.VolumeDriver)
 	d.Set("name", ct.Name)
 	d.Set("version", ct.Version)
+	d.Set("region", getRegion(d, config))
 
 	if err := d.Set("created_at", ct.CreatedAt.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Unable to set openstack_containerinfra_clustertemplate_v1 created_at: %s", err)
@@ -212,8 +188,6 @@ func dataSourceKubernetesClusterTemplateRead(d *schema.ResourceData, meta interf
 	if err := d.Set("updated_at", ct.UpdatedAt.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Unable to set openstack_containerinfra_clustertemplate_v1 updated_at: %s", err)
 	}
-
-	d.Set("region", getRegion(d, config))
 
 	return nil
 }

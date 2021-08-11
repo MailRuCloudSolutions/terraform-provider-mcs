@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/util/randutil"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -157,7 +159,7 @@ func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{})
 	if ngName, ok := d.GetOk("name"); ok {
 		createOpts.Name = ngName.(string)
 	} else {
-		createOpts.Name = "ng-" + randomName(5)
+		createOpts.Name = "ng-" + randutil.RandomName(5)
 	}
 
 	if lab, labOk := d.GetOk("labels"); labOk {

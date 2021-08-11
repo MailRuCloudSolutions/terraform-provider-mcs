@@ -1,4 +1,4 @@
-module gitlab.corp.mail.ru/infra/paas/terraform-provider-mcs
+module github.com/MailRuCloudSolutions/terraform-provider-mcs
 
 go 1.16
 

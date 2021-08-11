@@ -2,7 +2,6 @@ package mcs
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/gophercloud/gophercloud"
@@ -72,13 +71,4 @@ func ensureOnlyOnePresented(d *schema.ResourceData, keys ...string) (string, err
 	}
 
 	return keyPresented, nil
-}
-
-func randomName(n int) string {
-	charSet := []byte("abcdefghijklmnopqrstuvwxyz012346789")
-	result := make([]byte, 0, n)
-	for i := 0; i < n; i++ {
-		result = append(result, charSet[rand.Intn(len(charSet))])
-	}
-	return string(result)
 }

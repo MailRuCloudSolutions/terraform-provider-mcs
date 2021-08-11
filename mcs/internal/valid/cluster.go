@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"gitlab.corp.mail.ru/infra/paas/terraform-provider-mcs/mcs/internal/util/textutil"
+	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/util/textutil"
 )
 
 var (

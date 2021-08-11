@@ -19,6 +19,7 @@ const (
 // configer is interface to work with gophercloud.Config calls
 type configer interface {
 	LoadAndValidate() error
+	IdentityV3Client(region string) (ContainerClient, error)
 	ContainerInfraV1Client(region string) (ContainerClient, error)
 	DatabaseV1Client(region string) (ContainerClient, error)
 	GetRegion() string
@@ -34,6 +35,11 @@ var _ configer = &config{}
 // GetRegion is implementation of getRegion method
 func (c *config) GetRegion() string {
 	return c.Region
+}
+
+// IdentityV3Client is implementation of ContainerInfraV1Client method
+func (c *config) IdentityV3Client(region string) (ContainerClient, error) {
+	return c.Config.IdentityV3Client(region)
 }
 
 // ContainerInfraV1Client is implementation of ContainerInfraV1Client method
@@ -57,6 +63,7 @@ func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error
 			ClientKeyFile:    d.Get("key").(string),
 			Password:         d.Get("password").(string),
 			TenantID:         d.Get("project_id").(string),
+			Region:           d.Get("region").(string),
 			AllowReauth:      true,
 			MaxRetries:       maxRetriesCount,
 			TerraformVersion: terraformVersion,
@@ -105,57 +112,56 @@ func Provider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("AUTH_URL", ""),
-				Description: descriptions["auth_url"],
+				Description: "The Identity authentication URL.",
 			},
-
 			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("PROJECT_ID", ""),
-				Description: descriptions["project_id"],
+				Description: "The ID of Project to login with.",
 			},
-
 			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("PASSWORD", ""),
-				Description: descriptions["password"],
+				Description: "Password to login with.",
 			},
-
 			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("USER_NAME", ""),
-				Description: descriptions["username"],
+				Description: "User name to login with.",
 			},
-
+			"region": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("REGION", "RegionOne"),
+				Description: "A region to use.",
+			},
 			"insecure": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("INSECURE", nil),
-				Description: descriptions["insecure"],
+				Description: "Trust self-signed certificates.",
 			},
-
 			"cacert_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CACERT", ""),
-				Description: descriptions["cacert_file"],
+				Description: "A Custom CA certificate.",
 			},
-
 			"cert": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CERT", ""),
-				Description: descriptions["cert"],
+				Description: "A client certificate to authenticate with.",
 			},
-
 			"key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("KEY", ""),
-				Description: descriptions["key"],
+				Description: "A client private key to authenticate with.",
 			},
 		},
 
@@ -166,6 +172,7 @@ func Provider() terraform.ResourceProvider {
 			"mcs_db_instance":                dataSourceDatabaseInstance(),
 			"mcs_db_user":                    dataSourceDatabaseUser(),
 			"mcs_db_database":                dataSourceDatabaseDatabase(),
+			"mcs_region":                     dataSourceMcsRegion(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -190,26 +197,4 @@ func Provider() terraform.ResourceProvider {
 	}
 
 	return provider
-}
-
-var descriptions map[string]string
-
-func init() {
-	descriptions = map[string]string{
-		"auth_url": "The Identity authentication URL.",
-
-		"project_id": "The ID of Project to login with.",
-
-		"username": "User name to login with.",
-
-		"password": "Password to login with.",
-
-		"insecure": "Trust self-signed certificates.",
-
-		"cacert_file": "A Custom CA certificate.",
-
-		"cert": "A client certificate to authenticate with.",
-
-		"key": "A client private key to authenticate with.",
-	}
 }
