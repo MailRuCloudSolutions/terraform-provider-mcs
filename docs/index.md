@@ -45,3 +45,5 @@ The following arguments are supported:
 
 * `auth_url` - (Optional) URL for authentication in MCS. Default is https://infra.mail.ru/identity/v3/.
 
+* `region` - (Optional) A region to use. Default is `RegionOne`. **New since v0.4.0**
+

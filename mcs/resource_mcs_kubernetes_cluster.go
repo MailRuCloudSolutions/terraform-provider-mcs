@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"gitlab.corp.mail.ru/infra/paas/terraform-provider-mcs/mcs/internal/valid"
+
+	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/valid"
 )
 
 // OperationCreate ...
@@ -320,6 +321,7 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("ingress_floating_ip", cluster.IngressFloatingIP)
 	d.Set("registry_auth_password", cluster.RegistryAuthPassword)
 	d.Set("availability_zone", cluster.AvailabilityZone)
+	d.Set("region", getRegion(d, config))
 
 	// Allow to read old api clusters
 	if cluster.NetworkID != "" {

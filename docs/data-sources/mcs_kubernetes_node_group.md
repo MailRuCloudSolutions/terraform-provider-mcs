@@ -10,7 +10,7 @@ description: |-
 Use this data source to get the ID of an available MCS kubernetes clusters node group.
 
 ## Example Usage
-```
+```hcl
 data "mcs_kubernetes_node_group" "mynodegroup" {
   uuid = "mynguuid"
 }

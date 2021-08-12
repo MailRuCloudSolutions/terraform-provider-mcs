@@ -24,7 +24,16 @@ func (d *dummyConfig) LoadAndValidate() error {
 	return args.Error(0)
 }
 
-// ContainerInfraV1Client ...
+// IdentityV3Client is a mock client for identity requests.
+func (d *dummyConfig) IdentityV3Client(region string) (ContainerClient, error) {
+	args := d.Called(region)
+	if r, ok := args.Get(0).(ContainerClient); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(0)
+}
+
+// ContainerInfraV1Client is a mock client for infra requests.
 func (d *dummyConfig) ContainerInfraV1Client(region string) (ContainerClient, error) {
 	args := d.Called(region)
 	if r, ok := args.Get(0).(ContainerClient); ok {

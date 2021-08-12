@@ -7,6 +7,10 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.4.0
+- Added `region` support for provider.
+- Added `mcs_region` data source.
+
 #### v0.3.4
 - Removed field `node_count` for kubernetes cluster.
 

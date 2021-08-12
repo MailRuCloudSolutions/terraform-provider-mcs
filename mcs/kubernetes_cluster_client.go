@@ -11,6 +11,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/containerinfra/v1/clusters"
 	"github.com/gophercloud/gophercloud/openstack/containerinfra/v1/clustertemplates"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/regions"
 )
 
 // ContainerClient is interface to work with gophercloud requests
@@ -183,6 +184,10 @@ type cluster struct {
 	AvailabilityZone     string             `json:"availability_zone"`
 }
 
+type region struct {
+	Region regions.Region `json:"region"`
+}
+
 type clusterTemplate struct {
 	clustertemplates.ClusterTemplate
 	Version string `json:"version"`
@@ -261,6 +266,7 @@ const (
 	clustersAPIPath        = "clusters"
 	nodeGroupsAPIPath      = "nodegroups"
 	clusterTemplateAPIPath = "clustertemplates"
+	regionsAPIPath         = "regions"
 )
 
 type commonResult struct {
@@ -289,6 +295,17 @@ type nodeGroupScaleResult struct {
 
 type clusterTemplateResult struct {
 	commonResult
+}
+
+type regionResult struct {
+	commonResult
+}
+
+// Extract parses result into params for region.
+func (r regionResult) Extract() (*region, error) {
+	var s *region
+	err := r.ExtractInto(&s)
+	return s, err
 }
 
 // Extract returns uuid.
@@ -332,7 +349,6 @@ func clusterTemplateGet(client ContainerClient, id string) (r clusterTemplateRes
 }
 
 func createCluster(client ContainerClient, opts optsBuilder) (r clusters.CreateResult) {
-	log.Printf("CREATE cluster")
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -501,4 +517,15 @@ func getRequestOpts(codes ...int) *gophercloud.RequestOpts {
 	}
 	addMicroVersionHeader(reqOpts)
 	return reqOpts
+}
+
+func regionGet(client ContainerClient, id string) (r regionResult) {
+	var result *http.Response
+	reqOpts := getRequestOpts(200)
+	result, r.Err = client.Get(getURL(client, regionsAPIPath, id), &r.Body, reqOpts)
+	if r.Err == nil {
+		r.Header = result.Header
+	}
+
+	return
 }
