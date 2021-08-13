@@ -85,7 +85,7 @@ func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error
 		config.Username = os.Getenv("OS_USERNAME")
 	}
 	if config.Region == "" {
-		config.Region = os.Getenv("OS_Region")
+		config.Region = os.Getenv("OS_REGION")
 	}
 
 	v, ok := d.GetOk("insecure")
