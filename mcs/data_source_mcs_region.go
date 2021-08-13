@@ -3,6 +3,8 @@ package mcs
 import (
 	"fmt"
 
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/regions"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -12,7 +14,7 @@ func dataSourceMcsRegion() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"parent_region": {
 				Type:     schema.TypeString,
@@ -40,13 +42,13 @@ func dataSourceMcsRegionRead(d *schema.ResourceData, meta interface{}) error {
 		regionName = v.(string)
 	}
 
-	region, err := regionGet(client, regionName).Extract()
+	region, err := regions.Get(client.(*gophercloud.ServiceClient), regionName).Extract()
 	if err != nil {
 		return fmt.Errorf("failed to get region for %s: %s", regionName, err)
 	}
 
-	d.SetId(region.Region.ID)
-	d.Set("parent_region", region.Region.ParentRegionID)
-	d.Set("description", region.Region.Description)
+	d.SetId(region.ID)
+	d.Set("parent_region", region.ParentRegionID)
+	d.Set("description", region.Description)
 	return nil
 }

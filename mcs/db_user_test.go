@@ -1,3 +1,5 @@
+//+build db_acc_test
+
 package mcs
 
 import (

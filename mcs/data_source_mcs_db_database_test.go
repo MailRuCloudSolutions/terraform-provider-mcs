@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccDataSourceDatabaseDatabase_basic(t *testing.T) {
+func TestAccDatabaseDataSourceDatabase_basic(t *testing.T) {
 	resourceName := "mcs_db_database.basic"
 	datasourceName := "data.mcs_db_database.basic"
 

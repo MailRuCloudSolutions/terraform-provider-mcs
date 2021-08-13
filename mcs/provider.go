@@ -53,9 +53,10 @@ func (c *config) DatabaseV1Client(region string) (ContainerClient, error) {
 }
 
 func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error) {
-	if os.Getenv("TF_ACC") != "" && os.Getenv("TF_ACC_DBAAS") == "" {
+	if os.Getenv("TF_ACC") == "" {
 		return &dummyConfig{}, nil
 	}
+
 	config := &config{
 		auth.Config{
 			CACertFile:       d.Get("cacert_file").(string),
@@ -69,6 +70,22 @@ func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error
 			TerraformVersion: terraformVersion,
 			SDKVersion:       meta.SDKVersionString(),
 		},
+	}
+
+	if config.TenantID == "" {
+		config.TenantID = os.Getenv("OS_PROJECT_ID")
+	}
+	if config.UserDomainID == "" {
+		config.UserDomainID = os.Getenv("OS_USER_DOMAIN_ID")
+	}
+	if config.Password == "" {
+		config.Password = os.Getenv("OS_PASSWORD")
+	}
+	if config.Username == "" {
+		config.Username = os.Getenv("OS_USERNAME")
+	}
+	if config.Region == "" {
+		config.Region = os.Getenv("OS_REGION")
 	}
 
 	v, ok := d.GetOk("insecure")
@@ -95,10 +112,11 @@ func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error
 func initWithUsername(d *schema.ResourceData, config *config) error {
 	config.UserDomainName = defaultUsersDomainName
 
-	v, ok := d.GetOk("username")
-	if ok {
+	config.Username = os.Getenv("OS_USERNAME")
+	if v, ok := d.GetOk("username"); ok {
 		config.Username = v.(string)
-	} else {
+	}
+	if config.Username == "" {
 		return fmt.Errorf("username must be specified")
 	}
 	return nil
@@ -173,6 +191,7 @@ func Provider() terraform.ResourceProvider {
 			"mcs_db_user":                    dataSourceDatabaseUser(),
 			"mcs_db_database":                dataSourceDatabaseDatabase(),
 			"mcs_region":                     dataSourceMcsRegion(),
+			"mcs_regions":                    dataSourceMcsRegions(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
