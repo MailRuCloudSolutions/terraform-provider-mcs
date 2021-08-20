@@ -38,7 +38,7 @@ resource "mcs_kubernetes_cluster" "mycluster"{
 
 ## Authentication
 
-The MCS provider supports username/password authentication. Preconfigured provider file with username and project_id can be downloaded from [https://mcs.mail.ru/app/project](https://mcs.mail.ru/app/mcs9353524878/project) portal. Go to Terraform tab -> click on the "Download MCS provider file".
+The MCS provider supports username/password authentication. Preconfigured provider file with `username` and `project_id` can be downloaded from [https://mcs.mail.ru/app/project](https://mcs.mail.ru/app/project) portal. Go to `Terraform` tab -> click on the "Download MCS provider file".
 
 ```terraform
 provider "mcs" {
