@@ -16,7 +16,7 @@ Use the navigation to the left to read about the available resources.
 
 ## Example Usage
 
-Terraform 0.13 and later:
+Terraform 1.0 and later:
 
 ```terraform
 # Configure the mcs provider
@@ -38,7 +38,7 @@ resource "mcs_kubernetes_cluster" "mycluster"{
 
 ## Authentication
 
-The MCS provider supports username/password authentication. Preconfigured provider file with username and project_id can be download on https://mcs.mail.ru/app/ portal. Go to Containers -> Kubernetes clusters -> click the cluster name -> "MCS Terraform Provider" -> click on the "Download MCS provider file".
+The MCS provider supports username/password authentication. Preconfigured provider file with username and project_id can be download from [https://mcs.mail.ru/app/project](https://mcs.mail.ru/app/mcs9353524878/project) portal. Go to Terraform tab -> click on the "Download MCS provider file".
 
 ```terraform
 provider "mcs" {
