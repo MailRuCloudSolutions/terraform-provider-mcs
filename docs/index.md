@@ -25,7 +25,7 @@ terraform {
   required_providers {
     mcs = {
       source = "MailRuCloudSolutions/mcs"
-      version = "~> 0.3.0"
+      version = "~> 0.4.0"
     }
   }
 }
