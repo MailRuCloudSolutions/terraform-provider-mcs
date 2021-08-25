@@ -16,18 +16,35 @@ Use the navigation to the left to read about the available resources.
 
 ## Example Usage
 
+Terraform 1.0 and later:
+
 ```terraform
 # Configure the mcs provider
 
-provider "mcs" {
-    username   = "example@mail.ru"
-    password   = "s3cr3t"
-    project_id = "some_project_id"
+terraform {
+  required_providers {
+    mcs = {
+      source = "MailRuCloudSolutions/mcs"
+      version = "~> 0.4.0"
+    }
+  }
 }
 
 # Create new kubernetes cluster
 resource "mcs_kubernetes_cluster" "mycluster"{
   # ...
+}
+```
+
+## Authentication
+
+The MCS provider supports username/password authentication. Preconfigured provider file with `username` and `project_id` can be downloaded from [https://mcs.mail.ru/app/project](https://mcs.mail.ru/app/project) portal. Go to `Terraform` tab -> click on the "Download MCS provider file".
+
+```terraform
+provider "mcs" {
+    username   = "USERNAME"
+    password   = "PASSWORD"
+    project_id = "PROJECT_ID"
 }
 ```
 
