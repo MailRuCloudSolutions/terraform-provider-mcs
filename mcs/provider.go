@@ -1,9 +1,13 @@
 package mcs
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"time"
 
+	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/utils/terraform/auth"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/meta"
@@ -14,6 +18,8 @@ const (
 	maxRetriesCount         = 3
 	defaultIdentityEndpoint = "https://infra.mail.ru/identity/v3/"
 	defaultUsersDomainName  = "users"
+	requestsMaxRetriesCount = 3
+	requestsRetryDelay      = 30 * time.Millisecond
 )
 
 // configer is interface to work with gophercloud.Config calls
@@ -49,7 +55,26 @@ func (c *config) ContainerInfraV1Client(region string) (ContainerClient, error) 
 
 // DatabaseV1Client is implementation of DatabaseV1Client method
 func (c *config) DatabaseV1Client(region string) (ContainerClient, error) {
-	return c.Config.DatabaseV1Client(region)
+	client, clientErr := c.Config.DatabaseV1Client(region)
+	client.ProviderClient.RetryFunc = func(context context.Context, method, url string, options *gophercloud.RequestOpts, err error, failCount uint) error {
+		if failCount >= requestsMaxRetriesCount {
+			return err
+		}
+		switch errType := err.(type) {
+		case gophercloud.ErrDefault500, gophercloud.ErrDefault503:
+			time.Sleep(requestsRetryDelay)
+			return nil
+		case gophercloud.ErrUnexpectedResponseCode:
+			if errType.Actual == http.StatusGatewayTimeout {
+				time.Sleep(requestsRetryDelay)
+				return nil
+			}
+			return err
+		default:
+			return err
+		}
+	}
+	return client, clientErr
 }
 
 func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error) {
