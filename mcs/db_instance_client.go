@@ -2,6 +2,7 @@ package mcs
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gophercloud/gophercloud"
@@ -84,6 +85,17 @@ type dataStore struct {
 // dateTimeFormat represents format of time used in dbaas
 type dateTimeFormat struct {
 	time.Time
+}
+
+// UnmarshalJSON is used to correctly unmarshal datetime fields
+func (t *dateTimeFormat) UnmarshalJSON(b []byte) (err error) {
+	layout := "2006-01-02T15:04:05"
+	s := strings.Trim(string(b), "\"")
+	if s == "null" {
+		return
+	}
+	t.Time, err = time.Parse(layout, s)
+	return
 }
 
 // link represents database instance link
