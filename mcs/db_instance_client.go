@@ -1,6 +1,7 @@
 package mcs
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -233,6 +234,17 @@ type databaseCreateOpts struct {
 // createOptsBuilder is used to build create opts map
 type createOptsBuilder interface {
 	Map() (map[string]interface{}, error)
+}
+
+// err404 is needed to customize http 404 error message
+type err404 struct {
+	gophercloud.ErrUnexpectedResponseCode
+}
+
+// Error404 overrides gophercloud http 404 error message
+func (e err404) Error404(res gophercloud.ErrUnexpectedResponseCode) error {
+	return fmt.Errorf("resource not found with: [%s %s], error message: %s",
+		res.Method, res.URL, res.Body)
 }
 
 // Map converts opts to a map (for a request body)
