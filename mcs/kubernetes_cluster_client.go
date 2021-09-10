@@ -447,6 +447,7 @@ func clusterGet(client ContainerClient, id string) (r clusterConfigResult) {
 func k8sConfigGet(client ContainerClient, id string) (string, error) {
 	var result *http.Response
 	reqOpts := getRequestOpts(200)
+	reqOpts.KeepResponseBody = true
 	result, err := client.Get(kubeConfigURL(client, clustersAPIPath, id), nil, reqOpts)
 	if err != nil {
 		return "", err
