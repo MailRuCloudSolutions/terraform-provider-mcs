@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrInvalidClusterName     = errors.New("invalid cluster name")
-	ErrInvalidAvailablityZone = errors.New("invalid availability zone")
+	ErrInvalidClusterName      = errors.New("invalid cluster name")
+	ErrInvalidAvailabilityZone = errors.New("invalid availability zone")
 )
 
 // ClusterName validates name of cluster.
@@ -40,7 +40,7 @@ var availabilityAvailabilityZones = map[string]struct{}{
 // AvailabilityZone validates provided availability zone.
 func AvailabilityZone(name string) error {
 	if _, ok := availabilityAvailabilityZones[strings.ToLower(name)]; !ok {
-		return ErrInvalidAvailablityZone
+		return ErrInvalidAvailabilityZone
 	}
 	return nil
 }

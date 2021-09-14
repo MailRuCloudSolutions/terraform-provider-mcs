@@ -36,8 +36,8 @@ func TestAvailabilityZone(t *testing.T) {
 		"DP1": {zone: "DP1", err: nil},
 		"ms1": {zone: "ms1", err: nil},
 		// invalid zone
-		"ms2":         {zone: "ms2", err: ErrInvalidAvailablityZone},
-		"empty value": {zone: "", err: ErrInvalidAvailablityZone},
+		"ms2":         {zone: "ms2", err: ErrInvalidAvailabilityZone},
+		"empty value": {zone: "", err: ErrInvalidAvailabilityZone},
 	}
 
 	for name := range tests {

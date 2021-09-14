@@ -1,4 +1,4 @@
-//+build db_acc_test
+//go:build db_acc_test
 
 package mcs
 

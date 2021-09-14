@@ -186,6 +186,8 @@ func TestAccProvider_clientCertString(t *testing.T) {
 }
 
 func envVarContents(varName string) (string, error) {
+	// TODO(irlndts): the function is deprecated, replace it.
+	// nolint:staticcheck
 	contents, _, err := pathorcontents.Read(os.Getenv(varName))
 	if err != nil {
 		return "", fmt.Errorf("error reading %s: %s", varName, err)

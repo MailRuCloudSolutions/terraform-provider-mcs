@@ -494,8 +494,7 @@ func clusterDelete(client ContainerClient, id string) (r clusterDeleteResult) {
 
 func getRequestOpts(codes ...int) *gophercloud.RequestOpts {
 	reqOpts := &gophercloud.RequestOpts{
-		OkCodes:      codes,
-		ErrorContext: err404{},
+		OkCodes: codes,
 	}
 	if len(codes) != 0 {
 		reqOpts.OkCodes = codes
