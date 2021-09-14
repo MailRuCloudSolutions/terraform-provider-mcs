@@ -20,6 +20,8 @@ func volInstHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%.2f-", used))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["volume_id"].(string)))
+	// TODO(irlndts): the function is deprecated, replace it.
+	// nolint:staticcheck
 	return hashcode.String(buf.String())
 }
 

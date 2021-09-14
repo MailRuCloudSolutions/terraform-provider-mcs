@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/containerinfra/v1/clusters"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
@@ -504,25 +506,24 @@ func checkForStatus(d *schema.ResourceData, containerInfraClient ContainerClient
 
 func resourceKubernetesClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(configer)
-	containerInfraClient, err := config.ContainerInfraV1Client(getRegion(d, config))
+	client, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
 		return fmt.Errorf("error creating container infra client: %s", err)
 	}
 
-	if err := clusterDelete(containerInfraClient, d.Id()).ExtractErr(); err != nil {
+	if err := clusters.Delete(client.(*gophercloud.ServiceClient), d.Id()).ExtractErr(); err != nil {
 		return checkDeleted(d, err, "error deleting mcs_kubernetes_cluster")
 	}
 
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{string(clusterStatusDeleting)},
 		Target:       []string{string(clusterStatusDeleted)},
-		Refresh:      kubernetesStateRefreshFunc(containerInfraClient, d.Id()),
+		Refresh:      kubernetesStateRefreshFunc(client, d.Id()),
 		Timeout:      d.Timeout(schema.TimeoutDelete),
 		Delay:        deleteDelay * time.Second,
 		PollInterval: deletePollInterval * time.Second,
 	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
+	if _, err = stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
 			"error waiting for mcs_kubernetes_cluster %s to become deleted: %s", d.Id(), err)
 	}
