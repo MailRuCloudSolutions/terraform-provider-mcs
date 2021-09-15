@@ -1,6 +1,7 @@
 package mcs
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -245,6 +246,18 @@ type databaseCreateOpts struct {
 // createOptsBuilder is used to build create opts map
 type createOptsBuilder interface {
 	Map() (map[string]interface{}, error)
+}
+
+// err404 is needed to customize http 404 error message
+type err404 struct {
+	gophercloud.ErrUnexpectedResponseCode
+}
+
+// Error404 overrides gophercloud http 404 error message
+func (e err404) Error404(res gophercloud.ErrUnexpectedResponseCode) error {
+	e.Info = fmt.Sprintf("resource not found with: [%s %s], error message: %s",
+		res.Method, res.URL, res.Body)
+	return e
 }
 
 // Map converts opts to a map (for a request body)
@@ -513,8 +526,9 @@ func instanceCreate(client databaseClient, opts optsBuilder) (r createInstanceRe
 
 // instanceGet performs request to get database instance
 func instanceGet(client databaseClient, id string) (r getInstanceResult) {
+	reqOpts := getRequestOpts(200)
 	var result *http.Response
-	result, r.Err = client.Get(getURL(client, instancesAPIPath, id), &r.Body, nil)
+	result, r.Err = client.Get(getURL(client, instancesAPIPath, id), &r.Body, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}

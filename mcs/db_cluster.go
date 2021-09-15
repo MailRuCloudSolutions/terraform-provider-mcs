@@ -11,7 +11,7 @@ func databaseClusterStateRefreshFunc(client databaseClient, clusterID string) re
 	return func() (interface{}, string, error) {
 		c, err := dbClusterGet(client, clusterID).extract()
 		if err != nil {
-			if _, ok := err.(gophercloud.ErrDefault404); ok {
+			if _, ok := err.(gophercloud.Err404er); ok {
 				return c, "DELETED", nil
 			}
 			return nil, "", err
