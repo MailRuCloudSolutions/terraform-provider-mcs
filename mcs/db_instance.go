@@ -88,7 +88,7 @@ func databaseInstanceStateRefreshFunc(client databaseClient, instanceID string) 
 	return func() (interface{}, string, error) {
 		i, err := instanceGet(client, instanceID).extract()
 		if err != nil {
-			if _, ok := err.(gophercloud.ErrDefault404); ok {
+			if _, ok := err.(gophercloud.Err404er); ok {
 				return i, "DELETED", nil
 			}
 			return nil, "", err
