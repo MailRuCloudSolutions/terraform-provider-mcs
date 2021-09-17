@@ -7,6 +7,9 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.5.0
+- Added `availability_zones` attribute to cluster node group.
+
 #### v0.4.0
 - Added `region` support for provider.
 - Added `mcs_region` and `mcs_regions` data sources.

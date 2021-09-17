@@ -13,7 +13,6 @@ import (
 	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/valid"
 )
 
-// OperationCreate ...
 const (
 	operationCreate          = 60
 	operationUpdate          = 60

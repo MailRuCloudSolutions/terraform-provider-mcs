@@ -91,6 +91,11 @@ func dataSourceKubernetesNodeGroup() *schema.Resource {
 					},
 				},
 			},
+			"availability_zones": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -121,6 +126,7 @@ func dataSourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{})
 	d.Set("autoscaling_enabled", nodeGroup.Autoscaling)
 	d.Set("nodes", flattenNodes(nodeGroup.Nodes))
 	d.Set("state", nodeGroup.State)
+	d.Set("availability_zones", nodeGroup.AvailabilityZones)
 
 	if err := d.Set("created_at", getTimestamp(&nodeGroup.CreatedAt)); err != nil {
 		log.Printf("[DEBUG] Unable to set mcs_kubernetes_node_group created_at: %s", err)
