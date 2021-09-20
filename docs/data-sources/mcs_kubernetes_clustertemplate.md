@@ -5,7 +5,7 @@ description: |-
   Get information on an MCS kubernetes cluster template.
 ---
 
-# mcs\_kubernetes\_cluster\_template
+# MCS Kubernetes Cluster Template
 
 Use this data source to get the ID of an available MCS kubernetes cluster
 template.

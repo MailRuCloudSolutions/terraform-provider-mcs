@@ -9,6 +9,7 @@ description: |-
 
 #### v0.5.0
 - Added `availability_zones` attribute to cluster node group.
+- Added `mcs_kubernetes_clustertemplates` data source.
 
 #### v0.4.0
 - Added `region` support for provider.
