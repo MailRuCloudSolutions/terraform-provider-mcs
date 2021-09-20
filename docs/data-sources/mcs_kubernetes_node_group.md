@@ -5,7 +5,7 @@ description: |-
   Get information on clusters node group.
 ---
 
-# mcs\_kubernetes\_cluster
+# MCS Kubernetes Node Group
 
 Use this data source to get the ID of an available MCS kubernetes clusters node group.
 
@@ -27,15 +27,16 @@ The following arguments are supported:
 `id` is set to the ID of the found cluster template. In addition, the following
 attributes are exported:
 
-* `name` - The name of the node group.
+* `autoscaling_enabled` - Determines whether the autoscaling is enabled.
+* `availability_zones` - The list of availability zones of the node group.
 * `cluster_id` - The UUID of cluster that node group belongs.
-* `node_count` - The count of nodes in node group.
+* `flavor_id` - The id of flavor.
 * `max_nodes` - The maximum amount of nodes in node group.
 * `min_nodes` - The minimum amount of nodes in node group.
+* `name` - The name of the node group.
+* `node_count` - The count of nodes in node group.
+* `nodes` - The list of node group's node objects.
+* `state` - Determines current state of node group (RUNNING, SHUTOFF, ERROR).
+* `uuid` - The UUID of the cluster's node group.
 * `volume_size` - The amount of memory of volume in Gb.
 * `volume_type` - The type of volume.
-* `flavor_id` - The id of flavor.
-* `autoscaling_enabled` - Determines whether the autoscaling is enabled.
-* `uuid` - The UUID of the cluster's node group.
-* `state` - Determines current state of node group (RUNNING, SHUTOFF, ERROR).
-* `nodes` - The list of node group's node objects.

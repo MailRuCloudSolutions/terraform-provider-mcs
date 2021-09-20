@@ -53,8 +53,7 @@ func TestAccKubernetesNodeGroup_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckKubernetes(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKubernetesClusterDestroy,
-		Steps: []resource.TestStep{
+		CheckDestroy: testAccCheckKubernetesClusterDestroy, Steps: []resource.TestStep{
 			{
 				Config: testAccKubernetesNodeGroupBasic(clusterName, testAccKubernetesClusterBasic(createClusterFixture), ngFixture),
 				Check: resource.ComposeTestCheckFunc(
@@ -201,7 +200,6 @@ func getNgAndResource(n string, s *terraform.State) (*terraform.ResourceState, *
 }
 
 func testAccKubernetesNodeGroupBasic(clusterName, clusterResource string, fixture *nodeGroupCreateOpts) string {
-
 	return fmt.Sprintf(
 		nodeGroupResourceFixture,
 		clusterResource,

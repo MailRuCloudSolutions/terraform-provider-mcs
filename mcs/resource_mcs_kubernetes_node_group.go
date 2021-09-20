@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/util/randutil"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
+	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/util/randutil"
+	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/valid"
 )
 
 func resourceKubernetesNodeGroup() *schema.Resource {
@@ -135,6 +136,21 @@ func resourceKubernetesNodeGroup() *schema.Resource {
 				ForceNew: false,
 				Computed: true,
 			},
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"updated_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zones": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -154,6 +170,19 @@ func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{})
 		VolumeSize:  d.Get("volume_size").(int),
 		VolumeType:  d.Get("volume_type").(string),
 		Autoscaling: d.Get("autoscaling_enabled").(bool),
+	}
+
+	if zonesRaw, ok := d.GetOk("availability_zones"); ok {
+		zones := zonesRaw.([]interface{})
+		az := make([]string, 0, len(zones))
+		for _, zone := range zones {
+			z := zone.(string)
+			if err := valid.AvailabilityZone(z); err != nil {
+				return err
+			}
+			az = append(az, z)
+		}
+		createOpts.AvailabilityZones = az
 	}
 
 	if ngName, ok := d.GetOk("name"); ok {
@@ -255,6 +284,7 @@ func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("flavor_id", s.FlavorID)
 	d.Set("autoscaling_enabled", s.Autoscaling)
 	d.Set("cluster_id", s.ClusterID)
+	d.Set("availability_zones", s.AvailabilityZones)
 
 	if err := d.Set("created_at", getTimestamp(&s.CreatedAt)); err != nil {
 		log.Printf("[DEBUG] Unable to set mcs_kubernetes_node_group created_at: %s", err)
