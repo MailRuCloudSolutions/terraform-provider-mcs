@@ -40,7 +40,7 @@ func TestAccKubernetesNodeGroup_basic(t *testing.T) {
 
 	clusterName := "testcluster" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)
 	createClusterFixture := clusterFixture(clusterName, clusterTemplateID, osFlavorID,
-		osKeypairName, osNetworkID, osSubnetworkID, 1)
+		osKeypairName, osNetworkID, osSubnetworkID, "MS1", 1)
 	clusterResourceName := "mcs_kubernetes_cluster." + clusterName
 
 	nodeGroupName := "testng" + acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum)

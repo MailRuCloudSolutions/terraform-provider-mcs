@@ -78,7 +78,7 @@ func (c *config) DatabaseV1Client(region string) (ContainerClient, error) {
 }
 
 func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error) {
-	if os.Getenv("TF_ACC") != "" {
+	if os.Getenv("TF_ACC") == "" {
 		return &dummyConfig{}, nil
 	}
 
@@ -209,14 +209,15 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"mcs_kubernetes_clustertemplate": dataSourceKubernetesClusterTemplate(),
-			"mcs_kubernetes_cluster":         dataSourceKubernetesCluster(),
-			"mcs_kubernetes_node_group":      dataSourceKubernetesNodeGroup(),
-			"mcs_db_instance":                dataSourceDatabaseInstance(),
-			"mcs_db_user":                    dataSourceDatabaseUser(),
-			"mcs_db_database":                dataSourceDatabaseDatabase(),
-			"mcs_region":                     dataSourceMcsRegion(),
-			"mcs_regions":                    dataSourceMcsRegions(),
+			"mcs_kubernetes_clustertemplate":  dataSourceKubernetesClusterTemplate(),
+			"mcs_kubernetes_clustertemplates": dataSourceKubernetesClusterTemplates(),
+			"mcs_kubernetes_cluster":          dataSourceKubernetesCluster(),
+			"mcs_kubernetes_node_group":       dataSourceKubernetesNodeGroup(),
+			"mcs_db_instance":                 dataSourceDatabaseInstance(),
+			"mcs_db_user":                     dataSourceDatabaseUser(),
+			"mcs_db_database":                 dataSourceDatabaseDatabase(),
+			"mcs_region":                      dataSourceMcsRegion(),
+			"mcs_regions":                     dataSourceMcsRegions(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{

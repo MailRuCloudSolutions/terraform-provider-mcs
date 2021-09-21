@@ -23,11 +23,12 @@ const clusterResourceFixture = `
           network_id = "%s"
           subnet_id = "%s"
           floating_ip_enabled = false
+          availability_zone = "%s"
 		}
 `
 
 func clusterFixture(name, clusterTemplateID, flavorID, keypair,
-	networkID, subnetID string, masterCount int) *clusterCreateOpts {
+	networkID, subnetID, az string, masterCount int) *clusterCreateOpts {
 	return &clusterCreateOpts{
 		Name:              name,
 		MasterCount:       masterCount,
@@ -36,6 +37,7 @@ func clusterFixture(name, clusterTemplateID, flavorID, keypair,
 		Keypair:           keypair,
 		NetworkID:         networkID,
 		SubnetID:          subnetID,
+		AvailabilityZone:  az,
 	}
 }
 
@@ -70,11 +72,11 @@ func TestAccKubernetesCluster_basic(t *testing.T) {
 	resourceName := "mcs_kubernetes_cluster." + clusterName
 
 	createClusterFixture := clusterFixture(clusterName, clusterTemplateID, osFlavorID,
-		osKeypairName, osNetworkID, osSubnetworkID, 1)
+		osKeypairName, osNetworkID, osSubnetworkID, "MS1", 1)
 	jsonClusterFixture, _ := createClusterFixture.Map()
 
 	scaleFlavorClusterFixture := clusterFixture(clusterName, clusterTemplateID, osNewFlavorID,
-		osKeypairName, osNetworkID, osSubnetworkID, 1)
+		osKeypairName, osNetworkID, osSubnetworkID, "MS1", 1)
 	scaleRequestFixture := map[string]interface{}{"action": "resize_masters", "payload": map[string]interface{}{"flavor": scaleFlavorClusterFixture.MasterFlavorID}}
 	jsonClusterScaleFixture, _ := scaleFlavorClusterFixture.Map()
 
@@ -205,5 +207,6 @@ func testAccKubernetesClusterBasic(createOpts *clusterCreateOpts) string {
 		createOpts.Keypair,
 		createOpts.NetworkID,
 		createOpts.SubnetID,
+		createOpts.AvailabilityZone,
 	)
 }

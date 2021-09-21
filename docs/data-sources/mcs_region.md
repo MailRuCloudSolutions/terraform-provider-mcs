@@ -11,7 +11,7 @@ As well as validating a given region name this resource can be used to discover 
 
 ### Example Usage
 
-The following example shows how the resource might be used to obtain the name of the AWS region configured on the provider.
+The following example shows how the resource might be used to obtain the name of the MCS region configured on the provider.
 
 ```hcl
 data "mcs_region" "current" {}
@@ -25,7 +25,7 @@ The following arguments are supported:
 
 ### Attributes Reference
 
-* `id` - Id of the region.
+* `id` - ID of the region.
 * `parent_region` - Parent of the region.
 * `description` - Description of the region.
 

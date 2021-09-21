@@ -5,7 +5,7 @@ description: |-
 List available mcs regions.
 ---
 
-`mcs_regions` provides information about MCS regions. Can be used to filter regions by parent region. To get details of each region the data source can be combined with the aws_region data source.
+`mcs_regions` provides information about MCS regions. Can be used to filter regions by parent region. To get details of each region the data source can be combined with the `mcs_region` data source.
 
 ### Example Usage
 
