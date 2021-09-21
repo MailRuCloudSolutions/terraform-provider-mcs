@@ -15,7 +15,7 @@ func TestAccKubernetesClusterDataSourceBasic(t *testing.T) {
 	datasourceName := "data.mcs_kubernetes_cluster." + clusterName
 
 	createClusterFixture := clusterFixture(clusterName, clusterTemplateID, osFlavorID,
-		osKeypairName, osNetworkID, osSubnetworkID, 1)
+		osKeypairName, osNetworkID, osSubnetworkID, "MS1", 1)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheckKubernetes(t) },
