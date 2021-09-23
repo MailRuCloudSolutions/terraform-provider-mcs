@@ -78,7 +78,7 @@ func (c *config) DatabaseV1Client(region string) (ContainerClient, error) {
 }
 
 func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error) {
-	if os.Getenv("TF_ACC") == "" {
+	if os.Getenv("TF_ACC") != "" {
 		return &dummyConfig{}, nil
 	}
 
