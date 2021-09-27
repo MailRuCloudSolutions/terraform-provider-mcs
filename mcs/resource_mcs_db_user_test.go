@@ -201,7 +201,7 @@ resource "mcs_db_database" "testdb2" {
 resource "mcs_db_user" "basic" {
   name        = "basic"
   instance_id = "${mcs_db_instance.basic.id}"
-  password    = "password"
+  password    = "Qw!weZ12$"
   databases = [
 	"${mcs_db_database.testdb1.name}"
   ]
@@ -238,7 +238,7 @@ resource "mcs_db_database" "testdb2" {
 resource "mcs_db_user" "basic" {
   name        = "basic"
   instance_id = "${mcs_db_instance.basic.id}"
-  password    = "password"
+  password    = "Qw!weZ12$"
   databases = [
 	  "${mcs_db_database.testdb2.name}",
 	  "${mcs_db_database.testdb1.name}"

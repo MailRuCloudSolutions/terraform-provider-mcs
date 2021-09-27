@@ -12,15 +12,17 @@ import (
 )
 
 var (
-	clusterTemplateID    = os.Getenv("CLUSTER_TEMPLATE_ID")
-	osFlavorID           = os.Getenv("OS_FLAVOR_ID")
-	osNewFlavorID        = os.Getenv("OS_NEW_FLAVOR_ID")
-	osNetworkID          = os.Getenv("OS_NETWORK_ID")
-	osSubnetworkID       = os.Getenv("OS_SUBNETWORK_ID")
-	osRegionName         = os.Getenv("OS_REGION_NAME")
-	osKeypairName        = os.Getenv("OS_KEYPAIR_NAME")
-	osDBDatastoreVersion = os.Getenv("OS_DB_DATASTORE_VERSION")
-	osDBDatastoreType    = os.Getenv("OS_DB_DATASTORE_TYPE")
+	clusterTemplateID          = os.Getenv("CLUSTER_TEMPLATE_ID")
+	osFlavorID                 = os.Getenv("OS_FLAVOR_ID")
+	osNewFlavorID              = os.Getenv("OS_NEW_FLAVOR_ID")
+	osNetworkID                = os.Getenv("OS_NETWORK_ID")
+	osSubnetworkID             = os.Getenv("OS_SUBNETWORK_ID")
+	osRegionName               = os.Getenv("OS_REGION_NAME")
+	osKeypairName              = os.Getenv("OS_KEYPAIR_NAME")
+	osDBDatastoreVersion       = os.Getenv("OS_DB_DATASTORE_VERSION")
+	osDBDatastoreType          = os.Getenv("OS_DB_DATASTORE_TYPE")
+	osDBShardsDatastoreType    = os.Getenv("OS_DB_SHARDS_DATASTORE_TYPE")
+	osDBShardsDatastoreVersion = os.Getenv("OS_DB_SHARDS_DATASTORE_VERSION")
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
@@ -38,6 +40,7 @@ func testAccPreCheckDatabase(t *testing.T) {
 		"OS_NETWORK_ID":           osNetworkID,
 		"OS_DB_DATASTORE_VERSION": osDBDatastoreVersion,
 		"OS_DB_DATASTORE_TYPE":    osDBDatastoreType,
+		"OS_FLAVOR_ID":            osFlavorID,
 	}
 	for k, v := range vars {
 		if v == "" {
