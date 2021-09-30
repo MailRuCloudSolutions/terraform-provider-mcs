@@ -5,6 +5,8 @@ description: |-
 List available mcs kubernetes cluster templates.
 ---
 
+# MCS Kubernetes Cluster Templates
+
 `mcs_kubernetes_cluster_templates` returns list of available MCS Kubernetes Cluster Templates. 
 To get details of each cluster template the data source can be combined with the `mcs_kubernetes_clustertemplate` data source.
 
