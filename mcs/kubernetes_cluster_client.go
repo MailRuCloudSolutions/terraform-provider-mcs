@@ -493,15 +493,3 @@ func clusterDelete(client ContainerClient, id string) (r clusterDeleteResult) {
 	r.Header = result.Header
 	return
 }
-
-func getRequestOpts(codes ...int) *gophercloud.RequestOpts {
-	reqOpts := &gophercloud.RequestOpts{
-		OkCodes:      codes,
-		ErrorContext: err404{},
-	}
-	if len(codes) != 0 {
-		reqOpts.OkCodes = codes
-	}
-	addMicroVersionHeader(reqOpts)
-	return reqOpts
-}

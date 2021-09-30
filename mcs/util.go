@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/mitchellh/mapstructure"
 )
@@ -31,7 +30,7 @@ func getTimestamp(t *time.Time) string {
 // checkDeleted checks the error to see if it's a 404 (Not Found) and, if so,
 // sets the resource ID to the empty string instead of throwing an error.
 func checkDeleted(d *schema.ResourceData, err error, msg string) error {
-	if _, ok := err.(gophercloud.Err404er); ok {
+	if _, ok := err.(mcsError404); ok {
 		d.SetId("")
 		return nil
 	}

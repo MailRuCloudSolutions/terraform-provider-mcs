@@ -11,7 +11,7 @@ import (
 type dbClusterStatus string
 
 var (
-	dbClusterStatusActive   dbClusterStatus = "NONE"
+	dbClusterStatusActive   dbClusterStatus = "CLUSTER_ACTIVE"
 	dbClusterStatusBuild    dbClusterStatus = "BUILDING"
 	dbClusterStatusDeleted  dbClusterStatus = "DELETED"
 	dbClusterStatusDeleting dbClusterStatus = "DELETING"
@@ -334,7 +334,7 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// Wait for the cluster to become available.
-	log.Printf("[DEBUG] Waiting for mcs_db_instance %s to become available", cluster.ID)
+	log.Printf("[DEBUG] Waiting for mcs_db_cluster %s to become available", cluster.ID)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbClusterStatusBuild)},

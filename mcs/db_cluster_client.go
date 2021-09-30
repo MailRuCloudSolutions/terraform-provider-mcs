@@ -125,7 +125,7 @@ type dbClusterShrinkOpts struct {
 // dbClusterResp represents database cluster response
 type dbClusterResp struct {
 	ConfigurationID string                  `json:"configuration_id"`
-	Created         dateTimeFormat          `json:"created"`
+	Created         dateTimeWithoutTZFormat `json:"created"`
 	DataStore       *dataStore              `json:"datastore"`
 	HealthStatus    string                  `json:"health_status"`
 	ID              string                  `json:"id"`
@@ -134,7 +134,7 @@ type dbClusterResp struct {
 	LoadbalancerID  string                  `json:"loadbalancer_id"`
 	Name            string                  `json:"name"`
 	Task            dbClusterTask           `json:"task"`
-	Updated         dateTimeFormat          `json:"updated"`
+	Updated         dateTimeWithoutTZFormat `json:"updated"`
 }
 
 // dbClusterInstanceResp represents database cluster instance response
@@ -277,8 +277,9 @@ func dbClusterCreate(client databaseClient, opts optsBuilder) (r createClusterRe
 
 // dbClusterGet performs request to get database cluster
 func dbClusterGet(client databaseClient, id string) (r getClusterResult) {
+	reqOpts := getRequestOpts(200)
 	var result *http.Response
-	result, r.Err = client.Get(getURL(client, dbClustersAPIPath, id), &r.Body, nil)
+	result, r.Err = client.Get(getURL(client, dbClustersAPIPath, id), &r.Body, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -292,8 +293,9 @@ func dbClusterAction(client databaseClient, id string, opts optsBuilder) (r clus
 		r.Err = err
 		return
 	}
+	reqOpts := getRequestOpts(202)
 	var result *http.Response
-	result, r.Err = client.Post(getURL(client, dbClustersAPIPath, id), b, nil, nil)
+	result, r.Err = client.Post(getURL(client, dbClustersAPIPath, id), b, nil, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}

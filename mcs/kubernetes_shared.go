@@ -3,7 +3,6 @@ package mcs
 import (
 	"fmt"
 
-	"github.com/gophercloud/gophercloud"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/mitchellh/mapstructure"
 )
@@ -87,7 +86,7 @@ func kubernetesStateRefreshFunc(client ContainerClient, clusterID string) resour
 	return func() (interface{}, string, error) {
 		c, err := clusterGet(client, clusterID).Extract()
 		if err != nil {
-			if _, ok := err.(gophercloud.Err404er); ok {
+			if _, ok := err.(mcsError404); ok {
 				return c, string(clusterStatusDeleted), nil
 			}
 			return nil, "", err

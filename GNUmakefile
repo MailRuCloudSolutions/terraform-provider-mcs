@@ -23,7 +23,7 @@ test: fmtcheck
 		xargs -t -n4 go test $(TESTARGS) -cover -timeout=30s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 TF_ACC_MOCK_MCS=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
 testacc_dbaas: fmtcheck
 	TF_ACC=1 go test -run=TestAccDatabase -v $(TESTARGS) -timeout 120m

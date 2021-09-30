@@ -62,6 +62,7 @@ var testAccDatabaseClusterWithShardsBasic = fmt.Sprintf(`
   
 	shard {
 	  size = 2
+	  shard_id = "shard0"
 	  flavor_id = "%s"
 	  volume_size      = 8
 	  volume_type = "ms1"
@@ -73,6 +74,7 @@ var testAccDatabaseClusterWithShardsBasic = fmt.Sprintf(`
   
 	shard {
 	  size = 1
+	  shard_id = "shard1"
 	  flavor_id = "%s"
 	  volume_size = 8
 	  volume_type = "ms1"
@@ -82,4 +84,4 @@ var testAccDatabaseClusterWithShardsBasic = fmt.Sprintf(`
 	  availability_zone = "MS1"
 	}
  }
-`, osDBDatastoreVersion, osDBDatastoreType, osFlavorID, osNetworkID, osFlavorID, osNetworkID)
+`, osDBShardsDatastoreVersion, osDBShardsDatastoreType, osFlavorID, osNetworkID, osFlavorID, osNetworkID)

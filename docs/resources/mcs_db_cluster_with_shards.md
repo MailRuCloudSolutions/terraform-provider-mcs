@@ -55,7 +55,7 @@ resource "mcs_db_cluster_with_shards" "db-cluster-with-shards" {
 * `name` - (Required) The name of the cluster. Changing this creates a new cluster
 
 * `datastore` - (Required) Object that represents datastore of the cluster. Changing this creates a new cluster. It has following attributes:
-    * `type` - (Required) Type of the datastore. Changing this creates a new cluster. Type of the datastore can either be "galera_mysql" or "postgresql".
+    * `type` - (Required) Type of the datastore. Changing this creates a new cluster. Type of the datastore must be "clickhouse".
     * `version` - (Required) Version of the datastore. Changing this creates a new cluster.
 
 * `keypair` - Name of the keypair to be attached to cluster. Changing this creates a new cluster.

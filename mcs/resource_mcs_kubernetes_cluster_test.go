@@ -95,7 +95,7 @@ func TestAccKubernetesCluster_basic(t *testing.T) {
 	// Delete cluster
 	clientFixture.On("Delete", testAccURL+"/clusters/"+clusterUUID, getRequestOpts()).Return(makeClusterDeleteResponseFixture(), nil)
 	// Check deleted
-	clientFixture.On("Get", testAccURL+"/clusters/"+clusterUUID, mock.Anything, getRequestOpts(200)).Return(err404{}).Twice()
+	clientFixture.On("Get", testAccURL+"/clusters/"+clusterUUID, mock.Anything, getRequestOpts(200)).Return(mcsError404{}).Twice()
 
 	var cluster cluster
 

@@ -1,10 +1,7 @@
 package mcs
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/gophercloud/gophercloud"
 	db "github.com/gophercloud/gophercloud/openstack/db/v1/databases"
@@ -26,23 +23,23 @@ type databaseClient interface {
 
 // instanceResp represents result of database instance get
 type instanceResp struct {
-	СomputeInstanceID string         `json:"compute_instance_id"`
-	Configuration     *configuration `json:"configuration"`
-	ConfigurationID   string         `json:"configuration_id"`
-	ID                string         `json:"id"`
-	Created           dateTimeFormat `json:"created"`
-	Updated           dateTimeFormat `json:"updated"`
-	DataStore         *dataStore     `json:"datastore"`
-	Flavor            *links         `json:"flavor"`
-	GaVersion         string         `json:"ga_version"`
-	HealthStatus      string         `json:"health_status"`
-	IP                *[]string      `json:"ip"`
-	Links             *[]link        `json:"links"`
-	Name              string         `json:"name"`
-	Region            string         `json:"region"`
-	Status            string         `json:"status"`
-	Volume            *volume        `json:"volume"`
-	ReplicaOf         *links         `json:"replica_of"`
+	СomputeInstanceID string                  `json:"compute_instance_id"`
+	Configuration     *configuration          `json:"configuration"`
+	ConfigurationID   string                  `json:"configuration_id"`
+	ID                string                  `json:"id"`
+	Created           dateTimeWithoutTZFormat `json:"created"`
+	Updated           dateTimeWithoutTZFormat `json:"updated"`
+	DataStore         *dataStore              `json:"datastore"`
+	Flavor            *links                  `json:"flavor"`
+	GaVersion         string                  `json:"ga_version"`
+	HealthStatus      string                  `json:"health_status"`
+	IP                *[]string               `json:"ip"`
+	Links             *[]link                 `json:"links"`
+	Name              string                  `json:"name"`
+	Region            string                  `json:"region"`
+	Status            string                  `json:"status"`
+	Volume            *volume                 `json:"volume"`
+	ReplicaOf         *links                  `json:"replica_of"`
 }
 
 // volume represents database instance volume
@@ -81,22 +78,6 @@ type links struct {
 type dataStore struct {
 	Type    string `json:"type" required:"true"`
 	Version string `json:"version" required:"true"`
-}
-
-// dateTimeFormat represents format of time used in dbaas
-type dateTimeFormat struct {
-	time.Time
-}
-
-// UnmarshalJSON is used to correctly unmarshal datetime fields
-func (t *dateTimeFormat) UnmarshalJSON(b []byte) (err error) {
-	layout := "2006-01-02T15:04:05"
-	s := strings.Trim(string(b), "\"")
-	if s == "null" {
-		return
-	}
-	t.Time, err = time.Parse(layout, s)
-	return
 }
 
 // link represents database instance link
@@ -246,18 +227,6 @@ type databaseCreateOpts struct {
 // createOptsBuilder is used to build create opts map
 type createOptsBuilder interface {
 	Map() (map[string]interface{}, error)
-}
-
-// err404 is needed to customize http 404 error message
-type err404 struct {
-	gophercloud.ErrUnexpectedResponseCode
-}
-
-// Error404 overrides gophercloud http 404 error message
-func (e err404) Error404(res gophercloud.ErrUnexpectedResponseCode) error {
-	e.Info = fmt.Sprintf("resource not found with: [%s %s], error message: %s",
-		res.Method, res.URL, res.Body)
-	return e
 }
 
 // Map converts opts to a map (for a request body)
@@ -609,8 +578,9 @@ func instanceAction(client databaseClient, id string, opts optsBuilder) (r actio
 		r.Err = err
 		return
 	}
+	reqOpts := getRequestOpts(202)
 	var result *http.Response
-	result, r.Err = client.Post(instanceActionURL(client, instancesAPIPath, id), b, nil, nil)
+	result, r.Err = client.Post(instanceActionURL(client, instancesAPIPath, id), b, nil, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -636,7 +606,8 @@ func instanceRootUserEnable(client databaseClient, id string, opts optsBuilder) 
 // instanceRootUserGet performs request to get root user of database instance
 func instanceRootUserGet(client databaseClient, id string) (r isRootUserEnabledResult) {
 	var result *http.Response
-	result, err := client.Get(rootUserURL(client, instancesAPIPath, id), &r.Body, nil)
+	reqOpts := getRequestOpts(200)
+	result, err := client.Get(rootUserURL(client, instancesAPIPath, id), &r.Body, reqOpts)
 	if err == nil {
 		r.Header = result.Header
 	}
@@ -656,8 +627,9 @@ func instanceRootUserDisable(client databaseClient, id string) (r deleteRootUser
 
 // instanceDelete performs request to delete database instance
 func instanceDelete(client databaseClient, id string) (r deleteResult) {
+	reqOpts := getRequestOpts()
 	var result *http.Response
-	result, r.Err = client.Delete(getURL(client, instancesAPIPath, id), nil)
+	result, r.Err = client.Delete(getURL(client, instancesAPIPath, id), reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -671,8 +643,9 @@ func userCreate(client databaseClient, id string, opts createOptsBuilder) (r use
 		r.Err = err
 		return
 	}
+	reqOpts := getRequestOpts(202)
 	var result *http.Response
-	result, r.Err = client.Post(instanceUsersURL(client, instancesAPIPath, id), b, nil, nil)
+	result, r.Err = client.Post(instanceUsersURL(client, instancesAPIPath, id), b, nil, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -688,8 +661,9 @@ func userList(client databaseClient, id string) pagination.Pager {
 
 // userDelete performs request to delete database user
 func userDelete(client databaseClient, id string, userName string) (r userDeleteResult) {
+	reqOpts := getRequestOpts()
 	var result *http.Response
-	result, r.Err = client.Delete(instanceUserURL(client, instancesAPIPath, id, userName), nil)
+	result, r.Err = client.Delete(instanceUserURL(client, instancesAPIPath, id, userName), reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -746,8 +720,9 @@ func databaseCreate(client databaseClient, id string, opts createOptsBuilder) (r
 		r.Err = err
 		return
 	}
+	reqOpts := getRequestOpts(202)
 	var result *http.Response
-	result, r.Err = client.Post(instanceDatabasesURL(client, instancesAPIPath, id), b, nil, nil)
+	result, r.Err = client.Post(instanceDatabasesURL(client, instancesAPIPath, id), b, nil, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -763,8 +738,9 @@ func databaseList(client databaseClient, id string) pagination.Pager {
 
 // databaseDelete performs request to delete database
 func databaseDelete(client databaseClient, id string, dbName string) (r databaseDeleteResult) {
+	reqOpts := getRequestOpts()
 	var result *http.Response
-	result, r.Err = client.Delete(instanceDatabaseURL(client, instancesAPIPath, id, dbName), nil)
+	result, r.Err = client.Delete(instanceDatabaseURL(client, instancesAPIPath, id, dbName), reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
