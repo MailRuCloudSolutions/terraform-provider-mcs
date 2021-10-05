@@ -13,7 +13,7 @@ Provides a kubernetes cluster resource. This can be used to create, modify and d
 
 ```terraform
 
-resource "mcs_kubernetes_cluster_v1" "mycluster" {
+resource "mcs_kubernetes_cluster" "mycluster" {
       name                = "terracluster"
       cluster_template_id = example_template_id
       master_flavor       = example_flavor_id
@@ -31,10 +31,10 @@ The following arguments are supported:
 * `name` - (Required) The name of the cluster. Changing this creates a new cluster. Should match the pattern `^[a-zA-Z][a-zA-Z0-9_.-]*$`.
 
 * `cluster_template_id` - (Required) The UUID of the Kubernetes cluster
-    template. It can be obtained using the cluster_template data source
+    template. It can be obtained using the cluster_template data source.
 
 * `master_flavor` - (Optional) The ID of flavor for the master nodes.
- If master_flavor is not present, value from cluster_template will be used
+ If master_flavor is not present, value from cluster_template will be used.
 
 * `network_id` - (Required) The UUID of the network that will be attached to the cluster.
  Changing this creates a new cluster.

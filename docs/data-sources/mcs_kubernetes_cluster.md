@@ -49,7 +49,6 @@ attributes are exported:
 * `cluster_template_id` - The UUID of the V1 Container Infra cluster template.
 * `create_timeout` - The timeout (in minutes) for creating the cluster.
 * `discovery_url` - The URL used for cluster node discovery.
-* `flavor` - The ID of flavor for the nodes of the cluster.
 * `master_flavor` - The ID of the flavor for the master nodes.
 * `keypair` - The name of the Compute service SSH keypair.
 * `labels` - The list of key value pairs representing additional properties of
