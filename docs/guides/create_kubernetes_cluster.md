@@ -19,7 +19,6 @@ resource "mcs_kubernetes_cluster_v1" "k8s-cluster" {
 
   name = "k8s-cluster"
   cluster_template_id = var.k8s-template.id
-  flavor              = var.k8s-flavor.id
   master_flavor       = var.k8s-flavor.id
   master_count        = 3
 

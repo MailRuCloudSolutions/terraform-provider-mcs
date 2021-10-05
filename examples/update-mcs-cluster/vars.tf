@@ -5,7 +5,7 @@ variable "public-key-file" {
 
 variable "k8s-flavor" {
     type = string
-    default = "Basic-1-2-20"
+    default = "Standard-2-4-50"
 }
 
 variable "k8s-network-id" {

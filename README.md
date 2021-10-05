@@ -31,15 +31,15 @@ $ cd $GOPATH/src/github.com/MailRuCloudSolutions
 $ git clone git@github.com:MailRuCloudSolutions/terraform-provider-mcs.git
 $ cd $GOPATH/src/github.com/MailRuCloudSolutions/terraform-provider-mcs
 $ make build_darwin
-$ mdkir -p ~/.terraform.d/plugins/hub.mcs.mail.ru/repository/mcs/0.5.1/darwin_amd64/
-$ cp terraform-provider-mcs_darwin ~/.terraform.d/plugins/hub.mcs.mail.ru/repository/mcs/0.5.1/darwin_amd64/terraform-provider-mcs_v0.5.1
+$ mdkir -p ~/.terraform.d/plugins/hub.mcs.mail.ru/repository/mcs/0.5.3/darwin_amd64/
+$ cp terraform-provider-mcs_darwin ~/.terraform.d/plugins/hub.mcs.mail.ru/repository/mcs/0.5.3/darwin_amd64/terraform-provider-mcs_v0.5.3
 
 $ cat <<EOF > main.tf 
 terraform {
   required_providers {
     mcs = {
       source  = "hub.mcs.mail.ru/repository/mcs"
-      version = "0.5.1"
+      version = "0.5.3"
     }
   }
 }
@@ -52,8 +52,8 @@ Publishing provider
 Provider publishes via action [release](https://github.com/MailRuCloudSolutions/terraform-provider-mcs/blob/master/.github/workflows/release.yml).
 To call the action create new tag.
 ```sh
-$ git tag v0.5.1
-$ git push origin v0.5.1
+$ git tag v0.5.3
+$ git push origin v0.5.3
 ```
 
 Thank You!
