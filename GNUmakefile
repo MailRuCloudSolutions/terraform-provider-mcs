@@ -30,6 +30,9 @@ testacc_k8saas: fmtcheck
 testacc_dbaas: fmtcheck
 	TF_ACC=1 go test -run=TestAccDatabase $(TEST) -v $(TESTARGS) -timeout 120m
 
+testacc_bs: fmtcheck
+	TF_ACC=1 go test -run=TestAccBlockStorage -v $(TESTARGS) -timeout 120m
+
 vet:
 	@echo "go vet ."
 	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \

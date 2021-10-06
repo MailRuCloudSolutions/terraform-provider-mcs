@@ -28,6 +28,7 @@ type configer interface {
 	IdentityV3Client(region string) (ContainerClient, error)
 	ContainerInfraV1Client(region string) (ContainerClient, error)
 	DatabaseV1Client(region string) (ContainerClient, error)
+	BlockStorageV3Client(region string) (ContainerClient, error)
 	GetRegion() string
 }
 
@@ -75,6 +76,10 @@ func (c *config) DatabaseV1Client(region string) (ContainerClient, error) {
 		}
 	}
 	return client, clientErr
+}
+
+func (c *config) BlockStorageV3Client(region string) (ContainerClient, error) {
+	return c.Config.BlockStorageV3Client(region)
 }
 
 func newConfig(d *schema.ResourceData, terraformVersion string) (configer, error) {
@@ -228,6 +233,8 @@ func Provider() terraform.ResourceProvider {
 			"mcs_db_database":            resourceDatabaseDatabase(),
 			"mcs_db_cluster":             resourceDatabaseCluster(),
 			"mcs_db_cluster_with_shards": resourceDatabaseClusterWithShards(),
+			"mcs_blockstorage_volume":    resourceBlockStorageVolume(),
+			"mcs_blockstorage_snapshot":  resourceBlockStorageSnapshot(),
 		},
 	}
 
