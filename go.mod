@@ -3,7 +3,7 @@ module github.com/MailRuCloudSolutions/terraform-provider-mcs
 go 1.17
 
 require (
-	github.com/gophercloud/gophercloud v0.20.0
+	github.com/gophercloud/gophercloud v0.22.0
 	github.com/gophercloud/utils v0.0.0-20210909165623-d7085207ff6d
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/mitchellh/mapstructure v1.4.1
