@@ -3,6 +3,7 @@ package mcs
 import (
 	"fmt"
 
+	"github.com/gophercloud/gophercloud"
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -87,7 +88,7 @@ func databaseInstanceStateRefreshFunc(client databaseClient, instanceID string) 
 	return func() (interface{}, string, error) {
 		i, err := instanceGet(client, instanceID).extract()
 		if err != nil {
-			if _, ok := err.(mcsError404); ok {
+			if _, ok := err.(gophercloud.ErrDefault404); ok {
 				return i, "DELETED", nil
 			}
 			return nil, "", err
