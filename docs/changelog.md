@@ -7,6 +7,9 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.5.4
+- Added `loadbalancer_subnet_id` attribute to cluster.
+
 #### v0.5.0
 - Added `availability_zones` attribute to cluster node group.
 - Added `mcs_kubernetes_clustertemplates` data source.

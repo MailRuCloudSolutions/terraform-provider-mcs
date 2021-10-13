@@ -64,7 +64,6 @@ resource "mcs_kubernetes_cluster" "k8s-cluster" {
 
   name = "k8s-cluster"
   cluster_template_id = data.mcs_kubernetes_clustertemplate.ct.id
-  master_flavor       = data.openstack_compute_flavor_v2.k8s.id
   master_count        = 1
   keypair = openstack_compute_keypair_v2.keypair.id
   network_id = openstack_networking_network_v2.k8s.id

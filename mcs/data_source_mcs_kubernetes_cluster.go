@@ -133,6 +133,10 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"loadbalancer_subnet_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -177,6 +181,7 @@ func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("ingress_floating_ip", c.IngressFloatingIP)
 	d.Set("registry_auth_password", c.RegistryAuthPassword)
 	d.Set("availability_zone", c.AvailabilityZone)
+	d.Set("loadbalancer_subnet_id", c.LoadbalancerSubnetID)
 
 	k8sConfig, err := k8sConfigGet(containerInfraClient, c.UUID)
 	if err != nil {

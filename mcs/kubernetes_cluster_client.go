@@ -24,7 +24,7 @@ type ContainerClient interface {
 	ServiceURL(parts ...string) string
 }
 
-const magnumAPIMicroVersion = "1.19"
+const magnumAPIMicroVersion = "1.21"
 
 var magnumAPIMicroVersionHeader = map[string]string{
 	"MCS-API-Version": fmt.Sprintf("container-infra %s", magnumAPIMicroVersion),
@@ -140,6 +140,7 @@ type clusterCreateOpts struct {
 	IngressFloatingIP    string            `json:"ingress_floating_ip,omitempty"`
 	RegistryAuthPassword string            `json:"registry_auth_password,omitempty"`
 	AvailabilityZone     string            `json:"availability_zone,omitempty"`
+	LoadbalancerSubnetID string            `json:"loadbalancer_subnet_id,omitempty"`
 }
 
 type clusterActionsBaseOpts struct {
@@ -183,6 +184,7 @@ type cluster struct {
 	IngressFloatingIP    string             `json:"ingress_floating_ip"`
 	RegistryAuthPassword string             `json:"registry_auth_password"`
 	AvailabilityZone     string             `json:"availability_zone"`
+	LoadbalancerSubnetID string             `json:"loadbalancer_subnet_id"`
 }
 
 type clusterTemplate struct {
