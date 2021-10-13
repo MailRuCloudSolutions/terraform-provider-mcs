@@ -12,7 +12,7 @@ terraform {
 
 
 data "mcs_kubernetes_cluster" "your_cluster" {
-  uuid = "your_cluster_uuid"
+  cluster_id = "your_cluster_uuid"
 }
 
 resource "mcs_kubernetes_node_group" "default_ng" {

@@ -67,6 +67,8 @@ The following arguments are supported:
 
 * `region` - (Optional) Region to use for the cluster. Default is a region configured for provider. **New since v0.4.0**.
 
+* `loadbalancer_subnet_id` - (Optional) The UUID of the load balancer's subnet. Changing this creates new cluster. **New since v0.5.4**.
+
 ## Attributes
 
 This resource exports the following attributes:
@@ -97,6 +99,7 @@ This resource exports the following attributes:
 * `ingress_floating_ip` - Floating IP created for ingress service.
 * `registry_auth_password` - Docker registry access password.
 * `availability_zone` - Availability zone of the cluster. **New since v0.3.3**
+* `loadbalancer_subnet_id` - UUID of the load balancer's subnet. **New since v0.5.4**.
 
 ## Import
 

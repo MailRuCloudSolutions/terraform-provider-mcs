@@ -197,6 +197,12 @@ func resourceKubernetesCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"loadbalancer_subnet_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -240,6 +246,7 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 		APILBVIP:             d.Get("api_lb_vip").(string),
 		APILBFIP:             d.Get("api_lb_fip").(string),
 		IngressFloatingIP:    d.Get("ingress_floating_ip").(string),
+		LoadbalancerSubnetID: d.Get("loadbalancer_subnet_id").(string),
 		RegistryAuthPassword: d.Get("registry_auth_password").(string),
 		AvailabilityZone:     d.Get("availability_zone").(string),
 	}
@@ -320,6 +327,7 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("api_lb_vip", cluster.APILBVIP)
 	d.Set("api_lb_fip", cluster.APILBFIP)
 	d.Set("ingress_floating_ip", cluster.IngressFloatingIP)
+	d.Set("loadbalancer_subnet_id", cluster.LoadbalancerSubnetID)
 	d.Set("registry_auth_password", cluster.RegistryAuthPassword)
 	d.Set("availability_zone", cluster.AvailabilityZone)
 	d.Set("region", getRegion(d, config))
