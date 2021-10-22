@@ -12,6 +12,7 @@ func resourceDatabaseDatabase() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDatabaseDatabaseCreate,
 		Read:   resourceDatabaseDatabaseRead,
+		Update: resourceDatabaseDatabaseUpdate,
 		Delete: resourceDatabaseDatabaseDelete,
 
 		Timeouts: &schema.ResourceTimeout{
@@ -27,9 +28,18 @@ func resourceDatabaseDatabase() *schema.Resource {
 			},
 
 			"instance_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      false,
+				Deprecated:    "Please, use dmbs_id attribute instead",
+				ConflictsWith: []string{"dbms_id"},
+			},
+
+			"dbms_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"instance_id"},
 			},
 
 			"charset": {
@@ -43,6 +53,11 @@ func resourceDatabaseDatabase() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+
+			"dbms_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -55,17 +70,37 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	databaseName := d.Get("name").(string)
-	instanceID := d.Get("instance_id").(string)
+	dbmsIDRaw, dbmsIDOk := d.GetOk("dbms_id")
+	instanceIDRaw, instanceIDOk := d.GetOk("instance_id")
+	if !dbmsIDOk && !instanceIDOk {
+		return fmt.Errorf("only dbms_id must be set")
+	}
+	var dbmsID string
+	if instanceIDOk {
+		dbmsID = instanceIDRaw.(string)
+	} else {
+		dbmsID = dbmsIDRaw.(string)
+	}
 
-	instance, err := instanceGet(DatabaseV1Client, instanceID).extract()
+	dbmsResp, err := getDBMSResource(DatabaseV1Client, dbmsID)
 	if err != nil {
-		return fmt.Errorf("error while getting mcs_db_instance: %s", err)
+		return fmt.Errorf("error while getting instance or cluster: %s", err)
 	}
-	if instance.DataStore.Type == Redis {
-		return fmt.Errorf("operation not supported for this datastore")
+	var dbmsType string
+	if instanceResource, ok := dbmsResp.(instanceResp); ok {
+		if instanceResource.DataStore.Type == Redis {
+			return fmt.Errorf("operation not supported for this datastore")
+		}
+		if instanceResource.ReplicaOf != nil {
+			return fmt.Errorf("operation not supported for replica")
+		}
+		dbmsType = dbmsTypeInstance
 	}
-	if instance.ReplicaOf != nil {
-		return fmt.Errorf("operation not supported for replica")
+	if clusterResource, ok := dbmsResp.(dbClusterResp); ok {
+		if clusterResource.DataStore.Type == Redis {
+			return fmt.Errorf("operation not supported for this datastore")
+		}
+		dbmsType = dbmsTypeCluster
 	}
 
 	var databasesList databaseBatchCreateOpts
@@ -77,7 +112,7 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	databasesList.Databases = append(databasesList.Databases, db)
-	err = databaseCreate(DatabaseV1Client, instanceID, &databasesList).ExtractErr()
+	err = databaseCreate(DatabaseV1Client, dbmsID, &databasesList, dbmsType).ExtractErr()
 	if err != nil {
 		return fmt.Errorf("error creating mcs_db_database: %s", err)
 	}
@@ -85,7 +120,7 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"BUILD"},
 		Target:     []string{"ACTIVE"},
-		Refresh:    databaseDatabaseStateRefreshFunc(DatabaseV1Client, instanceID, databaseName),
+		Refresh:    databaseDatabaseStateRefreshFunc(DatabaseV1Client, dbmsID, databaseName, dbmsType),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      dbDatabaseDelay,
 		MinTimeout: dbDatabaseMinTimeout,
@@ -97,7 +132,9 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	// Store the ID now
-	d.SetId(fmt.Sprintf("%s/%s", instanceID, databaseName))
+	d.SetId(fmt.Sprintf("%s/%s", dbmsID, databaseName))
+	// Store dbms type
+	d.Set("dbms_type", dbmsType)
 
 	return resourceDatabaseDatabaseRead(d, meta)
 }
@@ -114,10 +151,17 @@ func resourceDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("invalid mcs_db_database ID: %s", d.Id())
 	}
 
-	instanceID := databaseID[0]
+	dbmsID := databaseID[0]
 	databaseName := databaseID[1]
 
-	exists, err := databaseDatabaseExists(DatabaseV1Client, instanceID, databaseName)
+	var dbmsType string
+	if dbmsTypeRaw, ok := d.GetOk("dbms_type"); ok {
+		dbmsType = dbmsTypeRaw.(string)
+	} else {
+		dbmsType = dbmsTypeInstance
+	}
+
+	exists, err := databaseDatabaseExists(DatabaseV1Client, dbmsID, databaseName, dbmsType)
 	if err != nil {
 		return fmt.Errorf("error checking if mcs_db_database %s exists: %s", d.Id(), err)
 	}
@@ -128,8 +172,23 @@ func resourceDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("name", databaseName)
+	if _, ok := d.GetOk("instance_id"); ok {
+		d.Set("instance_id", dbmsID)
+	}
+	if _, ok := d.GetOk("dbms_id"); ok {
+		d.Set("dbms_id", dbmsID)
+	}
 
 	return nil
+}
+
+func resourceDatabaseDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
+	_, dbmsIDOk := d.GetOk("dbms_id")
+	_, instanceIDOk := d.GetOk("instance_id")
+	if !dbmsIDOk && !instanceIDOk {
+		return fmt.Errorf("only dbms_id must be set")
+	}
+	return resourceDatabaseDatabaseRead(d, meta)
 }
 
 func resourceDatabaseDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
@@ -144,10 +203,11 @@ func resourceDatabaseDatabaseDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("invalid mcs_db_database ID: %s", d.Id())
 	}
 
-	instanceID := databaseID[0]
+	dbmsID := databaseID[0]
 	databaseName := databaseID[1]
+	dbmsType := d.Get("dbms_type").(string)
 
-	exists, err := databaseDatabaseExists(DatabaseV1Client, instanceID, databaseName)
+	exists, err := databaseDatabaseExists(DatabaseV1Client, dbmsID, databaseName, dbmsType)
 	if err != nil {
 		return fmt.Errorf("error checking if mcs_db_database %s exists: %s", d.Id(), err)
 	}
@@ -156,7 +216,7 @@ func resourceDatabaseDatabaseDelete(d *schema.ResourceData, meta interface{}) er
 		return nil
 	}
 
-	err = databaseDelete(DatabaseV1Client, instanceID, databaseName).ExtractErr()
+	err = databaseDelete(DatabaseV1Client, dbmsID, databaseName, dbmsType).ExtractErr()
 	if err != nil {
 		return fmt.Errorf("error deleting mcs_db_database %s: %s", d.Id(), err)
 	}

@@ -56,7 +56,7 @@ func testAccCheckDatabaseDatabaseExists(n string, instance *instanceResp, databa
 			return fmt.Errorf("Error creating cloud database client: %s", err)
 		}
 
-		pages, err := databaseList(DatabaseClient, instance.ID).AllPages()
+		pages, err := databaseList(DatabaseClient, instance.ID, "instance").AllPages()
 		if err != nil {
 			return fmt.Errorf("Unable to retrieve databases: %s", err)
 		}
@@ -95,7 +95,7 @@ func testAccCheckDatabaseDatabaseDestroy(s *terraform.State) error {
 			return fmt.Errorf("Malformed database name: %s", rs.Primary.ID)
 		}
 
-		pages, err := databaseList(DatabaseClient, parts[0]).AllPages()
+		pages, err := databaseList(DatabaseClient, parts[0], "instance").AllPages()
 		if err != nil {
 			return nil
 		}
@@ -139,6 +139,6 @@ resource "mcs_db_instance" "basic" {
 
 resource "mcs_db_database" "basic" {
   name        = "basic"
-  instance_id = "${mcs_db_instance.basic.id}"
+  dbms_id = "${mcs_db_instance.basic.id}"
 }
 `, osFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)

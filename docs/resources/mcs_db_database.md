@@ -28,10 +28,12 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the database. Changing this creates a new database.
 
-* `instance_id` - (Required) ID of the instance that database is created for. Changing this creates a new database.
+* `instance_id` - (Optional) ID of the instance that database is created for. **Deprecated** Please, use `dbms_id` attribute instead.
+
+* `dbms_id` - (Optional) ID of the instance or cluster that database is created for.
 
 * `charset` - Type of charset used for the database. Changing this creates a new database.
 
 * `collate` - Collate option of the database.  Changing this creates a new database.
 
-
+Either `instance_id` or `dbms_id` must be configured.

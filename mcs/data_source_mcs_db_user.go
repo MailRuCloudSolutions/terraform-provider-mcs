@@ -22,6 +22,12 @@ func dataSourceDatabaseUser() *schema.Resource {
 			},
 
 			"instance_id": {
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Please, use dmbs_id attribute instead",
+			},
+
+			"dbms_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -60,10 +66,20 @@ func dataSourceDatabaseUserRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("invalid mcs_db_user id: %s", id)
 	}
 
-	instanceID := userID[0]
+	dbmsID := userID[0]
 	userName := userID[1]
-
-	exists, userObj, err := databaseUserExists(DatabaseV1Client, instanceID, userName)
+	dbmsResp, err := getDBMSResource(DatabaseV1Client, dbmsID)
+	if err != nil {
+		return fmt.Errorf("error while getting resource: %s", err)
+	}
+	var dbmsType string
+	if _, ok := dbmsResp.(instanceResp); ok {
+		dbmsType = dbmsTypeInstance
+	}
+	if _, ok := dbmsResp.(dbClusterResp); ok {
+		dbmsType = dbmsTypeCluster
+	}
+	exists, userObj, err := databaseUserExists(DatabaseV1Client, dbmsID, userName, dbmsType)
 	if err != nil {
 		return fmt.Errorf("error checking if mcs_db_user %s exists: %s", d.Id(), err)
 	}
@@ -80,6 +96,7 @@ func dataSourceDatabaseUserRead(d *schema.ResourceData, meta interface{}) error 
 	if err := d.Set("databases", databases); err != nil {
 		return fmt.Errorf("unable to set databases: %s", err)
 	}
-
+	d.Set("instance_id", dbmsID)
+	d.Set("dbms_id", dbmsID)
 	return nil
 }

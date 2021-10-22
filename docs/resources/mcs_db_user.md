@@ -33,7 +33,11 @@ The following arguments are supported:
 
 * `host` - IP address of the host that user will be accessible from.
 
-* `instance_id` - (Required) ID of the instance that user is created for. Changing this creates a new user.
+* `instance_id` - (Optional) ID of the instance that user is created for. **Deprecated** Please, use `dbms_id` attribute instead.
+
+* `dbms_id` - (Optional) ID of the instance or cluster that user is created for.
 
 * `databases` - List of names of the databases, that user is created for.
+
+Either `instance_id` or `dbms_id` must be configured.
 

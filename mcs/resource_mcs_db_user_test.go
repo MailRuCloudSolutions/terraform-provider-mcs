@@ -97,7 +97,7 @@ func testAccCheckDatabaseUserExists(n string, instance *instanceResp, user *user
 			return fmt.Errorf("error creating cloud database client: %s", err)
 		}
 
-		pages, err := userList(DatabaseClient, instance.ID).AllPages()
+		pages, err := userList(DatabaseClient, instance.ID, "instance").AllPages()
 		if err != nil {
 			return fmt.Errorf("unable to retrieve users: %s", err)
 		}
@@ -146,7 +146,7 @@ func testAccCheckDatabaseUserDestroy(s *terraform.State) error {
 			return fmt.Errorf("malformed username: %s", rs.Primary.ID)
 		}
 
-		pages, err := userList(DatabaseClient, parts[0]).AllPages()
+		pages, err := userList(DatabaseClient, parts[0], "instance").AllPages()
 		if err != nil {
 			return nil
 		}
@@ -190,17 +190,17 @@ resource "mcs_db_instance" "basic" {
 
 resource "mcs_db_database" "testdb1" {
   name = "testdb1"
-  instance_id = "${mcs_db_instance.basic.id}"
+  dbms_id = "${mcs_db_instance.basic.id}"
 }
   
 resource "mcs_db_database" "testdb2" {
   name = "testdb2"
-  instance_id = "${mcs_db_instance.basic.id}"
+  dbms_id = "${mcs_db_instance.basic.id}"
 }
 
 resource "mcs_db_user" "basic" {
   name        = "basic"
-  instance_id = "${mcs_db_instance.basic.id}"
+  dbms_id = "${mcs_db_instance.basic.id}"
   password    = "Qw!weZ12$"
   databases = [
 	"${mcs_db_database.testdb1.name}"
@@ -227,17 +227,17 @@ resource "mcs_db_instance" "basic" {
 
 resource "mcs_db_database" "testdb1" {
 	name = "testdb1"
-	instance_id = "${mcs_db_instance.basic.id}"
+	dbms_id= "${mcs_db_instance.basic.id}"
 }
   
 resource "mcs_db_database" "testdb2" {
 	name = "testdb2"
-	instance_id = "${mcs_db_instance.basic.id}"
+	dbms_id = "${mcs_db_instance.basic.id}"
 }
 
 resource "mcs_db_user" "basic" {
   name        = "basic"
-  instance_id = "${mcs_db_instance.basic.id}"
+  dbms_id = "${mcs_db_instance.basic.id}"
   password    = "Qw!weZ12$"
   databases = [
 	  "${mcs_db_database.testdb2.name}",
