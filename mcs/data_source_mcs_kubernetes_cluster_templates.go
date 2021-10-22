@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/containerinfra/v1/clustertemplates"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -27,6 +25,10 @@ func dataSourceKubernetesClusterTemplates() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"version": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -35,8 +37,9 @@ func dataSourceKubernetesClusterTemplates() *schema.Resource {
 }
 
 type clusterTemplateResponse struct {
-	UUID string
-	Name string
+	Version string
+	UUID    string
+	Name    string
 }
 
 type clusterTemplateFlatSchema []map[string]interface{}
@@ -47,6 +50,7 @@ func flattenClusterTemplates(templates []clusterTemplateResponse) clusterTemplat
 		flatSchema = append(flatSchema, map[string]interface{}{
 			"name":                  template.Name,
 			"cluster_template_uuid": template.UUID,
+			"version":               template.Version,
 		})
 	}
 	return flatSchema
@@ -59,21 +63,17 @@ func dataSourceMcsClusterTemplatesRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("failed to init identity v3 client: %s", err)
 	}
 
-	allPages, err := clustertemplates.List(client.(*gophercloud.ServiceClient), nil).AllPages()
+	templates, err := clusterTemplateList(client).Extract()
 	if err != nil {
 		return fmt.Errorf("failed to list cluster templates: %s", err)
 	}
 
-	allClusterTemplates, err := clustertemplates.ExtractClusterTemplates(allPages)
-	if err != nil {
-		return fmt.Errorf("failed to extract cluster templates: %s", err)
-	}
-
-	clusterTemplates := make([]clusterTemplateResponse, 0, len(allClusterTemplates))
-	for _, t := range allClusterTemplates {
+	clusterTemplates := make([]clusterTemplateResponse, 0, len(templates))
+	for _, t := range templates {
 		clusterTemplates = append(clusterTemplates, clusterTemplateResponse{
-			UUID: t.UUID,
-			Name: t.Name,
+			UUID:    t.UUID,
+			Name:    t.Name,
+			Version: t.Version,
 		})
 	}
 

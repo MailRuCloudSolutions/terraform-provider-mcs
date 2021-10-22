@@ -5,8 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/containerinfra/v1/clusters"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
@@ -259,7 +257,7 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 		createOpts.MasterCount = mCount
 	}
 
-	s, err := createCluster(containerInfraClient, &createOpts).Extract()
+	s, err := clusterCreate(containerInfraClient, &createOpts).Extract()
 	if err != nil {
 		return fmt.Errorf("error creating mcs_kubernetes_cluster: %s", err)
 	}
@@ -515,11 +513,11 @@ func resourceKubernetesClusterDelete(d *schema.ResourceData, meta interface{}) e
 	config := meta.(configer)
 	client, err := config.ContainerInfraV1Client(getRegion(d, config))
 	if err != nil {
-		return fmt.Errorf("error creating container infra client: %s", err)
+		return fmt.Errorf("failed to get container infra client: %s", err)
 	}
 
-	if err := clusters.Delete(client.(*gophercloud.ServiceClient), d.Id()).ExtractErr(); err != nil {
-		return checkDeleted(d, err, "error deleting mcs_kubernetes_cluster")
+	if err := clusterDelete(client, d.Id()).ExtractErr(); err != nil {
+		return checkDeleted(d, err, "failed to delete mcs_kubernetes_cluster")
 	}
 
 	stateConf := &resource.StateChangeConf{

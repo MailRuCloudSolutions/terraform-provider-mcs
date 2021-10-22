@@ -192,6 +192,10 @@ type clusterTemplate struct {
 	Version string `json:"version"`
 }
 
+type clusterTemplates struct {
+	Templates []clusterTemplate `json:"clustertemplates"`
+}
+
 type optsBuilder interface {
 	Map() (map[string]interface{}, error)
 }
@@ -318,6 +322,17 @@ func (r clusterTemplateResult) Extract() (*clusterTemplate, error) {
 	return s, err
 }
 
+type clusterTemplatesResult struct {
+	commonResult
+}
+
+// Extract parses result into params for cluster templates.
+func (r clusterTemplatesResult) Extract() ([]clusterTemplate, error) {
+	var s *clusterTemplates
+	err := r.ExtractInto(&s)
+	return s.Templates, err
+}
+
 // Extract parses result into params for node group.
 func (r nodeGroupResult) Extract() (*nodeGroup, error) {
 	var s *nodeGroup
@@ -335,7 +350,17 @@ func clusterTemplateGet(client ContainerClient, id string) (r clusterTemplateRes
 	return
 }
 
-func createCluster(client ContainerClient, opts optsBuilder) (r clusters.CreateResult) {
+func clusterTemplateList(client ContainerClient) (r clusterTemplatesResult) {
+	var result *http.Response
+	reqOpts := getRequestOpts(200)
+	result, r.Err = client.Get(getURL(client, clusterTemplateAPIPath, ""), &r.Body, reqOpts)
+	if r.Err == nil {
+		r.Header = result.Header
+	}
+	return
+}
+
+func clusterCreate(client ContainerClient, opts optsBuilder) (r clusters.CreateResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -396,6 +421,26 @@ func clusterSwitchState(client ContainerClient, id string, opts optsBuilder) (r 
 	return
 }
 
+// clusterGet gets cluster data from mcs.
+func clusterGet(client ContainerClient, id string) (r clusterConfigResult) {
+	log.Printf("GET cluster %s", id)
+	var result *http.Response
+	reqOpts := getRequestOpts(200)
+	result, r.Err = client.Get(getURL(client, clustersAPIPath, id), &r.Body, reqOpts)
+	if r.Err == nil {
+		r.Header = result.Header
+	}
+	return
+}
+
+func clusterDelete(client ContainerClient, id string) (r clusterDeleteResult) {
+	var result *http.Response
+	reqOpts := getRequestOpts()
+	result, r.Err = client.Delete(deleteURL(client, clustersAPIPath, id), reqOpts)
+	r.Header = result.Header
+	return
+}
+
 func nodeGroupGet(client ContainerClient, id string) (r nodeGroupResult) {
 	var result *http.Response
 	reqOpts := getRequestOpts(200)
@@ -436,12 +481,10 @@ func nodeGroupCreate(client ContainerClient, opts optsBuilder) (r nodeGroupResul
 	return
 }
 
-// clusterGet gets cluster data from mcs.
-func clusterGet(client ContainerClient, id string) (r clusterConfigResult) {
-	log.Printf("GET cluster %s", id)
+func nodeGroupDelete(client ContainerClient, id string) (r nodeGroupDeleteResult) {
 	var result *http.Response
-	reqOpts := getRequestOpts(200)
-	result, r.Err = client.Get(getURL(client, clustersAPIPath, id), &r.Body, reqOpts)
+	reqOpts := getRequestOpts(204)
+	result, r.Err = client.Delete(getURL(client, nodeGroupsAPIPath, id), reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -475,23 +518,5 @@ func nodeGroupPatch(client ContainerClient, id string, opts patchOptsBuilder) (r
 	if r.Err == nil {
 		r.Header = result.Header
 	}
-	return
-}
-
-func nodeGroupDelete(client ContainerClient, id string) (r nodeGroupDeleteResult) {
-	var result *http.Response
-	reqOpts := getRequestOpts(204)
-	result, r.Err = client.Delete(getURL(client, nodeGroupsAPIPath, id), reqOpts)
-	if r.Err == nil {
-		r.Header = result.Header
-	}
-	return
-}
-
-func clusterDelete(client ContainerClient, id string) (r clusterDeleteResult) {
-	var result *http.Response
-	reqOpts := getRequestOpts()
-	result, r.Err = client.Delete(deleteURL(client, clustersAPIPath, id), reqOpts)
-	r.Header = result.Header
 	return
 }

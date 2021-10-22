@@ -276,6 +276,7 @@ func resourceKubernetesNodeGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("unable to set mcs_kubernetes_node_group taints: %s", err)
 	}
 
+	d.Set("name", s.Name)
 	d.Set("node_count", s.NodeCount)
 	d.Set("max_nodes", s.MaxNodes)
 	d.Set("min_nodes", s.MinNodes)
