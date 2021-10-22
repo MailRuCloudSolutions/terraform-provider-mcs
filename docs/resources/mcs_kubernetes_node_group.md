@@ -38,6 +38,8 @@ The following arguments are supported:
 * `name` - (Optional) The name of node group to create.
  If none presented then random name will be generated.
  Changing this will force to create a new node group.
+ **Important:** Receiving random name add it manually to your main.tf config to sync it with state
+ to avoid node groups force recreation in the future.
 * `node_count` - (Required) The node count for this node group. Should be greater than 0.
  If `autoscaling_enabled` parameter is set, this attribute will be ignored during update.
 * `taints` - (Optional) The list of objects representing node group taints. Each
