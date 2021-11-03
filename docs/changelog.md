@@ -8,7 +8,8 @@ description: |-
 # MCS Provider's changelog
 
 #### v0.5.7
-- Forbade using of a flavor's name, allow UUID only
+- Forbade using name in `master_flavor` attribute in cluster 
+- Forbade using name in `flavor_id` attribute in nodegroup
 
 #### v0.5.6
 - Make `name` attribute of node group required.

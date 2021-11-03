@@ -54,7 +54,7 @@ attributes are exported:
 * `autoscaling_enabled` - Determines whether the autoscaling is enabled.
 * `availability_zones` - The list of availability zones of the node group. **New since v0.5.0**
 * `cluster_id` - The UUID of cluster that node group belongs.
-* `flavor_id` - The UUID or name of a flavor. (From v0.5.5 only UUID supported)
+* `flavor_id` - The UUID of a flavor. 
 * `labels` - The list of key value pairs representing additional
   properties of the node group.
 * `max_nodes` - The maximum amount of nodes in node group.
