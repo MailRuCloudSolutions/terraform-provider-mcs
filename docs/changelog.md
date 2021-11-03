@@ -7,6 +7,9 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.5.7
+- Forbade using of a flavor's name, allow UUID only
+
 #### v0.5.6
 - Make `name` attribute of node group required.
 

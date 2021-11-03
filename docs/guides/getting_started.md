@@ -111,8 +111,16 @@ data "openstack_compute_keypair_v2" "mykeypair" {
 
 Use flavor:
 
+> ⚠️ From v0.5.5 the provider supports **only UUID** of a flavor
+
 ```hcl
 data "openstack_compute_flavor_v2" "myflavor" {
-  name = "Standard-2-4-50"
+  name = "b7d20f15-82f1-4ed4-a12e-e60277fe955f" # Standard 2-4-50
 }
+```
+ 
+You can see the list of all available flavours with the command:
+
+```
+openstack flavor list
 ```
