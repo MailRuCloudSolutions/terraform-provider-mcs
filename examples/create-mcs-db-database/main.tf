@@ -39,7 +39,7 @@ resource "mcs_db_instance" "db-instance" {
 
 resource "mcs_db_database" "db-database" {
   name        = "testdb"
-  instance_id = mcs_db_instance.db-instance.id
+  dbms_id     = mcs_db_instance.db-instance.id
   charset     = "utf8"
   collate     = "utf8_general_ci"
 }

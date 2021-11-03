@@ -28,9 +28,18 @@ func resourceDatabaseUser() *schema.Resource {
 			},
 
 			"instance_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      false,
+				Deprecated:    "Please, use dmbs_id attribute instead",
+				ConflictsWith: []string{"dbms_id"},
+			},
+
+			"dbms_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"instance_id"},
 			},
 
 			"password": {
@@ -55,6 +64,11 @@ func resourceDatabaseUser() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"dbms_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -68,17 +82,37 @@ func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error 
 
 	userName := d.Get("name").(string)
 	rawDatabases := d.Get("databases").([]interface{})
-	instanceID := d.Get("instance_id").(string)
+	dbmsIDRaw, dbmsIDOk := d.GetOk("dbms_id")
+	instanceIDRaw, instanceIDOk := d.GetOk("instance_id")
+	if !dbmsIDOk && !instanceIDOk {
+		return fmt.Errorf("only dbms_id must be set")
+	}
+	var dbmsID string
+	if instanceIDOk {
+		dbmsID = instanceIDRaw.(string)
+	} else {
+		dbmsID = dbmsIDRaw.(string)
+	}
 
-	instance, err := instanceGet(DatabaseV1Client, instanceID).extract()
+	dbmsResp, err := getDBMSResource(DatabaseV1Client, dbmsID)
 	if err != nil {
-		return fmt.Errorf("error while getting mcs_db_instance: %s", err)
+		return fmt.Errorf("error while getting resource: %s", err)
 	}
-	if instance.DataStore.Type == Redis {
-		return fmt.Errorf("operation not supported for this datastore")
+	var dbmsType string
+	if instanceResource, ok := dbmsResp.(instanceResp); ok {
+		if instanceResource.DataStore.Type == Redis {
+			return fmt.Errorf("operation not supported for this datastore")
+		}
+		if instanceResource.ReplicaOf != nil {
+			return fmt.Errorf("operation not supported for replica")
+		}
+		dbmsType = dbmsTypeInstance
 	}
-	if instance.ReplicaOf != nil {
-		return fmt.Errorf("operation not supported for replica")
+	if clusterResource, ok := dbmsResp.(dbClusterResp); ok {
+		if clusterResource.DataStore.Type == Redis {
+			return fmt.Errorf("operation not supported for this datastore")
+		}
+		dbmsType = dbmsTypeCluster
 	}
 
 	var usersList userBatchCreateOpts
@@ -94,7 +128,7 @@ func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	usersList.Users = append(usersList.Users, u)
 
-	err = userCreate(DatabaseV1Client, instanceID, &usersList).ExtractErr()
+	err = userCreate(DatabaseV1Client, dbmsID, &usersList, dbmsType).ExtractErr()
 	if err != nil {
 		return fmt.Errorf("error creating mcs_db_user: %s", err)
 	}
@@ -102,7 +136,7 @@ func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"BUILD"},
 		Target:     []string{"ACTIVE"},
-		Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, instanceID, userName),
+		Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, dbmsID, userName, dbmsType),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      dbUserDelay,
 		MinTimeout: dbUserMinTimeout,
@@ -114,7 +148,9 @@ func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	// Store the ID now
-	d.SetId(fmt.Sprintf("%s/%s", instanceID, userName))
+	d.SetId(fmt.Sprintf("%s/%s", dbmsID, userName))
+	// Store dbms type
+	d.Set("dbms_type", dbmsType)
 
 	return resourceDatabaseUserRead(d, meta)
 }
@@ -131,10 +167,16 @@ func resourceDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("invalid mcs_db_user ID: %s", d.Id())
 	}
 
-	instanceID := userID[0]
+	dbmsID := userID[0]
 	userName := userID[1]
+	var dbmsType string
+	if dbmsTypeRaw, ok := d.GetOk("dbms_type"); ok {
+		dbmsType = dbmsTypeRaw.(string)
+	} else {
+		dbmsType = dbmsTypeInstance
+	}
 
-	exists, userObj, err := databaseUserExists(DatabaseV1Client, instanceID, userName)
+	exists, userObj, err := databaseUserExists(DatabaseV1Client, dbmsID, userName, dbmsType)
 	if err != nil {
 		return fmt.Errorf("error checking if mcs_db_user %s exists: %s", d.Id(), err)
 	}
@@ -149,6 +191,13 @@ func resourceDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
 	databases := flattenDatabaseUserDatabases(userObj.Databases)
 	if err := d.Set("databases", databases); err != nil {
 		return fmt.Errorf("unable to set databases: %s", err)
+	}
+
+	if _, ok := d.GetOk("instance_id"); ok {
+		d.Set("instance_id", dbmsID)
+	}
+	if _, ok := d.GetOk("dbms_id"); ok {
+		d.Set("dbms_id", dbmsID)
 	}
 
 	return nil
@@ -166,14 +215,21 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("invalid mcs_db_user ID: %s", d.Id())
 	}
 
-	instanceID := userID[0]
+	_, dbmsIDOk := d.GetOk("dbms_id")
+	_, instanceIDOk := d.GetOk("instance_id")
+	if !dbmsIDOk && !instanceIDOk {
+		return fmt.Errorf("only dbms_id must be set")
+	}
+
+	dbmsID := userID[0]
 	userName := userID[1]
+	dbmsType := d.Get("dbms_type").(string)
 
 	if d.HasChange("databases") {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"BUILD"},
 			Target:     []string{"ACTIVE"},
-			Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, instanceID, userName),
+			Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, dbmsID, userName, dbmsType),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      dbUserDelay,
 			MinTimeout: dbUserMinTimeout,
@@ -197,7 +253,7 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		for _, databaseForDeletion := range databasesForDeletion {
 			databaseName := databaseForDeletion.(string)
-			err = userDeleteDatabase(DatabaseV1Client, instanceID, userName, databaseName).ExtractErr()
+			err = userDeleteDatabase(DatabaseV1Client, dbmsID, userName, databaseName, dbmsType).ExtractErr()
 			if err != nil {
 				return fmt.Errorf("error deleting database from mcs_db_user: %s", err)
 			}
@@ -209,7 +265,7 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 		userUpdateDatabasesOpts := userUpdateDatabasesOpts{
 			Databases: newDatabasesOpts,
 		}
-		err = userUpdateDatabases(DatabaseV1Client, instanceID, userName, &userUpdateDatabasesOpts).ExtractErr()
+		err = userUpdateDatabases(DatabaseV1Client, dbmsID, userName, &userUpdateDatabasesOpts, dbmsType).ExtractErr()
 		if err != nil {
 			return fmt.Errorf("error adding databases to mcs_db_user: %s", err)
 		}
@@ -240,16 +296,16 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"BUILD"},
 			Target:     []string{"ACTIVE"},
-			Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, instanceID, userUpdateParams.User.Name),
+			Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, dbmsID, userUpdateParams.User.Name, dbmsType),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      dbUserDelay,
 			MinTimeout: dbUserMinTimeout,
 		}
-		err = userUpdate(DatabaseV1Client, instanceID, userName, &userUpdateParams).ExtractErr()
+		err = userUpdate(DatabaseV1Client, dbmsID, userName, &userUpdateParams, dbmsType).ExtractErr()
 		if err != nil {
 			return fmt.Errorf("error updating mcs_db_user: %s", err)
 		}
-		d.SetId(fmt.Sprintf("%s/%s", instanceID, userUpdateParams.User.Name))
+		d.SetId(fmt.Sprintf("%s/%s", dbmsID, userUpdateParams.User.Name))
 		_, err = stateConf.WaitForState()
 		if err != nil {
 			return fmt.Errorf("error waiting for mcs_db_user %s to be updated: %s", userName, err)
@@ -271,10 +327,11 @@ func resourceDatabaseUserDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("invalid mcs_db_user ID: %s", d.Id())
 	}
 
-	instanceID := userID[0]
+	dbmsID := userID[0]
 	userName := userID[1]
+	dbmsType := d.Get("dbms_type").(string)
 
-	exists, _, err := databaseUserExists(DatabaseV1Client, instanceID, userName)
+	exists, _, err := databaseUserExists(DatabaseV1Client, dbmsID, userName, dbmsType)
 	if err != nil {
 		return fmt.Errorf("error checking if mcs_db_user %s exists: %s", d.Id(), err)
 	}
@@ -283,7 +340,7 @@ func resourceDatabaseUserDelete(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	err = userDelete(DatabaseV1Client, instanceID, userName).ExtractErr()
+	err = userDelete(DatabaseV1Client, dbmsID, userName, dbmsType).ExtractErr()
 	if err != nil {
 		return fmt.Errorf("error deleting mcs_db_user %s: %s", d.Id(), err)
 	}

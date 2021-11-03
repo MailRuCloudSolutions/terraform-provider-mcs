@@ -101,3 +101,15 @@ func databaseInstanceStateRefreshFunc(client databaseClient, instanceID string) 
 		return i, i.Status, nil
 	}
 }
+
+func getDBMSResource(client databaseClient, dbmsID string) (interface{}, error) {
+	instanceResource, err := instanceGet(client, dbmsID).extract()
+	if err == nil {
+		return instanceResource, nil
+	}
+	clusterResource, err := dbClusterGet(client, dbmsID).extract()
+	if err == nil {
+		return clusterResource, nil
+	}
+	return nil, err
+}

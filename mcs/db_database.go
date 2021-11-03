@@ -7,9 +7,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func databaseDatabaseStateRefreshFunc(client databaseClient, instanceID string, databaseName string) resource.StateRefreshFunc {
+const (
+	dbmsTypeInstance = "instance"
+	dbmsTypeCluster  = "cluster"
+)
+
+func databaseDatabaseStateRefreshFunc(client databaseClient, dbmsID string, databaseName string, dbmsType string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		pages, err := databaseList(client, instanceID).AllPages()
+		pages, err := databaseList(client, dbmsID, dbmsType).AllPages()
 		if err != nil {
 			return nil, "", fmt.Errorf("unable to retrieve mcs database databases: %s", err)
 		}
@@ -29,11 +34,11 @@ func databaseDatabaseStateRefreshFunc(client databaseClient, instanceID string, 
 	}
 }
 
-func databaseDatabaseExists(client databaseClient, instanceID string, databaseName string) (bool, error) {
+func databaseDatabaseExists(client databaseClient, dbmsID string, databaseName string, dbmsType string) (bool, error) {
 	var exists bool
 	var err error
 
-	pages, err := databaseList(client, instanceID).AllPages()
+	pages, err := databaseList(client, dbmsID, dbmsType).AllPages()
 	if err != nil {
 		return exists, err
 	}

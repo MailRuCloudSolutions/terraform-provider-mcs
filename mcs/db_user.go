@@ -26,9 +26,9 @@ func flattenDatabaseUserDatabases(v []db.Database) []interface{} {
 	return databases
 }
 
-func databaseUserStateRefreshFunc(client databaseClient, instanceID string, userName string) resource.StateRefreshFunc {
+func databaseUserStateRefreshFunc(client databaseClient, dbmsID string, userName string, dbmsType string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		pages, err := userList(client, instanceID).AllPages()
+		pages, err := userList(client, dbmsID, dbmsType).AllPages()
 		if err != nil {
 			return nil, "", fmt.Errorf("unable to retrieve mcs database users: %s", err)
 		}
@@ -48,12 +48,12 @@ func databaseUserStateRefreshFunc(client databaseClient, instanceID string, user
 	}
 }
 
-func databaseUserExists(client databaseClient, instanceID string, userName string) (bool, users.User, error) {
+func databaseUserExists(client databaseClient, dbmsID string, userName string, dbmsType string) (bool, users.User, error) {
 	var exists bool
 	var err error
 	var userObj users.User
 
-	pages, err := userList(client, instanceID).AllPages()
+	pages, err := userList(client, dbmsID, dbmsType).AllPages()
 	if err != nil {
 		return exists, userObj, err
 	}

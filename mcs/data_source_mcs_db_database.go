@@ -22,6 +22,12 @@ func dataSourceDatabaseDatabase() *schema.Resource {
 			},
 
 			"instance_id": {
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Please, use dmbs_id attribute instead",
+			},
+
+			"dbms_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -54,10 +60,20 @@ func dataSourceDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("invalid mcs_db_database id: %s", id)
 	}
 
-	instanceID := databaseID[0]
+	dbmsID := databaseID[0]
 	databaseName := databaseID[1]
-
-	exists, err := databaseDatabaseExists(DatabaseV1Client, instanceID, databaseName)
+	dbmsResp, err := getDBMSResource(DatabaseV1Client, dbmsID)
+	if err != nil {
+		return fmt.Errorf("error while getting resource: %s", err)
+	}
+	var dbmsType string
+	if _, ok := dbmsResp.(instanceResp); ok {
+		dbmsType = dbmsTypeInstance
+	}
+	if _, ok := dbmsResp.(dbClusterResp); ok {
+		dbmsType = dbmsTypeCluster
+	}
+	exists, err := databaseDatabaseExists(DatabaseV1Client, dbmsID, databaseName, dbmsType)
 	if err != nil {
 		return fmt.Errorf("error checking if mcs_db_database %s exists: %s", d.Id(), err)
 	}
@@ -69,6 +85,7 @@ func dataSourceDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(id)
 	d.Set("name", databaseName)
-
+	d.Set("instance_id", dbmsID)
+	d.Set("dbms_id", dbmsID)
 	return nil
 }

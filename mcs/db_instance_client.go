@@ -637,7 +637,7 @@ func instanceDelete(client databaseClient, id string) (r deleteResult) {
 }
 
 // userCreate performs request to create database user
-func userCreate(client databaseClient, id string, opts createOptsBuilder) (r userCreateResult) {
+func userCreate(client databaseClient, id string, opts createOptsBuilder, dbmsType string) (r userCreateResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -645,7 +645,11 @@ func userCreate(client databaseClient, id string, opts createOptsBuilder) (r use
 	}
 	reqOpts := getRequestOpts(202)
 	var result *http.Response
-	result, r.Err = client.Post(instanceUsersURL(client, instancesAPIPath, id), b, nil, reqOpts)
+	if dbmsType == dbmsTypeInstance {
+		result, r.Err = client.Post(instanceUsersURL(client, instancesAPIPath, id), b, nil, reqOpts)
+	} else {
+		result, r.Err = client.Post(instanceUsersURL(client, dbClustersAPIPath, id), b, nil, reqOpts)
+	}
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -653,17 +657,29 @@ func userCreate(client databaseClient, id string, opts createOptsBuilder) (r use
 }
 
 // userList performs request to get list of database users
-func userList(client databaseClient, id string) pagination.Pager {
-	return pagination.NewPager(client.(*gophercloud.ServiceClient), instanceUsersURL(client, instancesAPIPath, id), func(r pagination.PageResult) pagination.Page {
+func userList(client databaseClient, id string, dbmsType string) pagination.Pager {
+	var APIPath string
+	if dbmsType == dbmsTypeInstance {
+		APIPath = instancesAPIPath
+	} else {
+		APIPath = dbClustersAPIPath
+	}
+	return pagination.NewPager(client.(*gophercloud.ServiceClient), instanceUsersURL(client, APIPath, id), func(r pagination.PageResult) pagination.Page {
 		return users.UserPage{LinkedPageBase: pagination.LinkedPageBase{PageResult: r}}
 	})
 }
 
 // userDelete performs request to delete database user
-func userDelete(client databaseClient, id string, userName string) (r userDeleteResult) {
+func userDelete(client databaseClient, id string, userName string, dbmsType string) (r userDeleteResult) {
 	reqOpts := getRequestOpts()
 	var result *http.Response
-	result, r.Err = client.Delete(instanceUserURL(client, instancesAPIPath, id, userName), reqOpts)
+	var APIPath string
+	if dbmsType == dbmsTypeInstance {
+		APIPath = instancesAPIPath
+	} else {
+		APIPath = dbClustersAPIPath
+	}
+	result, r.Err = client.Delete(instanceUserURL(client, APIPath, id, userName), reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -671,15 +687,21 @@ func userDelete(client databaseClient, id string, userName string) (r userDelete
 }
 
 // userUpdate performs request to update database user
-func userUpdate(client databaseClient, id string, name string, opts optsBuilder) (r updateUserResult) {
+func userUpdate(client databaseClient, id string, name string, opts optsBuilder, dbmsType string) (r updateUserResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
 		return
 	}
 	reqOpts := getRequestOpts(202)
+	var APIPath string
+	if dbmsType == dbmsTypeInstance {
+		APIPath = instancesAPIPath
+	} else {
+		APIPath = dbClustersAPIPath
+	}
 	var result *http.Response
-	result, r.Err = client.Put(userURL(client, instancesAPIPath, id, name), b, nil, reqOpts)
+	result, r.Err = client.Put(userURL(client, APIPath, id, name), b, nil, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -687,7 +709,7 @@ func userUpdate(client databaseClient, id string, name string, opts optsBuilder)
 }
 
 // userUpdateDatabases performs request to update database user databases
-func userUpdateDatabases(client databaseClient, id string, name string, opts optsBuilder) (r updateUserDatabasesResult) {
+func userUpdateDatabases(client databaseClient, id string, name string, opts optsBuilder, dbmsType string) (r updateUserDatabasesResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -695,7 +717,13 @@ func userUpdateDatabases(client databaseClient, id string, name string, opts opt
 	}
 	reqOpts := getRequestOpts(202)
 	var result *http.Response
-	result, r.Err = client.Put(userDatabasesURL(client, instancesAPIPath, id, name), b, nil, reqOpts)
+	var APIPath string
+	if dbmsType == dbmsTypeInstance {
+		APIPath = instancesAPIPath
+	} else {
+		APIPath = dbClustersAPIPath
+	}
+	result, r.Err = client.Put(userDatabasesURL(client, APIPath, id, name), b, nil, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -703,10 +731,16 @@ func userUpdateDatabases(client databaseClient, id string, name string, opts opt
 }
 
 // userDeleteDatabase performs request to delete database user
-func userDeleteDatabase(client databaseClient, id string, userName string, dbName string) (r deleteUserDatabaseResult) {
+func userDeleteDatabase(client databaseClient, id string, userName string, dbName string, dbmsType string) (r deleteUserDatabaseResult) {
 	reqOpts := getRequestOpts(202)
 	var result *http.Response
-	result, r.Err = client.Delete(userDatabaseURL(client, instancesAPIPath, id, userName, dbName), reqOpts)
+	var APIPath string
+	if dbmsType == dbmsTypeInstance {
+		APIPath = instancesAPIPath
+	} else {
+		APIPath = dbClustersAPIPath
+	}
+	result, r.Err = client.Delete(userDatabaseURL(client, APIPath, id, userName, dbName), reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -714,7 +748,7 @@ func userDeleteDatabase(client databaseClient, id string, userName string, dbNam
 }
 
 // databaseCreate performs request to create database
-func databaseCreate(client databaseClient, id string, opts createOptsBuilder) (r databaseCreateResult) {
+func databaseCreate(client databaseClient, id string, opts createOptsBuilder, dbmsType string) (r databaseCreateResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -722,7 +756,14 @@ func databaseCreate(client databaseClient, id string, opts createOptsBuilder) (r
 	}
 	reqOpts := getRequestOpts(202)
 	var result *http.Response
-	result, r.Err = client.Post(instanceDatabasesURL(client, instancesAPIPath, id), b, nil, reqOpts)
+	var APIPath string
+	if dbmsType == dbmsTypeInstance {
+		APIPath = instancesAPIPath
+	} else {
+		APIPath = dbClustersAPIPath
+	}
+	result, r.Err = client.Post(instanceDatabasesURL(client, APIPath, id), b, nil, reqOpts)
+
 	if r.Err == nil {
 		r.Header = result.Header
 	}
@@ -730,17 +771,29 @@ func databaseCreate(client databaseClient, id string, opts createOptsBuilder) (r
 }
 
 // databaseList performs request to list databases
-func databaseList(client databaseClient, id string) pagination.Pager {
-	return pagination.NewPager(client.(*gophercloud.ServiceClient), instanceDatabasesURL(client, instancesAPIPath, id), func(r pagination.PageResult) pagination.Page {
+func databaseList(client databaseClient, id string, dbmsType string) pagination.Pager {
+	var APIPath string
+	if dbmsType == dbmsTypeInstance {
+		APIPath = instancesAPIPath
+	} else {
+		APIPath = dbClustersAPIPath
+	}
+	return pagination.NewPager(client.(*gophercloud.ServiceClient), instanceDatabasesURL(client, APIPath, id), func(r pagination.PageResult) pagination.Page {
 		return db.DBPage{LinkedPageBase: pagination.LinkedPageBase{PageResult: r}}
 	})
 }
 
 // databaseDelete performs request to delete database
-func databaseDelete(client databaseClient, id string, dbName string) (r databaseDeleteResult) {
+func databaseDelete(client databaseClient, id string, dbName string, dbmsType string) (r databaseDeleteResult) {
 	reqOpts := getRequestOpts()
 	var result *http.Response
-	result, r.Err = client.Delete(instanceDatabaseURL(client, instancesAPIPath, id, dbName), reqOpts)
+	var APIPath string
+	if dbmsType == dbmsTypeInstance {
+		APIPath = instancesAPIPath
+	} else {
+		APIPath = dbClustersAPIPath
+	}
+	result, r.Err = client.Delete(instanceDatabaseURL(client, APIPath, id, dbName), reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}
