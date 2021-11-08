@@ -18,12 +18,15 @@ build_windows: fmtcheck
 	GOOS=windows CGO_ENABLED=0 go build -o terraform-provider-mcs_windows
 
 test: fmtcheck
-	go test -i $(TEST) || exit 1
+	go test $(TEST) || exit 1
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -cover -timeout=30s -parallel=4
 
-testacc: fmtcheck
-	TF_ACC=1 TF_ACC_MOCK_MCS=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+testmock_k8saas: fmtcheck
+	TF_ACC=1 TF_ACC_MOCK_MCS=1 go test $(TEST) -run=TestMockAcc $(TESTARGS) -timeout 120m
+
+testacc_k8saas: fmtcheck
+	TF_ACC=1 go test -run=TestAccKubernetes $(TEST) $(TESTARGS) -timeout 120m
 
 testacc_dbaas: fmtcheck
 	TF_ACC=1 go test -run=TestAccDatabase -v $(TESTARGS) -timeout 120m

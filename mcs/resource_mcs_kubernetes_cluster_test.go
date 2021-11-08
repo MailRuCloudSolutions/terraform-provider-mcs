@@ -58,7 +58,7 @@ func checkClusterAttrs(resourceName string, cluster *clusterCreateOpts) resource
 	}
 }
 
-func TestAccKubernetesCluster_basic(t *testing.T) {
+func TestMockAccKubernetesCluster_basic(t *testing.T) {
 	clientFixture := &ContainerClientFixture{}
 	clusterUUID := uuid.NewV4().String()
 
