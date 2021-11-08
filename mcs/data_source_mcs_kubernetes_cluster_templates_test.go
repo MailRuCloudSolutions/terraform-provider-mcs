@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccDataSourceMCSKubernetesClusterTemplates(t *testing.T) {
+func TestAccKubernetesDataSourceClusterTemplates(t *testing.T) {
 	tests := map[string]struct {
 		name     string
 		testCase resource.TestCase

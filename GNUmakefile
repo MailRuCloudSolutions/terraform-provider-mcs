@@ -1,6 +1,5 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
-WEBSITE_REPO=gitlab.corp.mail.ru/infra/paas/terraform-website
 PKG_NAME=mcs
 
 default: build
@@ -18,15 +17,18 @@ build_windows: fmtcheck
 	GOOS=windows CGO_ENABLED=0 go build -o terraform-provider-mcs_windows
 
 test: fmtcheck
-	go test -i $(TEST) || exit 1
+	go test $(TEST) || exit 1
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -cover -timeout=30s -parallel=4
 
-testacc: fmtcheck
-	TF_ACC=1 TF_ACC_MOCK_MCS=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+testmock_k8saas: fmtcheck
+	TF_ACC=1 TF_ACC_MOCK_MCS=1 go test $(TEST) -run=TestMockAcc $(TESTARGS) -timeout 120m
+
+testacc_k8saas: fmtcheck
+	TF_ACC=1 go test -run=TestAccKubernetes $(TEST) $(TESTARGS) -timeout 120m
 
 testacc_dbaas: fmtcheck
-	TF_ACC=1 go test -run=TestAccDatabase -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test -run=TestAccDatabase $(TEST) -v $(TESTARGS) -timeout 120m
 
 vet:
 	@echo "go vet ."
@@ -54,23 +56,9 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-website:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
-
-website-test:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
-
 lint:
-	GO111MODULE=off go get -u golang.org/x/lint/golint
-	golint -set_exit_status $$(go list ./...)
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
+	golangci-lint run ./...
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck test-compile website website-test lint
 
