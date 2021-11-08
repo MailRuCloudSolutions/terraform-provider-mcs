@@ -29,7 +29,7 @@ testacc_k8saas: fmtcheck
 	TF_ACC=1 go test -run=TestAccKubernetes $(TEST) $(TESTARGS) -timeout 120m
 
 testacc_dbaas: fmtcheck
-	TF_ACC=1 go test -run=TestAccDatabase -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test -run=TestAccDatabase $(TEST) -v $(TESTARGS) -timeout 120m
 
 vet:
 	@echo "go vet ."
@@ -72,8 +72,8 @@ endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
 lint:
-	GO111MODULE=off go get -u golang.org/x/lint/golint
-	golint -set_exit_status $$(go list ./...)
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
+	golangci-lint run ./...
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck test-compile website website-test lint
 
