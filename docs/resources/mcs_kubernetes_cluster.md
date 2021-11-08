@@ -21,6 +21,9 @@ resource "mcs_kubernetes_cluster" "mycluster" {
       network_id          = example_network_id
       subnet_id           = example_subnet_id
       availability_zone   = "MS1"
+      labels = {
+        ingress_controller="nginx"
+      }
 }
 ```
 
@@ -45,8 +48,11 @@ The following arguments are supported:
 * `keypair` - (Optional) The name of the Compute service SSH keypair. Changing
     this creates a new cluster.
 
-* `labels` - (Optional) The list of key value pairs representing additional
+* `labels` - (Optional) The list of optional key value pairs representing additional
     properties of the cluster. Changing this creates a new cluster.
+  * `docker_registry_enabled=true` to preinstall Docker Registry.
+  * `prometheus_monitoring=true` to preinstall monitoring system based on Prometheus and Grafana.
+  * `ingress_controller="nginx"` to preinstall NGINX Ingress Controller.
 
 * `master_count` - (Optional) The number of master nodes for the cluster.
     Changing this creates a new cluster.
