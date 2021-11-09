@@ -2,7 +2,7 @@ terraform {
   required_providers {
     mcs = {
       source = "MailRuCloudSolutions/mcs"
-      version = "~> 0.5.3"
+      version = "~> 0.5.5"
     }
     openstack = {
       source = "terraform-provider-openstack/openstack"
@@ -55,7 +55,7 @@ data "openstack_compute_flavor_v2" "k8s" {
 }
 
 data "mcs_kubernetes_clustertemplate" "ct" {
-  version = "1.20.4"
+  version = "1.21.4"
 }
 
 resource "mcs_kubernetes_cluster" "k8s-cluster" {
