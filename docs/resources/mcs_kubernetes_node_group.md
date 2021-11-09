@@ -35,7 +35,8 @@ The following arguments are supported:
   Object may also have optional attribute "value".
 * `max_nodes` - (Optional) The maximum allowed nodes for this node group.
 * `min_nodes` - (Optional) The minimum allowed nodes for this node group. Default to 0 if not set.
-* `name` - (Required) The name of node group to create.
+* `name` - (Required) The name of node group to create. 
+ Changing this will force to create a new node group.
 * `node_count` - (Required) The node count for this node group. Should be greater than 0.
  If `autoscaling_enabled` parameter is set, this attribute will be ignored during update.
 * `taints` - (Optional) The list of objects representing node group taints. Each
