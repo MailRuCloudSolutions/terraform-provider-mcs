@@ -35,7 +35,7 @@ The following arguments are supported:
   Object may also have optional attribute "value".
 * `max_nodes` - (Optional) The maximum allowed nodes for this node group.
 * `min_nodes` - (Optional) The minimum allowed nodes for this node group. Default to 0 if not set.
-* `name` - (Optional) The name of node group to create.
+* `name` - (Required) The name of node group to create.
  If none presented then random name will be generated.
  Changing this will force to create a new node group.
  **Important:** Receiving random name add it manually to your main.tf config to sync it with state

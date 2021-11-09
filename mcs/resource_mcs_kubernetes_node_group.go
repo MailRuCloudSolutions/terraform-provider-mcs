@@ -37,7 +37,7 @@ func resourceKubernetesNodeGroup() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"labels": {
