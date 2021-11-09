@@ -7,6 +7,9 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.5.6
+- Make `name` attribute of node group required.
+
 #### v0.5.4
 - Added `loadbalancer_subnet_id` attribute to cluster.
 
