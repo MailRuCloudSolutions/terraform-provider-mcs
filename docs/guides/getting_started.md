@@ -113,7 +113,7 @@ Use flavor:
 
 ```hcl
 data "openstack_compute_flavor_v2" "myflavor" {
-  flavor_id = "b7d20f15-82f1-4ed4-a12e-e60277fe955f"
+  name = "Standard-2-4-50"
 }
 ```
  

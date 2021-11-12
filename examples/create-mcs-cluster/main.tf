@@ -44,7 +44,7 @@ resource "openstack_compute_keypair_v2" "keypair" {
 }
 
 data "openstack_compute_flavor_v2" "k8s" {
-  flavor_id = var.k8s-flavor
+  name = var.k8s-flavor
 }
 
 data "mcs_kubernetes_clustertemplate" "ct" {
