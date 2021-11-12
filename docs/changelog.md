@@ -8,8 +8,8 @@ description: |-
 # MCS Provider's changelog
 
 #### v0.5.7
-- Forbade using name in `master_flavor` attribute in cluster 
-- Forbade using name in `flavor_id` attribute in nodegroup
+- Forbade using name in `master_flavor` attribute in `mcs_kubernetes_cluster`.
+- Forbade using name in `flavor_id` attribute in `mcs_kubernetes_nodegroup`.
 
 #### v0.5.6
 - Make `name` attribute of node group required.
