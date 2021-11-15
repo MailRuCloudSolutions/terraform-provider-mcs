@@ -11,4 +11,3 @@ provider "openstack" {
     user_domain_name = "users"
     auth_url         = "https://infra.mail.ru/identity/v3/"
 }
-

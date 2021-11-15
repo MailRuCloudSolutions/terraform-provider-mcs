@@ -36,7 +36,7 @@ The following arguments are supported:
 * `cluster_template_id` - (Required) The UUID of the Kubernetes cluster
     template. It can be obtained using the cluster_template data source.
 
-* `master_flavor` - (Optional) The ID of flavor for the master nodes.
+* `master_flavor` - (Optional) The UUID of a flavor for the master nodes.
  If master_flavor is not present, value from cluster_template will be used.
 
 * `network_id` - (Required) The UUID of the network that will be attached to the cluster.
@@ -87,7 +87,7 @@ This resource exports the following attributes:
 * `cluster_template_id` - The UUID of the V1 Container Infra cluster template.
 * `create_timeout` - The timeout (in minutes) for creating the cluster.
 * `discovery_url` - The URL used for cluster node discovery.
-* `master_flavor` - The ID of flavor for the master nodes.
+* `master_flavor` - The UUID of a flavor for the master nodes. 
 * `keypair` - The name of the Compute service SSH keypair.
 * `labels` - The list of key value pairs representing additional properties of
                  the cluster.

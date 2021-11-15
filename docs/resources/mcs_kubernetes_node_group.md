@@ -29,7 +29,7 @@ The following arguments are supported:
   **Important:** Receiving default AZ add it manually to your main.tf config to sync it with state 
   to avoid node groups force recreation in the future. 
 * `cluster_id` - (Required) The UUID of the existing cluster.
-* `flavor_id` - (Optional) The flavor of this node group.
+* `flavor_id` - (Optional) The flavor UUID of this node group.
 * `labels` - (Optional) The list of objects representing representing additional
   properties of the node group. Each object should have attribute "key".
   Object may also have optional attribute "value".
@@ -54,7 +54,7 @@ attributes are exported:
 * `autoscaling_enabled` - Determines whether the autoscaling is enabled.
 * `availability_zones` - The list of availability zones of the node group. **New since v0.5.0**
 * `cluster_id` - The UUID of cluster that node group belongs.
-* `flavor_id` - The id of flavor.
+* `flavor_id` - The UUID of a flavor. 
 * `labels` - The list of key value pairs representing additional
   properties of the node group.
 * `max_nodes` - The maximum amount of nodes in node group.

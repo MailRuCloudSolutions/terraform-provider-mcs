@@ -2,7 +2,7 @@ terraform {
   required_providers {
     mcs = {
       source = "MailRuCloudSolutions/mcs"
-      version = "~> 0.5.5"
+      version = "~> 0.5.7"
     }
     openstack = {
       source = "terraform-provider-openstack/openstack"
@@ -10,12 +10,10 @@ terraform {
   }
 }
 
-
 resource "openstack_networking_network_v2" "k8s" {
   name           = "k8s-net"
   admin_state_up = true
 }
-
 
 resource "openstack_networking_subnet_v2" "k8s-subnetwork" {
   name            = "k8s-subnet"
@@ -25,11 +23,9 @@ resource "openstack_networking_subnet_v2" "k8s-subnetwork" {
   dns_nameservers = ["8.8.8.8", "8.8.4.4"]
 }
 
-
 data "openstack_networking_network_v2" "extnet" {
   name = "ext-net"
 }
-
 
 resource "openstack_networking_router_v2" "k8s" {
   name                = "k8s-router"
@@ -37,18 +33,15 @@ resource "openstack_networking_router_v2" "k8s" {
   external_network_id = data.openstack_networking_network_v2.extnet.id
 }
 
-
 resource "openstack_networking_router_interface_v2" "k8s" {
   router_id = openstack_networking_router_v2.k8s.id
   subnet_id = openstack_networking_subnet_v2.k8s-subnetwork.id
 }
 
-
 resource "openstack_compute_keypair_v2" "keypair" {
   name       = "default"
   public_key = file(var.public-key-file)
 }
-
 
 data "openstack_compute_flavor_v2" "k8s" {
   name = var.k8s-flavor

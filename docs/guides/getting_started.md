@@ -116,3 +116,9 @@ data "openstack_compute_flavor_v2" "myflavor" {
   name = "Standard-2-4-50"
 }
 ```
+ 
+You can see the list of all available flavours with the command:
+
+```
+openstack flavor list
+```

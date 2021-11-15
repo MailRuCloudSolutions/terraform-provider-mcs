@@ -2,7 +2,7 @@ terraform {
   required_providers {
     mcs = {
       source = "MailRuCloudSolutions/mcs"
-      version = "~> 0.5.5"
+      version = "~> 0.5.7"
     }
     openstack = {
       source = "terraform-provider-openstack/openstack"
@@ -10,13 +10,11 @@ terraform {
   }
 }
 
-
 data "mcs_kubernetes_cluster" "your_cluster" {
   cluster_id = "your_cluster_uuid"
 }
 
 resource "mcs_kubernetes_node_group" "default_ng" {
-
   cluster_id = data.mcs_kubernetes_cluster.your_cluster.id
 
   node_count = 1
