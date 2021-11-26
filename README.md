@@ -39,7 +39,7 @@ terraform {
   required_providers {
     mcs = {
       source  = "hub.mcs.mail.ru/repository/mcs"
-      version = "0.5.7"
+      version = "~> 0.5.8"
     }
   }
 }
