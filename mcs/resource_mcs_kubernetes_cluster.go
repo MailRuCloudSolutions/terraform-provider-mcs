@@ -187,7 +187,6 @@ func resourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"registry_auth_password": {
 				Type:     schema.TypeString,
