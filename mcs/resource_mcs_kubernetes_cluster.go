@@ -187,7 +187,6 @@ func resourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"registry_auth_password": {
 				Type:     schema.TypeString,
@@ -243,7 +242,6 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 		FloatingIPEnabled:    d.Get("floating_ip_enabled").(bool),
 		APILBVIP:             d.Get("api_lb_vip").(string),
 		APILBFIP:             d.Get("api_lb_fip").(string),
-		IngressFloatingIP:    d.Get("ingress_floating_ip").(string),
 		LoadbalancerSubnetID: d.Get("loadbalancer_subnet_id").(string),
 		RegistryAuthPassword: d.Get("registry_auth_password").(string),
 		AvailabilityZone:     d.Get("availability_zone").(string),

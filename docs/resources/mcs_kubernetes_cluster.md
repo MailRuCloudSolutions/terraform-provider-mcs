@@ -65,8 +65,6 @@ The following arguments are supported:
 
 * `api_lb_fip` - (Optional) API LoadBalancer fip.
 
-* `ingress_floating_ip` - (Optional) Floating IP created for ingress service.
-
 * `registry_auth_password` - (Optional) Docker registry access password.
 
 * `availability_zone` - (Required) Zones available for cluster. `DP1` and `MS1` zones are available. **New since v0.3.3**.
