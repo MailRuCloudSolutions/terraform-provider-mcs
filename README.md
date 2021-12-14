@@ -31,7 +31,7 @@ $ cd $GOPATH/src/github.com/MailRuCloudSolutions
 $ git clone git@github.com:MailRuCloudSolutions/terraform-provider-mcs.git
 $ cd $GOPATH/src/github.com/MailRuCloudSolutions/terraform-provider-mcs
 $ make build_darwin
-$ mdkir -p ~/.terraform.d/plugins/hub.mcs.mail.ru/repository/mcs/0.5.8/darwin_amd64/
+$ mkdir -p ~/.terraform.d/plugins/hub.mcs.mail.ru/repository/mcs/0.5.8/darwin_amd64/
 $ cp terraform-provider-mcs_darwin ~/.terraform.d/plugins/hub.mcs.mail.ru/repository/mcs/0.5.8/darwin_amd64/terraform-provider-mcs_v0.5.8
 
 $ cat <<EOF > main.tf 
