@@ -40,6 +40,14 @@ type instanceResp struct {
 	Status            string                  `json:"status"`
 	Volume            *volume                 `json:"volume"`
 	ReplicaOf         *links                  `json:"replica_of"`
+	AutoExpand        int                     `json:"volume_autoresize_enabled"`
+	MaxDiskSize       int                     `json:"volume_autoresize_max_size"`
+	WalVolume         *walVolume              `json:"wal_volume"`
+}
+
+type instanceShortResp struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
 }
 
 // volume represents database instance volume
@@ -62,10 +70,8 @@ type walVolume struct {
 
 // walVolumeOpts represents parameters for creation of database instance wal volume
 type walVolumeOpts struct {
-	Size        int
-	VolumeType  string `mapstructure:"volume_type"`
-	AutoExpand  bool
-	MaxDiskSize int `mapstructure:"max_disk_size"`
+	Size       int
+	VolumeType string `mapstructure:"volume_type"`
 }
 
 // links represents database instance links
@@ -172,6 +178,10 @@ type instanceRespOpts struct {
 	Instance *instanceResp `json:"instance"`
 }
 
+type instanceShortRespOpts struct {
+	Instance *instanceShortResp `json:"instance"`
+}
+
 // instanceCapabilityOpts represents parameters of database instance capabilities
 type instanceCapabilityOpts struct {
 	Name   string            `json:"name"`
@@ -183,6 +193,10 @@ type instanceApplyCapabilityOpts struct {
 	ApplyCapability struct {
 		Capabilities []instanceCapabilityOpts `json:"capabilities"`
 	} `json:"apply_capability"`
+}
+
+type instanceGetCapabilityOpts struct {
+	Capabilities []instanceCapabilityOpts `json:"capabilities"`
 }
 
 // userBatchCreateOpts is used to send request to create database users
@@ -334,7 +348,7 @@ type dbInstanceCreateOpts struct {
 	AvailabilityZone  string                   `json:"availability_zone,omitempty"`
 	FloatingIPEnabled bool                     `json:"allow_remote_access,omitempty"`
 	Keypair           string                   `json:"key_name,omitempty"`
-	AutoExpand        int                      `json:"volume_autoresize_enabled,omitempty"`
+	AutoExpand        *int                     `json:"volume_autoresize_enabled,omitempty"`
 	MaxDiskSize       int                      `json:"volume_autoresize_max_size,omitempty"`
 	Walvolume         *walVolume               `json:"wal_volume,omitempty"`
 	Capabilities      []instanceCapabilityOpts `json:"capabilities,omitempty"`
@@ -351,14 +365,25 @@ type commonInstanceResult struct {
 	gophercloud.Result
 }
 
-// createInstanceResult represents result of database instance create
-type createInstanceResult struct {
-	commonInstanceResult
+type commonInstanceCapabilitiesResult struct {
+	gophercloud.Result
+}
+
+type instanceShortResult struct {
+	gophercloud.Result
 }
 
 // getInstanceResult represents result of database instance get
 type getInstanceResult struct {
 	commonInstanceResult
+}
+
+type getInstanceShortResult struct {
+	instanceShortResult
+}
+
+type getInstanceCapabilitiesResult struct {
+	commonInstanceCapabilitiesResult
 }
 
 // rootUserResp represents parameters of root user response
@@ -456,11 +481,18 @@ type databaseDeleteResult struct {
 // extract is used to extract result into response struct
 func (r commonInstanceResult) extract() (*instanceResp, error) {
 	var i *instanceRespOpts
-	err := r.ExtractInto(&i)
-	if err == nil {
-		return i.Instance, nil
+	if err := r.ExtractInto(&i); err != nil {
+		return nil, err
 	}
-	return nil, err
+	return i.Instance, nil
+}
+
+func (r instanceShortResult) extract() (*instanceShortResp, error) {
+	var i *instanceShortRespOpts
+	if err := r.ExtractInto(&i); err != nil {
+		return nil, err
+	}
+	return i.Instance, nil
 }
 
 // extract is used to extract result into response struct
@@ -475,10 +507,18 @@ func (r isRootUserEnabledResult) extract() (bool, error) {
 	return r.Body.(map[string]interface{})["rootEnabled"].(bool), r.Err
 }
 
+func (r commonInstanceCapabilitiesResult) extract() ([]instanceCapabilityOpts, error) {
+	var c *instanceGetCapabilityOpts
+	if err := r.ExtractInto(&c); err != nil {
+		return nil, err
+	}
+	return c.Capabilities, nil
+}
+
 var instancesAPIPath = "instances"
 
 // instanceCreate performs request to create database instance
-func instanceCreate(client databaseClient, opts optsBuilder) (r createInstanceResult) {
+func instanceCreate(client databaseClient, opts optsBuilder) (r getInstanceShortResult) {
 	b, err := opts.Map()
 	if err != nil {
 		r.Err = err
@@ -498,6 +538,26 @@ func instanceGet(client databaseClient, id string) (r getInstanceResult) {
 	reqOpts := getRequestOpts(200)
 	var result *http.Response
 	result, r.Err = client.Get(getURL(client, instancesAPIPath, id), &r.Body, reqOpts)
+	if r.Err == nil {
+		r.Header = result.Header
+	}
+	return
+}
+
+func instanceGetCapabilities(client databaseClient, id string) (r getInstanceCapabilitiesResult) {
+	reqOpts := getRequestOpts(200)
+	var result *http.Response
+	result, r.Err = client.Get(instanceCapabilitiesURL(client, instancesAPIPath, id), &r.Body, reqOpts)
+	if r.Err == nil {
+		r.Header = result.Header
+	}
+	return
+}
+
+func clusterGetCapabilities(client databaseClient, id string) (r getInstanceCapabilitiesResult) {
+	reqOpts := getRequestOpts(200)
+	var result *http.Response
+	result, r.Err = client.Get(instanceCapabilitiesURL(client, dbClustersAPIPath, id), &r.Body, reqOpts)
 	if r.Err == nil {
 		r.Header = result.Header
 	}

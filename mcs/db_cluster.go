@@ -7,6 +7,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
+func flattenDatabaseClusterWalVolume(w walVolume) []map[string]interface{} {
+	walvolume := make([]map[string]interface{}, 1)
+	walvolume[0] = make(map[string]interface{})
+	walvolume[0]["size"] = w.Size
+	walvolume[0]["volume_type"] = dbImportedStatus
+	return walvolume
+}
+
+func flattenDatabaseClusterShard(inst dbClusterInstanceResp) map[string]interface{} {
+	newShard := make(map[string]interface{})
+	newShard["shard_id"] = inst.ShardID
+	newShard["flavor_id"] = inst.Flavor.ID
+	newShard["volume_size"] = inst.Volume.Size
+	newShard["volume_type"] = dbImportedStatus
+	return newShard
+}
+
 func getClusterStatus(c *dbClusterResp) string {
 	instancesStatus := string(dbInstanceStatusActive)
 	for _, inst := range c.Instances {

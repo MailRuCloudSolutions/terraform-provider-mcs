@@ -27,6 +27,27 @@ func resourceDatabaseCluster() *schema.Resource {
 		Read:   resourceDatabaseClusterRead,
 		Delete: resourceDatabaseClusterDelete,
 		Update: resourceDatabaseClusterUpdate,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				config := meta.(configer)
+				DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
+				if err != nil {
+					return nil, fmt.Errorf("error creating OpenStack database client: %s", err)
+				}
+
+				err = resourceDatabaseClusterRead(d, meta)
+				if err != nil {
+					return nil, err
+				}
+
+				capabilities, err := clusterGetCapabilities(DatabaseV1Client, d.Id()).extract()
+				if err != nil {
+					return nil, fmt.Errorf("error getting cluster capabilities")
+				}
+				d.Set("capabilities", flattenDatabaseInstanceCapabilities(capabilities))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(dbCreateTimeout),
@@ -88,16 +109,6 @@ func resourceDatabaseCluster() *schema.Resource {
 						"volume_type": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: false,
-						},
-						"autoexpand": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: false,
-						},
-						"max_disk_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
 							ForceNew: false,
 						},
 					},
@@ -220,6 +231,27 @@ func resourceDatabaseCluster() *schema.Resource {
 				},
 			},
 
+			"wal_disk_autoexpand": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"autoexpand": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: false,
+						},
+						"max_disk_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: false,
+						},
+					},
+				},
+			},
+
 			"capabilities": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -257,7 +289,7 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	message := "unable to determine mcs_db_instance"
 	if v, ok := d.GetOk("datastore"); ok {
-		datastore, err := extractDatabaseInstanceDatastore(v.([]interface{}))
+		datastore, err := extractDatabaseDatastore(v.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("%s datastore", message)
 		}
@@ -265,7 +297,7 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("disk_autoexpand"); ok {
-		autoExpandOpts, err := extractDatabaseInstanceAutoExpand(v.([]interface{}))
+		autoExpandOpts, err := extractDatabaseAutoExpand(v.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("%s disk_autoexpand", message)
 		}
@@ -275,6 +307,19 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 			createOpts.AutoExpand = 0
 		}
 		createOpts.MaxDiskSize = autoExpandOpts.MaxDiskSize
+	}
+
+	if v, ok := d.GetOk("wal_disk_autoexpand"); ok {
+		walAutoExpandOpts, err := extractDatabaseAutoExpand(v.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("%s wal_disk_autoexpand", message)
+		}
+		if walAutoExpandOpts.AutoExpand {
+			createOpts.WalAutoExpand = 1
+		} else {
+			createOpts.WalAutoExpand = 0
+		}
+		createOpts.WalMaxDiskSize = walAutoExpandOpts.MaxDiskSize
 	}
 
 	clusterSize := d.Get("cluster_size").(int)
@@ -288,33 +333,20 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("network"); ok {
-		createDBInstanceOpts.Nics, err = extractDatabaseInstanceNetworks(v.([]interface{}))
+		createDBInstanceOpts.Nics, err = extractDatabaseNetworks(v.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("%s network", message)
 		}
 	}
-	if capabilities, ok := d.GetOk("capabilities"); ok {
-		capabilitiesOpts, err := extractDatabaseInstanceCapabilities(capabilities.([]interface{}))
-		if err != nil {
-			return fmt.Errorf("%s capability", message)
-		}
-		createDBInstanceOpts.Capabilities = capabilitiesOpts
-	}
 
 	if v, ok := d.GetOk("wal_volume"); ok {
-		walVolumeOpts, err := extractDatabaseInstanceWalVolume(v.([]interface{}))
+		walVolumeOpts, err := extractDatabaseWalVolume(v.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("%s wal_volume", message)
 		}
 		createDBInstanceOpts.Walvolume = &walVolume{
-			Size:        &walVolumeOpts.Size,
-			VolumeType:  walVolumeOpts.VolumeType,
-			MaxDiskSize: walVolumeOpts.MaxDiskSize,
-		}
-		if walVolumeOpts.AutoExpand {
-			createDBInstanceOpts.Walvolume.AutoExpand = 1
-		} else {
-			createDBInstanceOpts.Walvolume.AutoExpand = 0
+			Size:       &walVolumeOpts.Size,
+			VolumeType: walVolumeOpts.VolumeType,
 		}
 	}
 
@@ -330,7 +362,7 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	cluster, err := dbClusterCreate(DatabaseV1Client, clust).extract()
 	if err != nil {
-		return fmt.Errorf("error creating mcs_db_instance: %s", err)
+		return fmt.Errorf("error creating mcs_db_cluster: %s", err)
 	}
 
 	// Wait for the cluster to become available.
@@ -361,6 +393,20 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if capabilities, ok := d.GetOk("capabilities"); ok {
+		capabilitiesOpts, err := extractDatabaseCapabilities(capabilities.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("%s capability", message)
+		}
+		var applyCapabilityOpts dbClusterApplyCapabilityOpts
+		applyCapabilityOpts.ApplyCapability.Capabilities = capabilitiesOpts
+		err = dbClusterAction(DatabaseV1Client, cluster.ID, &applyCapabilityOpts).ExtractErr()
+
+		if err != nil {
+			return fmt.Errorf("error applying capability to mcs_db_cluster %s: %s", cluster.ID, err)
+		}
+	}
+
 	// Store the ID now
 	d.SetId(cluster.ID)
 	return resourceDatabaseClusterRead(d, meta)
@@ -381,7 +427,24 @@ func resourceDatabaseClusterRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Retrieved mcs_db_cluster %s: %#v", d.Id(), cluster)
 
 	d.Set("name", cluster.Name)
-	d.Set("datastore", cluster.DataStore)
+	d.Set("datastore", flattenDatabaseInstanceDatastore(*cluster.DataStore))
+	d.Set("flavor_id", cluster.Instances[0].Flavor.ID)
+	d.Set("cluster_size", len(cluster.Instances))
+	d.Set("volume_size", cluster.Instances[0].Volume.Size)
+
+	if _, ok := d.GetOk("volume_type"); !ok {
+		d.Set("volume_type", dbImportedStatus)
+	}
+	d.Set("configuration_id", cluster.ConfigurationID)
+	if _, ok := d.GetOk("disk_autoexpand"); ok {
+		d.Set("disk_autoexpand", flattenDatabaseInstanceAutoExpand(cluster.AutoExpand, cluster.MaxDiskSize))
+	}
+	if cluster.Instances[0].WalVolume.VolumeID != "" {
+		d.Set("wal_volume", flattenDatabaseClusterWalVolume(*cluster.Instances[0].WalVolume))
+		if _, ok := d.GetOk("wal_disk_autoexpand"); ok {
+			d.Set("wal_disk_autoexpand", flattenDatabaseInstanceAutoExpand(cluster.WalAutoExpand, cluster.WalMaxDiskSize))
+		}
+	}
 
 	return nil
 }
@@ -476,7 +539,7 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("disk_autoexpand") {
 		_, new := d.GetChange("disk_autoexpand")
-		autoExpandProperties, err := extractDatabaseInstanceAutoExpand(new.([]interface{}))
+		autoExpandProperties, err := extractDatabaseAutoExpand(new.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("unable to determine mcs_db_cluster disk_autoexpand")
 		}
@@ -503,12 +566,12 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("wal_volume") {
 		old, new := d.GetChange("wal_volume")
-		walVolumeOptsNew, err := extractDatabaseInstanceWalVolume(new.([]interface{}))
+		walVolumeOptsNew, err := extractDatabaseWalVolume(new.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("unable to determine mcs_db_instance wal_volume")
 		}
 
-		walVolumeOptsOld, err := extractDatabaseInstanceWalVolume(old.([]interface{}))
+		walVolumeOptsOld, err := extractDatabaseWalVolume(old.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("unable to determine mcs_db_instance wal_volume")
 		}
@@ -534,23 +597,37 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		// Wal volume autoresize params update
-		var autoExpandWalOpts dbClusterUpdateAutoExpandWalOpts
-		if walVolumeOptsNew.AutoExpand {
-			autoExpandWalOpts.Cluster.WalVolume.VolumeAutoresizeEnabled = 1
-		} else {
-			autoExpandWalOpts.Cluster.WalVolume.VolumeAutoresizeEnabled = 0
+	}
+	if d.HasChange("wal_disk_autoexpand") {
+		_, new := d.GetChange("wal_disk_autoexpand")
+		walAutoExpandProperties, err := extractDatabaseAutoExpand(new.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("unable to determine mcs_db_cluster wal_disk_autoexpand")
 		}
-		autoExpandWalOpts.Cluster.WalVolume.VolumeAutoresizeMaxSize = walVolumeOptsNew.MaxDiskSize
-		err = dbClusterUpdateAutoExpand(DatabaseV1Client, d.Id(), &autoExpandWalOpts).ExtractErr()
+		var walAutoExpandOpts dbClusterUpdateAutoExpandWalOpts
+		if walAutoExpandProperties.AutoExpand {
+			walAutoExpandOpts.Cluster.WalVolume.VolumeAutoresizeEnabled = 1
+		} else {
+			walAutoExpandOpts.Cluster.WalVolume.VolumeAutoresizeEnabled = 0
+		}
+		walAutoExpandOpts.Cluster.WalVolume.VolumeAutoresizeMaxSize = walAutoExpandProperties.MaxDiskSize
+		err = dbClusterUpdateAutoExpand(DatabaseV1Client, d.Id(), &walAutoExpandOpts).ExtractErr()
 		if err != nil {
 			return err
+		}
+
+		stateConf.Pending = []string{string(dbClusterStatusUpdating)}
+		stateConf.Target = []string{string(dbClusterStatusActive)}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error waiting for mcs_db_cluster %s to become ready: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("capabilities") {
 		_, newCapabilities := d.GetChange("capabilities")
-		newCapabilitiesOpts, err := extractDatabaseInstanceCapabilities(newCapabilities.([]interface{}))
+		newCapabilitiesOpts, err := extractDatabaseCapabilities(newCapabilities.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("unable to determine mcs_db_instance capability")
 		}
@@ -577,7 +654,7 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 				Volume:           &volume{Size: &volumeSize, VolumeType: d.Get("volume_type").(string)},
 			}
 			if v, ok := d.GetOk("wal_volume"); ok {
-				walVolumeOpts, err := extractDatabaseInstanceWalVolume(v.([]interface{}))
+				walVolumeOpts, err := extractDatabaseWalVolume(v.([]interface{}))
 				if err != nil {
 					return fmt.Errorf("unable to determine mcs_db_cluster wal_volume")
 				}

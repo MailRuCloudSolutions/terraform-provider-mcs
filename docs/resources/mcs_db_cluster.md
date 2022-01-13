@@ -83,3 +83,19 @@ The following arguments are supported:
 * `capabilities` - Object that represents capability applied to cluster. There can be several instances of this object. Each instance of this object has following attributes:
     * `name` - (Required) The name of the capability to apply.
     * `settings` - Map of key-value settings of the capability.
+
+## Import
+
+Clusters can be imported using the `id`, e.g.
+
+```
+$ terraform import mcs_db_cluster.mycluster 708a74a1-6b00-4a96-938c-28a8a6d98590
+```
+
+After the import you can use ```terraform show``` to view imported fields and write their values to your .tf file.
+
+You should at least add following fields to your .tf file:
+
+`name, flavor_id, cluster_size, volume_size, volume_type, datastore`
+
+Please, use `"IMPORTED"` as value for `volume_type` field.

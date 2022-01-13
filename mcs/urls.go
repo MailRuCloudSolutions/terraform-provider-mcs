@@ -63,3 +63,7 @@ func instanceUserURL(c ContainerClient, api string, id string, userName string) 
 func instanceDatabaseURL(c ContainerClient, api string, id string, databaseName string) string {
 	return c.ServiceURL(api, id, "databases", databaseName)
 }
+
+func instanceCapabilitiesURL(c ContainerClient, api string, id string) string {
+	return c.ServiceURL(api, id, "capabilities")
+}

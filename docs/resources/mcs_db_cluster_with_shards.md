@@ -88,3 +88,19 @@ resource "mcs_db_cluster_with_shards" "db-cluster-with-shards" {
         * `uuid` - The id of the network. Changing this creates a new cluster.
         * `port` - The port id of the network. Changing this creates a new cluster.
         * `fixed_ip_v4` - The IPv4 address. Changing this creates a new cluster.
+
+## Import
+
+Clusters can be imported using the `id`, e.g.
+
+```
+$ terraform import mcs_db_cluster_with_shards.mycluster 708a74a1-6b00-4a96-938c-28a8a6d98590
+```
+
+After the import you can use ```terraform show``` to view imported fields and write their values to your .tf file.
+
+You should at least add following fields to your .tf file:
+
+`name, datastore`, and for each shard add: `shard_id, size, flavor_id, volume_size, volume_type`
+
+Please, use `"IMPORTED"` as value for `volume_type` field.

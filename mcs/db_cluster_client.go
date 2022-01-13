@@ -18,19 +18,20 @@ type dbClusterCreateOpts struct {
 	FloatingIPEnabled bool                          `json:"allow_remote_access,omitempty"`
 	AutoExpand        int                           `json:"volume_autoresize_enabled,omitempty"`
 	MaxDiskSize       int                           `json:"volume_autoresize_max_size,omitempty"`
+	WalAutoExpand     int                           `json:"wal_autoresize_enabled,omitempty"`
+	WalMaxDiskSize    int                           `json:"wal_autoresize_max_size,omitempty"`
 	Instances         []dbClusterInstanceCreateOpts `json:"instances"`
 }
 
 // dbClusterInstanceCreateOpts represents database cluster instance creation parameters
 type dbClusterInstanceCreateOpts struct {
-	Keypair          string                   `json:"key_name,omitempty"`
-	AvailabilityZone string                   `json:"availability_zone,omitempty"`
-	FlavorRef        string                   `json:"flavorRef,omitempty" mapstructure:"flavor_id"`
-	Nics             []networkOpts            `json:"nics" required:"true"`
-	Volume           *volume                  `json:"volume" required:"true"`
-	Walvolume        *walVolume               `json:"wal_volume,omitempty"`
-	ShardID          string                   `json:"shard_id,omitempty"`
-	Capabilities     []instanceCapabilityOpts `json:"capabilities,omitempty"`
+	Keypair          string        `json:"key_name,omitempty"`
+	AvailabilityZone string        `json:"availability_zone,omitempty"`
+	FlavorRef        string        `json:"flavorRef,omitempty" mapstructure:"flavor_id"`
+	Nics             []networkOpts `json:"nics" required:"true"`
+	Volume           *volume       `json:"volume" required:"true"`
+	Walvolume        *walVolume    `json:"wal_volume,omitempty"`
+	ShardID          string        `json:"shard_id,omitempty"`
 }
 
 // dbClusterAttachConfigurationGroupOpts represents parameters of configuration group to be attached to database cluster
@@ -135,25 +136,39 @@ type dbClusterResp struct {
 	Name            string                  `json:"name"`
 	Task            dbClusterTask           `json:"task"`
 	Updated         dateTimeWithoutTZFormat `json:"updated"`
+	AutoExpand      int                     `json:"volume_autoresize_enabled"`
+	MaxDiskSize     int                     `json:"volume_autoresize_max_size"`
+	WalAutoExpand   int                     `json:"wal_autoresize_enabled"`
+	WalMaxDiskSize  int                     `json:"wal_autoresize_max_size"`
 }
 
 // dbClusterInstanceResp represents database cluster instance response
 type dbClusterInstanceResp struct {
-	СomputeInstanceID string  `json:"compute_instance_id"`
-	Flavor            *links  `json:"flavor"`
-	GaVersion         string  `json:"ga_version"`
-	ID                string  `json:"id"`
-	Links             *[]link `json:"links"`
-	Name              string  `json:"name"`
-	Role              string  `json:"role"`
-	Status            string  `json:"status"`
-	Type              string  `json:"type"`
-	Volume            *volume `json:"volume"`
+	СomputeInstanceID string     `json:"compute_instance_id"`
+	Flavor            *links     `json:"flavor"`
+	GaVersion         string     `json:"ga_version"`
+	ID                string     `json:"id"`
+	Links             *[]link    `json:"links"`
+	Name              string     `json:"name"`
+	Role              string     `json:"role"`
+	Status            string     `json:"status"`
+	Type              string     `json:"type"`
+	Volume            *volume    `json:"volume"`
+	WalVolume         *walVolume `json:"wal_volume"`
+	ShardID           string     `json:"shard_id"`
+}
+
+type dbClusterShortResp struct {
+	ID string `json:"id"`
 }
 
 // dbClusterRespOpts is used to properly extract database cluster response
 type dbClusterRespOpts struct {
 	Cluster *dbClusterResp `json:"cluster"`
+}
+
+type dbClusterShortRespOpts struct {
+	Cluster *dbClusterShortResp `json:"cluster"`
 }
 
 // dbClusterTask represents database cluster task
@@ -232,9 +247,13 @@ type commonClusterResult struct {
 	gophercloud.Result
 }
 
+type shortClusterResult struct {
+	gophercloud.Result
+}
+
 // createClusterResult represents result of database cluster create
 type createClusterResult struct {
-	commonClusterResult
+	shortClusterResult
 }
 
 // getClusterResult represents result of database cluster get
@@ -250,11 +269,19 @@ type clusterActionResult struct {
 // extract is used to extract result into response struct
 func (r commonClusterResult) extract() (*dbClusterResp, error) {
 	var c *dbClusterRespOpts
-	err := r.ExtractInto(&c)
-	if err == nil {
-		return c.Cluster, nil
+	if err := r.ExtractInto(&c); err != nil {
+		return nil, err
 	}
-	return nil, err
+	return c.Cluster, nil
+}
+
+// extract is used to extract result into short response struct
+func (r shortClusterResult) extract() (*dbClusterShortResp, error) {
+	var c *dbClusterShortRespOpts
+	if err := r.ExtractInto(&c); err != nil {
+		return nil, err
+	}
+	return c.Cluster, nil
 }
 
 var dbClustersAPIPath = "clusters"

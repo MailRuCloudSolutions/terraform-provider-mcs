@@ -41,3 +41,16 @@ The following arguments are supported:
 
 Either `instance_id` or `dbms_id` must be configured.
 
+## Import
+
+Users can be imported using the `dbms_id/name`
+
+```
+$ terraform import mcs_db_user.myuser my_dbms_id/myusername
+```
+
+After the import you can use ```terraform show``` to view imported fields and write their values to your .tf file.
+
+You should at least add following fields to your .tf file:
+
+`name, dbms_id, password`
