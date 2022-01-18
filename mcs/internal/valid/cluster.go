@@ -35,6 +35,8 @@ func ClusterName(name string) error {
 var availabilityAvailabilityZones = map[string]struct{}{
 	"dp1": {},
 	"ms1": {},
+	// the zone is not public, for corp cloud users only. Not mentioned in doc.
+	"ost1": {},
 }
 
 // AvailabilityZone validates provided availability zone.
