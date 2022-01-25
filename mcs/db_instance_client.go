@@ -358,7 +358,7 @@ type dbInstanceCreateOpts struct {
 type networkOpts struct {
 	UUID      string `json:"net-id,omitempty"`
 	Port      string `json:"port-id,omitempty"`
-	V4FixedIP string `json:"v4-fixed-ip,omitempty"`
+	V4FixedIP string `json:"v4-fixed-ip,omitempty" mapstructure:"fixed_ip_v4"`
 }
 
 type commonInstanceResult struct {

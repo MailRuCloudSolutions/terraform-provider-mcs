@@ -72,7 +72,6 @@ The following arguments are supported:
 * `network` -  Object that represents network of the cluster. Changing this creates a new cluster. It has following attributes: 
     * `uuid` - The id of the network. Changing this creates a new cluster.
     * `port` - The port id of the network. Changing this creates a new cluster.
-    * `fixed_ip_v4` - The IPv4 address. Changing this creates a new cluster.
 
 * `root_enabled` - Boolean field that indicates whether root user is enabled for the cluster.
 
