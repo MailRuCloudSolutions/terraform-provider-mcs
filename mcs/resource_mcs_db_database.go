@@ -14,6 +14,9 @@ func resourceDatabaseDatabase() *schema.Resource {
 		Read:   resourceDatabaseDatabaseRead,
 		Update: resourceDatabaseDatabaseUpdate,
 		Delete: resourceDatabaseDatabaseDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(dbDatabaseCreateTimeout),

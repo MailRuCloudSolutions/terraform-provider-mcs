@@ -37,3 +37,17 @@ The following arguments are supported:
 * `collate` - Collate option of the database.  Changing this creates a new database.
 
 Either `instance_id` or `dbms_id` must be configured.
+
+## Import
+
+Databases can be imported using the `dbms_id/name`
+
+```
+$ terraform import mcs_db_database.mydb my_dbms_id/mydbname
+```
+
+After the import you can use ```terraform show``` to view imported fields and write their values to your .tf file.
+
+You should at least add following fields to your .tf file:
+
+`name, dbms_id`

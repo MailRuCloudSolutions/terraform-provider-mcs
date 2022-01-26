@@ -14,7 +14,27 @@ func resourceDatabaseClusterWithShards() *schema.Resource {
 		Read:   resourceDatabaseClusterWithShardsRead,
 		Delete: resourceDatabaseClusterWithShardsDelete,
 		Update: resourceDatabaseClusterWithShardsUpdate,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				config := meta.(configer)
+				DatabaseV1Client, err := config.DatabaseV1Client(getRegion(d, config))
+				if err != nil {
+					return nil, fmt.Errorf("error creating OpenStack database client: %s", err)
+				}
 
+				err = resourceDatabaseClusterWithShardsRead(d, meta)
+				if err != nil {
+					return nil, err
+				}
+
+				capabilities, err := clusterGetCapabilities(DatabaseV1Client, d.Id()).extract()
+				if err != nil {
+					return nil, fmt.Errorf("error getting cluster capabilities")
+				}
+				d.Set("capabilities", flattenDatabaseInstanceCapabilities(capabilities))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(dbCreateTimeout),
 			Delete: schema.DefaultTimeout(dbDeleteTimeout),
@@ -97,6 +117,48 @@ func resourceDatabaseClusterWithShards() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"disk_autoexpand": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"autoexpand": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: false,
+						},
+						"max_disk_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: false,
+						},
+					},
+				},
+			},
+
+			"wal_disk_autoexpand": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"autoexpand": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: false,
+						},
+						"max_disk_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: false,
+						},
+					},
+				},
+			},
+
 			"capabilities": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -171,16 +233,6 @@ func resourceDatabaseClusterWithShards() *schema.Resource {
 										Required: true,
 										ForceNew: false,
 									},
-									"autoexpand": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										ForceNew: false,
-									},
-									"max_disk_size": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: false,
-									},
 								},
 							},
 						},
@@ -237,7 +289,7 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 
 	message := "unable to determine mcs_db_cluster"
 	if v, ok := d.GetOk("datastore"); ok {
-		datastore, err := extractDatabaseInstanceDatastore(v.([]interface{}))
+		datastore, err := extractDatabaseDatastore(v.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("%s datastore", message)
 		}
@@ -245,7 +297,7 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("disk_autoexpand"); ok {
-		autoExpandOpts, err := extractDatabaseInstanceAutoExpand(v.([]interface{}))
+		autoExpandOpts, err := extractDatabaseAutoExpand(v.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("%s disk_autoexpand", message)
 		}
@@ -256,6 +308,20 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 		}
 		createOpts.MaxDiskSize = autoExpandOpts.MaxDiskSize
 	}
+
+	if v, ok := d.GetOk("wal_disk_autoexpand"); ok {
+		walAutoExpandOpts, err := extractDatabaseAutoExpand(v.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("%s wal_disk_autoexpand", message)
+		}
+		if walAutoExpandOpts.AutoExpand {
+			createOpts.WalAutoExpand = 1
+		} else {
+			createOpts.WalAutoExpand = 0
+		}
+		createOpts.WalMaxDiskSize = walAutoExpandOpts.MaxDiskSize
+	}
+
 	var instanceCount int
 	shardsRaw := d.Get("shard").([]interface{})
 	shardInfo := make([]dbClusterInstanceCreateOpts, len(shardsRaw))
@@ -268,19 +334,17 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 		instanceCount += shardSize
 		volumeSize := shardMap["volume_size"].(int)
 		shardInfo[i].Volume = &volume{Size: &volumeSize, VolumeType: shardMap["volume_type"].(string)}
-		shardInfo[i].Nics, _ = extractDatabaseInstanceNetworks(shardMap["network"].([]interface{}))
+		shardInfo[i].Nics, _ = extractDatabaseNetworks(shardMap["network"].([]interface{}))
 		shardInfo[i].AvailabilityZone = shardMap["availability_zone"].(string)
 		shardInfo[i].FlavorRef = shardMap["flavor_id"].(string)
 		shardInfo[i].ShardID = shardMap["shard_id"].(string)
-	}
-
-	if capabilities, ok := d.GetOk("capabilities"); ok {
-		capabilitiesOpts, err := extractDatabaseInstanceCapabilities(capabilities.([]interface{}))
-		if err != nil {
-			return fmt.Errorf("%s capability", message)
-		}
-		for i := 0; i < len(shardInfo); i++ {
-			shardInfo[i].Capabilities = capabilitiesOpts
+		walVolumeV := shardMap["wal_volume"].([]interface{})
+		if len(walVolumeV) > 0 {
+			walVolumeOpts, err := extractDatabaseWalVolume(walVolumeV)
+			if err != nil {
+				return fmt.Errorf("%s wal_volume", message)
+			}
+			shardInfo[i].Walvolume = &walVolume{Size: &walVolumeOpts.Size, VolumeType: walVolumeOpts.VolumeType}
 		}
 	}
 
@@ -297,17 +361,17 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 	}
 	createOpts.Instances = instances
 
-	log.Printf("[DEBUG] mcs_db_cluster create options: %#v", createOpts)
+	log.Printf("[DEBUG] mcs_db_cluster_with_shards create options: %#v", createOpts)
 	clust := dbCluster{}
 	clust.Cluster = createOpts
 
 	cluster, err := dbClusterCreate(DatabaseV1Client, clust).extract()
 	if err != nil {
-		return fmt.Errorf("error creating mcs_db_instance: %s", err)
+		return fmt.Errorf("error creating mcs_db_cluster_with_shards: %s", err)
 	}
 
 	// Wait for the cluster to become available.
-	log.Printf("[DEBUG] Waiting for mcs_db_instance %s to become available", cluster.ID)
+	log.Printf("[DEBUG] Waiting for mcs_db_cluster_with_shards %s to become available", cluster.ID)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbClusterStatusBuild)},
@@ -320,7 +384,7 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for mcs_db_cluster %s to become ready: %s", cluster.ID, err)
+		return fmt.Errorf("error waiting for mcs_db_cluster_with_shards %s to become ready: %s", cluster.ID, err)
 	}
 
 	if configuration, ok := d.GetOk("configuration_id"); ok {
@@ -329,14 +393,28 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 		attachConfigurationOpts.ConfigurationAttach.ConfigurationID = configuration.(string)
 		err := instanceAttachConfigurationGroup(DatabaseV1Client, cluster.ID, &attachConfigurationOpts).ExtractErr()
 		if err != nil {
-			return fmt.Errorf("error attaching configuration group %s to mcs_db_instance %s: %s",
+			return fmt.Errorf("error attaching configuration group %s to mcs_db_cluster_with_shards %s: %s",
 				configuration, cluster.ID, err)
+		}
+	}
+
+	if capabilities, ok := d.GetOk("capabilities"); ok {
+		capabilitiesOpts, err := extractDatabaseCapabilities(capabilities.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("%s capability", message)
+		}
+		var applyCapabilityOpts dbClusterApplyCapabilityOpts
+		applyCapabilityOpts.ApplyCapability.Capabilities = capabilitiesOpts
+		err = dbClusterAction(DatabaseV1Client, cluster.ID, &applyCapabilityOpts).ExtractErr()
+
+		if err != nil {
+			return fmt.Errorf("error applying capability to mcs_db_cluster %s: %s", cluster.ID, err)
 		}
 	}
 
 	// Store the ID now
 	d.SetId(cluster.ID)
-	return resourceDatabaseClusterRead(d, meta)
+	return resourceDatabaseClusterWithShardsRead(d, meta)
 }
 
 func resourceDatabaseClusterWithShardsRead(d *schema.ResourceData, meta interface{}) error {
@@ -351,10 +429,37 @@ func resourceDatabaseClusterWithShardsRead(d *schema.ResourceData, meta interfac
 		return checkDeleted(d, err, "Error retrieving mcs_db_cluster")
 	}
 
-	log.Printf("[DEBUG] Retrieved mcs_db_cluster %s: %#v", d.Id(), cluster)
+	log.Printf("[DEBUG] Retrieved mcs_db_cluster_with_shards %s: %#v", d.Id(), cluster)
 
 	d.Set("name", cluster.Name)
-	d.Set("datastore", cluster.DataStore)
+	d.Set("datastore", flattenDatabaseInstanceDatastore(*cluster.DataStore))
+
+	shardIDs := make(map[string]int)
+	shards := make([]map[string]interface{}, 0)
+	for _, inst := range cluster.Instances {
+		if _, ok := shardIDs[inst.ShardID]; ok {
+			shardIDs[inst.ShardID]++
+			continue
+		}
+		shardIDs[inst.ShardID] = 1
+		newShard := flattenDatabaseClusterShard(inst)
+		if inst.WalVolume != nil {
+			newShard["wal_volume"] = flattenDatabaseClusterWalVolume(*inst.WalVolume)
+		}
+		shards = append(shards, newShard)
+	}
+	for _, shard := range shards {
+		shard["size"] = shardIDs[shard["shard_id"].(string)]
+	}
+	d.Set("shard", shards)
+
+	d.Set("configuration_id", cluster.ConfigurationID)
+	if _, ok := d.GetOk("disk_autoexpand"); ok {
+		d.Set("disk_autoexpand", flattenDatabaseInstanceAutoExpand(cluster.AutoExpand, cluster.MaxDiskSize))
+	}
+	if _, ok := d.GetOk("wal_disk_autoexpand"); ok {
+		d.Set("wal_disk_autoexpand", flattenDatabaseInstanceAutoExpand(cluster.WalAutoExpand, cluster.WalMaxDiskSize))
+	}
 
 	return nil
 }
@@ -409,7 +514,7 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 
 	if d.HasChange("disk_autoexpand") {
 		_, new := d.GetChange("disk_autoexpand")
-		autoExpandProperties, err := extractDatabaseInstanceAutoExpand(new.([]interface{}))
+		autoExpandProperties, err := extractDatabaseAutoExpand(new.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("unable to determine mcs_db_cluster disk_autoexpand")
 		}
@@ -436,7 +541,7 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 
 	if d.HasChange("capabilities") {
 		_, newCapabilities := d.GetChange("capabilities")
-		newCapabilitiesOpts, err := extractDatabaseInstanceCapabilities(newCapabilities.([]interface{}))
+		newCapabilitiesOpts, err := extractDatabaseCapabilities(newCapabilities.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("unable to determine mcs_db_instance capability")
 		}
@@ -450,7 +555,7 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceDatabaseClusterRead(d, meta)
+	return resourceDatabaseClusterWithShardsRead(d, meta)
 }
 
 func resourceDatabaseClusterWithShardsDelete(d *schema.ResourceData, meta interface{}) error {

@@ -74,12 +74,16 @@ The following arguments are supported:
 * `disk_autoexpand` - Object that represents autoresize properties of the instance. It has following attributes:
     * `autoexpand` - Boolean field that indicates whether autoresize is enabled.
     * `max_disk_size` - Maximum disk size for autoresize.
+  
+* `wal_disk_autoexpand` - Object that represents autoresize properties of the instance. It has following attributes:
+    * `autoexpand` - Boolean field that indicates whether wal volume autoresize is enabled.
+    * `max_disk_size` - Maximum disk size for wal volume autoresize.
 
 * `wal_volume` - Object that represents wal volume of the instance. Changing this creates a new instance. It has following attributes:
     * `size` - (Required) Size of the instance wal volume.
     * `volume_type` - (Required) The type of the instance wal volume. Changing this creates a new instance.
-    * `autoexpand` - Boolean field that indicates whether wal volume autoresize is enabled.
-    * `max_disk_size` - Maximum disk size for wal volume autoresize.
+    * `autoexpand` - Boolean field that indicates whether wal volume autoresize is enabled. **Deprecated** Please, use wal_disk_autoexpand block instead.
+    * `max_disk_size` - Maximum disk size for wal volume autoresize. **Deprecated** Please, use wal_disk_autoexpand block instead.
 
 * `network` -  Object that represents network of the instance. Changing this creates a new instance. It has following attributes: 
     * `uuid` - The id of the network. Changing this creates a new instance.
@@ -95,3 +99,19 @@ The following arguments are supported:
 * `capabilities` - Object that represents capability applied to instance. There can be several instances of this object (see example). Each instance of this object has following attributes:
     * `name` - (Required) The name of the capability to apply.
     * `settings` - Map of key-value settings of the capability.
+
+## Import
+
+Instances can be imported using the `id`, e.g.
+
+```
+$ terraform import mcs_db_instance.myinstance 708a74a1-6b00-4a96-938c-28a8a6d98590
+```
+
+After the import you can use ```terraform show``` to view imported fields and write their values to your .tf file.
+
+You should at least add following fields to your .tf file:
+
+`name, flavor_id, size, volume_type, datastore`
+
+Please, use `"IMPORTED"` as value for `volume_type` field.

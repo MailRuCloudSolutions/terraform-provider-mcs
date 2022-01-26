@@ -28,7 +28,7 @@ func getClusterWithShardsDatastores() []string {
 	return []string{Clickhouse}
 }
 
-func extractDatabaseInstanceDatastore(v []interface{}) (dataStore, error) {
+func extractDatabaseDatastore(v []interface{}) (dataStore, error) {
 	var D dataStore
 	in := v[0].(map[string]interface{})
 	err := mapStructureDecoder(&D, &in, decoderConfig)
@@ -38,7 +38,15 @@ func extractDatabaseInstanceDatastore(v []interface{}) (dataStore, error) {
 	return D, nil
 }
 
-func extractDatabaseInstanceNetworks(v []interface{}) ([]networkOpts, error) {
+func flattenDatabaseInstanceDatastore(d dataStore) []map[string]interface{} {
+	datastore := make([]map[string]interface{}, 1)
+	datastore[0] = make(map[string]interface{})
+	datastore[0]["type"] = d.Type
+	datastore[0]["version"] = d.Version
+	return datastore
+}
+
+func extractDatabaseNetworks(v []interface{}) ([]networkOpts, error) {
 	Networks := make([]networkOpts, len(v))
 	for i, network := range v {
 		var N networkOpts
@@ -51,7 +59,7 @@ func extractDatabaseInstanceNetworks(v []interface{}) ([]networkOpts, error) {
 	return Networks, nil
 }
 
-func extractDatabaseInstanceAutoExpand(v []interface{}) (instanceAutoExpandOpts, error) {
+func extractDatabaseAutoExpand(v []interface{}) (instanceAutoExpandOpts, error) {
 	var A instanceAutoExpandOpts
 	in := v[0].(map[string]interface{})
 	err := mapstructure.Decode(in, &A)
@@ -61,7 +69,19 @@ func extractDatabaseInstanceAutoExpand(v []interface{}) (instanceAutoExpandOpts,
 	return A, nil
 }
 
-func extractDatabaseInstanceWalVolume(v []interface{}) (walVolumeOpts, error) {
+func flattenDatabaseInstanceAutoExpand(autoExpandInt int, maxDiskSize int) []map[string]interface{} {
+	autoExpand := make([]map[string]interface{}, 1)
+	autoExpand[0] = make(map[string]interface{})
+	if autoExpandInt != 0 {
+		autoExpand[0]["autoexpand"] = true
+	} else {
+		autoExpand[0]["autoexpand"] = false
+	}
+	autoExpand[0]["max_disk_size"] = maxDiskSize
+	return autoExpand
+}
+
+func extractDatabaseWalVolume(v []interface{}) (walVolumeOpts, error) {
 	var W walVolumeOpts
 	in := v[0].(map[string]interface{})
 	err := mapstructure.Decode(in, &W)
@@ -71,7 +91,15 @@ func extractDatabaseInstanceWalVolume(v []interface{}) (walVolumeOpts, error) {
 	return W, nil
 }
 
-func extractDatabaseInstanceCapabilities(v []interface{}) ([]instanceCapabilityOpts, error) {
+func flattenDatabaseInstanceWalVolume(w walVolume) []map[string]interface{} {
+	walvolume := make([]map[string]interface{}, 1)
+	walvolume[0] = make(map[string]interface{})
+	walvolume[0]["size"] = w.Size
+	walvolume[0]["volume_type"] = dbImportedStatus
+	return walvolume
+}
+
+func extractDatabaseCapabilities(v []interface{}) ([]instanceCapabilityOpts, error) {
 	capabilities := make([]instanceCapabilityOpts, len(v))
 	for i, capability := range v {
 		var C instanceCapabilityOpts
@@ -82,6 +110,16 @@ func extractDatabaseInstanceCapabilities(v []interface{}) ([]instanceCapabilityO
 		capabilities[i] = C
 	}
 	return capabilities, nil
+}
+
+func flattenDatabaseInstanceCapabilities(c []instanceCapabilityOpts) []map[string]interface{} {
+	capabilities := make([]map[string]interface{}, len(c))
+	for i, capability := range c {
+		capabilities[i] = make(map[string]interface{})
+		capabilities[i]["name"] = capability.Name
+		capabilities[i]["settings"] = capability.Params
+	}
+	return capabilities
 }
 
 func databaseInstanceStateRefreshFunc(client databaseClient, instanceID string) resource.StateRefreshFunc {

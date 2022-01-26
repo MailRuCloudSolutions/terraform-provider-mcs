@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExtractDatabaseInstanceDatastore(t *testing.T) {
+func TestExtractInstanceDatastore(t *testing.T) {
 	datastore := []interface{}{
 		map[string]interface{}{
 			"version": "foo",
@@ -22,11 +22,11 @@ func TestExtractDatabaseInstanceDatastore(t *testing.T) {
 		Type:    "bar",
 	}
 
-	actual, _ := extractDatabaseInstanceDatastore(datastore)
+	actual, _ := extractDatabaseDatastore(datastore)
 	assert.Equal(t, expected, actual)
 }
 
-func TestExtractDatabaseInstanceNetworks(t *testing.T) {
+func TestExtractDatabaseNetworks(t *testing.T) {
 	network := []interface{}{
 		map[string]interface{}{
 			"uuid":        "foobar",
@@ -41,11 +41,11 @@ func TestExtractDatabaseInstanceNetworks(t *testing.T) {
 		},
 	}
 
-	actual, _ := extractDatabaseInstanceNetworks(network)
+	actual, _ := extractDatabaseNetworks(network)
 	assert.Equal(t, expected, actual)
 }
 
-func TestExtractDatabaseInstanceAutoExpand(t *testing.T) {
+func TestExtractDatabaseAutoExpand(t *testing.T) {
 	autoExpand := []interface{}{
 		map[string]interface{}{
 			"autoexpand":    true,
@@ -58,11 +58,11 @@ func TestExtractDatabaseInstanceAutoExpand(t *testing.T) {
 		MaxDiskSize: 1000,
 	}
 
-	actual, _ := extractDatabaseInstanceAutoExpand(autoExpand)
+	actual, _ := extractDatabaseAutoExpand(autoExpand)
 	assert.Equal(t, expected, actual)
 }
 
-func TestExtractDatabaseInstanceWalVolume(t *testing.T) {
+func TestExtractDatabaseWalVolume(t *testing.T) {
 	walVolume := []interface{}{
 		map[string]interface{}{
 			"size":          10,
@@ -79,11 +79,11 @@ func TestExtractDatabaseInstanceWalVolume(t *testing.T) {
 		MaxDiskSize: 1000,
 	}
 
-	actual, _ := extractDatabaseInstanceWalVolume(walVolume)
+	actual, _ := extractDatabaseWalVolume(walVolume)
 	assert.Equal(t, expected, actual)
 }
 
-func TestExtractDatabaseInstanceCapabilities(t *testing.T) {
+func TestExtractDatabaseCapabilities(t *testing.T) {
 	capabilities := []interface{}{
 		map[string]interface{}{
 			"name": "node_exporter",
@@ -114,6 +114,6 @@ func TestExtractDatabaseInstanceCapabilities(t *testing.T) {
 		},
 	}
 
-	actual, _ := extractDatabaseInstanceCapabilities(capabilities)
+	actual, _ := extractDatabaseCapabilities(capabilities)
 	assert.Equal(t, expected, actual)
 }
