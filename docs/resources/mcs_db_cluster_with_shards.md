@@ -87,7 +87,6 @@ resource "mcs_db_cluster_with_shards" "db-cluster-with-shards" {
     * `network` -  Object that represents network of the cluster shard. Changing this creates a new cluster. It has following attributes: 
         * `uuid` - The id of the network. Changing this creates a new cluster.
         * `port` - The port id of the network. Changing this creates a new cluster.
-        * `fixed_ip_v4` - The IPv4 address. Changing this creates a new cluster.
 
 ## Import
 
