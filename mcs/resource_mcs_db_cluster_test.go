@@ -38,6 +38,55 @@ func TestAccDatabaseCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccDatabaseCluster_wal(t *testing.T) {
+	var cluster dbClusterResp
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckDatabase(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDatabaseClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseClusterBasic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseClusterExists(
+						"mcs_db_cluster.basic", &cluster),
+					resource.TestCheckResourceAttrPtr(
+						"mcs_db_cluster.basic", "name", &cluster.Name),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDatabaseCluster_wal_no_update(t *testing.T) {
+	var cluster dbClusterResp
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckDatabase(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDatabaseClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseClusterWal,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseClusterExists(
+						"mcs_db_cluster.basic", &cluster),
+					resource.TestCheckResourceAttrPtr(
+						"mcs_db_cluster.basic", "name", &cluster.Name),
+				),
+			},
+			{
+				Config: testAccDatabaseClusterWal,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseClusterExists(
+						"mcs_db_cluster.basic", &cluster),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDatabaseClusterExists(n string, cluster *dbClusterResp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -130,3 +179,32 @@ resource "mcs_db_cluster" "basic" {
 	availability_zone = "MS1"
   }
 `, osNewFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)
+
+var testAccDatabaseClusterWal = fmt.Sprintf(`
+ resource "mcs_db_cluster" "basic" {
+   name      = "basic"
+   flavor_id = "%s"
+   volume_size      = 8
+   volume_type = "ms1"
+   cluster_size = 3
+   datastore {
+	version = "%s"
+	type    = "%s"
+  }
+
+   network {
+     uuid = "%s"
+   }
+	
+   availability_zone = "MS1"
+   wal_volume {
+	size = 8
+	volume_type = "ms1"
+   }
+
+   wal_disk_autoexpand {
+	autoexpand = true
+	max_disk_size = 1000
+   }
+ }
+`, osFlavorID, osDBDatastoreVersion, osDBDatastoreType, osNetworkID)

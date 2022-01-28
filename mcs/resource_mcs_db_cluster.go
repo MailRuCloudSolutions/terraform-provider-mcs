@@ -45,6 +45,11 @@ func resourceDatabaseCluster() *schema.Resource {
 					return nil, fmt.Errorf("error getting cluster capabilities")
 				}
 				d.Set("capabilities", flattenDatabaseInstanceCapabilities(capabilities))
+				d.Set("volume_type", dbImportedStatus)
+				if walV, ok := d.GetOk("wal_volume"); ok {
+					walVMap := walV.([]map[string]interface{})
+					walVMap[0]["volume_type"] = dbImportedStatus
+				}
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -427,15 +432,19 @@ func resourceDatabaseClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cluster_size", len(cluster.Instances))
 	d.Set("volume_size", cluster.Instances[0].Volume.Size)
 
-	if _, ok := d.GetOk("volume_type"); !ok {
-		d.Set("volume_type", dbImportedStatus)
-	}
 	d.Set("configuration_id", cluster.ConfigurationID)
 	if _, ok := d.GetOk("disk_autoexpand"); ok {
 		d.Set("disk_autoexpand", flattenDatabaseInstanceAutoExpand(cluster.AutoExpand, cluster.MaxDiskSize))
 	}
 	if cluster.Instances[0].WalVolume.VolumeID != "" {
-		d.Set("wal_volume", flattenDatabaseClusterWalVolume(*cluster.Instances[0].WalVolume))
+		var walVolumeType string
+		if v, ok := d.GetOk("wal_volume"); ok {
+			walVolume, _ := extractDatabaseWalVolume(v.([]interface{}))
+			walVolumeType = walVolume.VolumeType
+		}
+		walVolumeFlattened := flattenDatabaseClusterWalVolume(*cluster.Instances[0].WalVolume)
+		walVolumeFlattened[0]["volume_type"] = walVolumeType
+		d.Set("wal_volume", walVolumeFlattened)
 		if _, ok := d.GetOk("wal_disk_autoexpand"); ok {
 			d.Set("wal_disk_autoexpand", flattenDatabaseInstanceAutoExpand(cluster.WalAutoExpand, cluster.WalMaxDiskSize))
 		}

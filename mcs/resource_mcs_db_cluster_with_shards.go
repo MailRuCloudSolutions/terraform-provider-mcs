@@ -27,6 +27,30 @@ func resourceDatabaseClusterWithShards() *schema.Resource {
 					return nil, err
 				}
 
+				cluster, err := dbClusterGet(DatabaseV1Client, d.Id()).extract()
+				if err != nil {
+					return nil, fmt.Errorf("error retrieving mcs_db_cluster_with_shards")
+				}
+
+				shardIDs := make(map[string]int)
+				shards := make([]map[string]interface{}, 0)
+				for _, inst := range cluster.Instances {
+					if _, ok := shardIDs[inst.ShardID]; ok {
+						shardIDs[inst.ShardID]++
+						continue
+					}
+					shardIDs[inst.ShardID] = 1
+					newShard := flattenDatabaseClusterShard(inst)
+					if inst.WalVolume != nil {
+						newShard["wal_volume"] = flattenDatabaseClusterWalVolume(*inst.WalVolume)
+					}
+					shards = append(shards, newShard)
+				}
+				for _, shard := range shards {
+					shard["size"] = shardIDs[shard["shard_id"].(string)]
+				}
+				d.Set("shard", shards)
+
 				capabilities, err := clusterGetCapabilities(DatabaseV1Client, d.Id()).extract()
 				if err != nil {
 					return nil, fmt.Errorf("error getting cluster capabilities")
@@ -421,32 +445,13 @@ func resourceDatabaseClusterWithShardsRead(d *schema.ResourceData, meta interfac
 
 	cluster, err := dbClusterGet(DatabaseV1Client, d.Id()).extract()
 	if err != nil {
-		return checkDeleted(d, err, "Error retrieving mcs_db_cluster")
+		return checkDeleted(d, err, "error retrieving mcs_db_cluster_with_shards")
 	}
 
 	log.Printf("[DEBUG] Retrieved mcs_db_cluster_with_shards %s: %#v", d.Id(), cluster)
 
 	d.Set("name", cluster.Name)
 	d.Set("datastore", flattenDatabaseInstanceDatastore(*cluster.DataStore))
-
-	shardIDs := make(map[string]int)
-	shards := make([]map[string]interface{}, 0)
-	for _, inst := range cluster.Instances {
-		if _, ok := shardIDs[inst.ShardID]; ok {
-			shardIDs[inst.ShardID]++
-			continue
-		}
-		shardIDs[inst.ShardID] = 1
-		newShard := flattenDatabaseClusterShard(inst)
-		if inst.WalVolume != nil {
-			newShard["wal_volume"] = flattenDatabaseClusterWalVolume(*inst.WalVolume)
-		}
-		shards = append(shards, newShard)
-	}
-	for _, shard := range shards {
-		shard["size"] = shardIDs[shard["shard_id"].(string)]
-	}
-	d.Set("shard", shards)
 
 	d.Set("configuration_id", cluster.ConfigurationID)
 	if _, ok := d.GetOk("disk_autoexpand"); ok {
