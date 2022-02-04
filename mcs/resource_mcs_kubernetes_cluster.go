@@ -130,9 +130,10 @@ func resourceKubernetesCluster() *schema.Resource {
 				Computed: true,
 			},
 			"master_addresses": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				ForceNew: true,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"node_addresses": {
 				Type:     schema.TypeString,
