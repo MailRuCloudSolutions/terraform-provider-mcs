@@ -26,7 +26,7 @@ func flattenDatabaseClusterShard(inst dbClusterInstanceResp) map[string]interfac
 func getClusterStatus(c *dbClusterResp) string {
 	instancesStatus := string(dbInstanceStatusActive)
 	for _, inst := range c.Instances {
-		if inst.Status == "error" {
+		if inst.Status == string(dbInstanceStatusError) {
 			return inst.Status
 		}
 		if inst.Status == string(dbInstanceStatusBuild) || inst.Status == string(dbInstanceStatusResize) {
@@ -47,7 +47,7 @@ func getClusterStatus(c *dbClusterResp) string {
 	return c.Task.Name
 }
 
-func databaseClusterStateRefreshFunc(client databaseClient, clusterID string) resource.StateRefreshFunc {
+func databaseClusterStateRefreshFunc(client databaseClient, clusterID string, capabilitiesOpts *[]instanceCapabilityOpts) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		c, err := dbClusterGet(client, clusterID).extract()
 		if err != nil {
@@ -60,6 +60,24 @@ func databaseClusterStateRefreshFunc(client databaseClient, clusterID string) re
 		clusterStatus := getClusterStatus(c)
 		if clusterStatus == "error" {
 			return c, clusterStatus, fmt.Errorf("there was an error creating the database cluster")
+		}
+		if clusterStatus == string(dbClusterStatusActive) {
+			if capabilitiesOpts != nil {
+				for _, i := range c.Instances {
+					instCapabilities, err := instanceGetCapabilities(client, i.ID).extract()
+					if err != nil {
+						return nil, "", fmt.Errorf("error getting cluster instance capabilities: %s", err)
+					}
+					capabilitiesReady, err := checkDBMSCapabilities(*capabilitiesOpts, instCapabilities)
+					if err != nil {
+						return nil, "", err
+					}
+					if !capabilitiesReady {
+						return c, string(dbClusterStatusBuild), nil
+					}
+				}
+				return c, string(dbClusterStatusActive), nil
+			}
 		}
 
 		return c, clusterStatus, nil

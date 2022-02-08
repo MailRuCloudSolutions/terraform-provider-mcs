@@ -188,6 +188,13 @@ type instanceCapabilityOpts struct {
 	Params map[string]string `json:"params,omitempty" mapstructure:"settings"`
 }
 
+// databaseCapability represents capability info from dbaas
+type databaseCapability struct {
+	Name   string            `json:"name"`
+	Params map[string]string `json:"params,omitempty"`
+	Status string            `json:"status"`
+}
+
 // instanceApplyCapabilityOpts is used to send request to apply capability to database instance
 type instanceApplyCapabilityOpts struct {
 	ApplyCapability struct {
@@ -196,7 +203,7 @@ type instanceApplyCapabilityOpts struct {
 }
 
 type instanceGetCapabilityOpts struct {
-	Capabilities []instanceCapabilityOpts `json:"capabilities"`
+	Capabilities []databaseCapability `json:"capabilities"`
 }
 
 // userBatchCreateOpts is used to send request to create database users
@@ -507,7 +514,7 @@ func (r isRootUserEnabledResult) extract() (bool, error) {
 	return r.Body.(map[string]interface{})["rootEnabled"].(bool), r.Err
 }
 
-func (r commonInstanceCapabilitiesResult) extract() ([]instanceCapabilityOpts, error) {
+func (r commonInstanceCapabilitiesResult) extract() ([]databaseCapability, error) {
 	var c *instanceGetCapabilityOpts
 	if err := r.ExtractInto(&c); err != nil {
 		return nil, err
