@@ -57,7 +57,6 @@ test-compile:
 	go test -c $(TEST) $(TESTARGS)
 
 lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
 	golangci-lint run ./...
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck test-compile website website-test lint
