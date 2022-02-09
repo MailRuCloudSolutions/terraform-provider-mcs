@@ -205,13 +205,6 @@ func resourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					zone := val.(string)
-					if err := valid.AvailabilityZone(zone); err != nil {
-						errs = append(errs, err)
-					}
-					return
-				},
 			},
 		},
 	}
