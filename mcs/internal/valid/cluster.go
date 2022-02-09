@@ -2,8 +2,6 @@ package valid
 
 import (
 	"errors"
-	"strings"
-
 	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/util/textutil"
 )
 
@@ -29,20 +27,5 @@ func ClusterName(name string) error {
 		}
 	}
 
-	return nil
-}
-
-var availabilityAvailabilityZones = map[string]struct{}{
-	"dp1": {},
-	"ms1": {},
-	// the zone is not public, for corp cloud users only. Not mentioned in doc.
-	"ost1": {},
-}
-
-// AvailabilityZone validates provided availability zone.
-func AvailabilityZone(name string) error {
-	if _, ok := availabilityAvailabilityZones[strings.ToLower(name)]; !ok {
-		return ErrInvalidAvailabilityZone
-	}
 	return nil
 }

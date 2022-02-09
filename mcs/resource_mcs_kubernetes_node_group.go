@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/util/randutil"
-	"github.com/MailRuCloudSolutions/terraform-provider-mcs/mcs/internal/valid"
 )
 
 func resourceKubernetesNodeGroup() *schema.Resource {
@@ -177,9 +176,6 @@ func resourceKubernetesNodeGroupCreate(d *schema.ResourceData, meta interface{})
 		az := make([]string, 0, len(zones))
 		for _, zone := range zones {
 			z := zone.(string)
-			if err := valid.AvailabilityZone(z); err != nil {
-				return err
-			}
 			az = append(az, z)
 		}
 		createOpts.AvailabilityZones = az
