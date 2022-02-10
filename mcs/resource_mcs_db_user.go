@@ -102,7 +102,7 @@ func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error while getting resource: %s", err)
 	}
 	var dbmsType string
-	if instanceResource, ok := dbmsResp.(instanceResp); ok {
+	if instanceResource, ok := dbmsResp.(*instanceResp); ok {
 		if instanceResource.DataStore.Type == Redis {
 			return fmt.Errorf("operation not supported for this datastore")
 		}
@@ -111,7 +111,7 @@ func resourceDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 		dbmsType = dbmsTypeInstance
 	}
-	if clusterResource, ok := dbmsResp.(dbClusterResp); ok {
+	if clusterResource, ok := dbmsResp.(*dbClusterResp); ok {
 		if clusterResource.DataStore.Type == Redis {
 			return fmt.Errorf("operation not supported for this datastore")
 		}
@@ -177,6 +177,11 @@ func resourceDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
 		dbmsType = dbmsTypeRaw.(string)
 	} else {
 		dbmsType = dbmsTypeInstance
+	}
+
+	_, err = getDBMSResource(DatabaseV1Client, dbmsID)
+	if err != nil {
+		return checkDeleted(d, err, "Error retrieving mcs_db_user")
 	}
 
 	exists, userObj, err := databaseUserExists(DatabaseV1Client, dbmsID, userName, dbmsType)

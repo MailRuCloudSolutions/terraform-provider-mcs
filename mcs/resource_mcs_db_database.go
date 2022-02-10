@@ -90,7 +90,7 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error while getting instance or cluster: %s", err)
 	}
 	var dbmsType string
-	if instanceResource, ok := dbmsResp.(instanceResp); ok {
+	if instanceResource, ok := dbmsResp.(*instanceResp); ok {
 		if instanceResource.DataStore.Type == Redis {
 			return fmt.Errorf("operation not supported for this datastore")
 		}
@@ -99,13 +99,12 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		dbmsType = dbmsTypeInstance
 	}
-	if clusterResource, ok := dbmsResp.(dbClusterResp); ok {
+	if clusterResource, ok := dbmsResp.(*dbClusterResp); ok {
 		if clusterResource.DataStore.Type == Redis {
 			return fmt.Errorf("operation not supported for this datastore")
 		}
 		dbmsType = dbmsTypeCluster
 	}
-
 	var databasesList databaseBatchCreateOpts
 
 	db := databaseCreateOpts{
@@ -162,6 +161,11 @@ func resourceDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) erro
 		dbmsType = dbmsTypeRaw.(string)
 	} else {
 		dbmsType = dbmsTypeInstance
+	}
+
+	_, err = getDBMSResource(DatabaseV1Client, dbmsID)
+	if err != nil {
+		return checkDeleted(d, err, "Error retrieving mcs_db_database")
 	}
 
 	exists, err := databaseDatabaseExists(DatabaseV1Client, dbmsID, databaseName, dbmsType)

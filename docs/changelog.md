@@ -7,6 +7,22 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.6.4
+- Added validation of dbms existence for `mcs_db_database` and `mcs_db_user`.
+
+#### v0.6.3
+- Removed availability zone validation for `mcs_kubernetes_cluster`.
+
+#### v0.6.2
+- Fixed `mcs_kubernetes_cluster` read.
+
+#### v0.6.1
+- Fixed import of `volume_type` parameter for `mcs_db_instance` and `mcs_db_cluster`.
+
+#### v0.6.0
+- Added import functionality for dbaas resources.
+- Fixed `fixed_ip_v4` network parameter for `mcs_db_instance`.
+
 #### v0.5.8
 - Removed attribute `ingress_floating_ip` from `mcs_kubernetes_cluster`. 
 
