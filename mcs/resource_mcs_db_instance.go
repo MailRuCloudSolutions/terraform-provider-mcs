@@ -29,12 +29,21 @@ const (
 type dbInstanceStatus string
 
 var (
-	dbInstanceStatusDeleted  dbInstanceStatus = "DELETED"
-	dbInstanceStatusBuild    dbInstanceStatus = "BUILD"
-	dbInstanceStatusActive   dbInstanceStatus = "ACTIVE"
-	dbInstanceStatusShutdown dbInstanceStatus = "SHUTDOWN"
-	dbInstanceStatusResize   dbInstanceStatus = "RESIZE"
-	dbInstanceStatusDetach   dbInstanceStatus = "DETACH"
+	dbInstanceStatusDeleted            dbInstanceStatus = "DELETED"
+	dbInstanceStatusBuild              dbInstanceStatus = "BUILD"
+	dbInstanceStatusActive             dbInstanceStatus = "ACTIVE"
+	dbInstanceStatusError              dbInstanceStatus = "ERROR"
+	dbInstanceStatusShutdown           dbInstanceStatus = "SHUTDOWN"
+	dbInstanceStatusResize             dbInstanceStatus = "RESIZE"
+	dbInstanceStatusDetach             dbInstanceStatus = "DETACH"
+	dbInstanceStatusCapabilityApplying dbInstanceStatus = "CAPABILITY_APPLYING"
+)
+
+type dbCapabilityStatus string
+
+var (
+	dbCapabilityStatusActive dbCapabilityStatus = "ACTIVE"
+	dbCapabilityStatusError  dbCapabilityStatus = "ERROR"
 )
 
 const (
@@ -434,12 +443,16 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 		createOpts.Walvolume.MaxDiskSize = walAutoExpandOpts.MaxDiskSize
 	}
 
+	var checkCapabilities *[]instanceCapabilityOpts
 	if capabilities, ok := d.GetOk("capabilities"); ok {
 		capabilitiesOpts, err := extractDatabaseCapabilities(capabilities.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("%s capability", message)
 		}
 		createOpts.Capabilities = capabilitiesOpts
+		checkCapabilities = &capabilitiesOpts
+	} else {
+		checkCapabilities = nil
 	}
 
 	log.Printf("[DEBUG] mcs_db_instance create options: %#v", createOpts)
@@ -458,7 +471,7 @@ func resourceDatabaseInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbInstanceStatusBuild)},
 		Target:     []string{string(dbInstanceStatusActive)},
-		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, instance.ID),
+		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, instance.ID, checkCapabilities),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,
@@ -564,7 +577,7 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbInstanceStatusBuild)},
 		Target:     []string{string(dbInstanceStatusActive)},
-		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id()),
+		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id(), nil),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,
@@ -780,6 +793,20 @@ func resourceDatabaseInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("error applying capability to mcs_db_instance %s: %s", d.Id(), err)
 		}
+
+		applyCapabilityInstanceConf := &resource.StateChangeConf{
+			Pending:    []string{string(dbInstanceStatusCapabilityApplying), string(dbInstanceStatusBuild)},
+			Target:     []string{string(dbInstanceStatusActive)},
+			Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id(), &newCapabilitiesOpts),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      dbInstanceDelay,
+			MinTimeout: dbInstanceMinTimeout,
+		}
+		log.Printf("[DEBUG] Waiting for instance to become ready after applying capability")
+		_, err = applyCapabilityInstanceConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error applying capability to mcs_db_instance %s: %s", d.Id(), err)
+		}
 	}
 
 	return resourceDatabaseInstanceRead(d, meta)
@@ -800,7 +827,7 @@ func resourceDatabaseInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbInstanceStatusActive), string(dbInstanceStatusShutdown)},
 		Target:     []string{string(dbInstanceStatusDeleted)},
-		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id()),
+		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id(), nil),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,

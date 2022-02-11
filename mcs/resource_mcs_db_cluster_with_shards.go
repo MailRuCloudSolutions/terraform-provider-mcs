@@ -306,7 +306,7 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 		FloatingIPEnabled: d.Get("floating_ip_enabled").(bool),
 	}
 
-	message := "unable to determine mcs_db_cluster"
+	message := "unable to determine mcs_db_cluster_with_shards"
 	if v, ok := d.GetOk("datastore"); ok {
 		datastore, err := extractDatabaseDatastore(v.([]interface{}))
 		if err != nil {
@@ -380,6 +380,18 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 	}
 	createOpts.Instances = instances
 
+	var checkCapabilities *[]instanceCapabilityOpts
+	if capabilities, ok := d.GetOk("capabilities"); ok {
+		capabilitiesOpts, err := extractDatabaseCapabilities(capabilities.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("%s capability", message)
+		}
+		createOpts.Capabilities = capabilitiesOpts
+		checkCapabilities = &capabilitiesOpts
+	} else {
+		checkCapabilities = nil
+	}
+
 	log.Printf("[DEBUG] mcs_db_cluster_with_shards create options: %#v", createOpts)
 	clust := dbCluster{}
 	clust.Cluster = createOpts
@@ -395,7 +407,7 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbClusterStatusBuild)},
 		Target:     []string{string(dbClusterStatusActive)},
-		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, cluster.ID),
+		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, cluster.ID, checkCapabilities),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,
@@ -407,27 +419,13 @@ func resourceDatabaseClusterWithShardsCreate(d *schema.ResourceData, meta interf
 	}
 
 	if configuration, ok := d.GetOk("configuration_id"); ok {
-		log.Printf("[DEBUG] Attaching configuration %s to mcs_db_cluster %s", configuration, cluster.ID)
+		log.Printf("[DEBUG] Attaching configuration %s to mcs_db_cluster_with_shards %s", configuration, cluster.ID)
 		var attachConfigurationOpts dbClusterAttachConfigurationGroupOpts
 		attachConfigurationOpts.ConfigurationAttach.ConfigurationID = configuration.(string)
 		err := instanceAttachConfigurationGroup(DatabaseV1Client, cluster.ID, &attachConfigurationOpts).ExtractErr()
 		if err != nil {
 			return fmt.Errorf("error attaching configuration group %s to mcs_db_cluster_with_shards %s: %s",
 				configuration, cluster.ID, err)
-		}
-	}
-
-	if capabilities, ok := d.GetOk("capabilities"); ok {
-		capabilitiesOpts, err := extractDatabaseCapabilities(capabilities.([]interface{}))
-		if err != nil {
-			return fmt.Errorf("%s capability", message)
-		}
-		var applyCapabilityOpts dbClusterApplyCapabilityOpts
-		applyCapabilityOpts.ApplyCapability.Capabilities = capabilitiesOpts
-		err = dbClusterAction(DatabaseV1Client, cluster.ID, &applyCapabilityOpts).ExtractErr()
-
-		if err != nil {
-			return fmt.Errorf("error applying capability to mcs_db_cluster %s: %s", cluster.ID, err)
 		}
 	}
 
@@ -474,7 +472,7 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbClusterStatusBuild)},
 		Target:     []string{string(dbClusterStatusActive)},
-		Refresh:    databaseInstanceStateRefreshFunc(DatabaseV1Client, d.Id()),
+		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id(), nil),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,
@@ -489,11 +487,11 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 		if err != nil {
 			return err
 		}
-		log.Printf("Detaching configuration %s from mcs_db_cluster %s", old, d.Id())
+		log.Printf("Detaching configuration %s from mcs_db_cluster_with_shards %s", old, d.Id())
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return fmt.Errorf("error waiting for mcs_db_cluster %s to become ready: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for mcs_db_cluster_with_shards %s to become ready: %s", d.Id(), err)
 		}
 
 		if new != "" {
@@ -503,11 +501,11 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 			if err != nil {
 				return err
 			}
-			log.Printf("Attaching configuration %s to mcs_db_cluster %s", new, d.Id())
+			log.Printf("Attaching configuration %s to mcs_db_cluster_with_shards %s", new, d.Id())
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
-				return fmt.Errorf("error waiting for mcs_db_cluster %s to become ready: %s", d.Id(), err)
+				return fmt.Errorf("error waiting for mcs_db_cluster_with_shards %s to become ready: %s", d.Id(), err)
 			}
 		}
 	}
@@ -516,7 +514,7 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 		_, new := d.GetChange("disk_autoexpand")
 		autoExpandProperties, err := extractDatabaseAutoExpand(new.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("unable to determine mcs_db_cluster disk_autoexpand")
+			return fmt.Errorf("unable to determine mcs_db_cluster_with_shards disk_autoexpand")
 		}
 		var autoExpandOpts dbClusterUpdateAutoExpandOpts
 		if autoExpandProperties.AutoExpand {
@@ -535,7 +533,7 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return fmt.Errorf("error waiting for mcs_db_cluster %s to become ready: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for mcs_db_cluster_with_shards %s to become ready: %s", d.Id(), err)
 		}
 	}
 
@@ -543,7 +541,7 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 		_, newCapabilities := d.GetChange("capabilities")
 		newCapabilitiesOpts, err := extractDatabaseCapabilities(newCapabilities.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("unable to determine mcs_db_instance capability")
+			return fmt.Errorf("unable to determine mcs_db_cluster_with_shards capability")
 		}
 		var applyCapabilityOpts dbClusterApplyCapabilityOpts
 		applyCapabilityOpts.ApplyCapability.Capabilities = newCapabilitiesOpts
@@ -551,7 +549,21 @@ func resourceDatabaseClusterWithShardsUpdate(d *schema.ResourceData, meta interf
 		err = dbClusterAction(DatabaseV1Client, d.Id(), &applyCapabilityOpts).ExtractErr()
 
 		if err != nil {
-			return fmt.Errorf("error applying capability to mcs_db_instance %s: %s", d.Id(), err)
+			return fmt.Errorf("error applying capability to mcs_db_cluster_with_shards %s: %s", d.Id(), err)
+		}
+
+		applyCapabilityClusterConf := &resource.StateChangeConf{
+			Pending:    []string{string(dbClusterStatusCapabilityApplying), string(dbClusterStatusBuild)},
+			Target:     []string{string(dbClusterStatusActive)},
+			Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id(), &newCapabilitiesOpts),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      dbInstanceDelay,
+			MinTimeout: dbInstanceMinTimeout,
+		}
+		log.Printf("[DEBUG] Waiting for cluster to become ready after applying capability")
+		_, err = applyCapabilityClusterConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error applying capability to mcs_db_cluster_with_shards %s: %s", d.Id(), err)
 		}
 	}
 
@@ -567,13 +579,13 @@ func resourceDatabaseClusterWithShardsDelete(d *schema.ResourceData, meta interf
 
 	err = clusterDelete(DatabaseV1Client, d.Id()).ExtractErr()
 	if err != nil {
-		return checkDeleted(d, err, "Error deleting mcs_db_cluster")
+		return checkDeleted(d, err, "Error deleting mcs_db_cluster_with_shards")
 	}
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbClusterStatusActive), string(dbClusterStatusDeleting)},
 		Target:     []string{string(dbClusterStatusDeleted)},
-		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id()),
+		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id(), nil),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,
@@ -581,7 +593,7 @@ func resourceDatabaseClusterWithShardsDelete(d *schema.ResourceData, meta interf
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for mcs_db_cluster %s to delete: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for mcs_db_cluster_with_shards %s to delete: %s", d.Id(), err)
 	}
 
 	return nil

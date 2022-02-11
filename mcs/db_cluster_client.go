@@ -21,6 +21,7 @@ type dbClusterCreateOpts struct {
 	WalAutoExpand     int                           `json:"wal_autoresize_enabled,omitempty"`
 	WalMaxDiskSize    int                           `json:"wal_autoresize_max_size,omitempty"`
 	Instances         []dbClusterInstanceCreateOpts `json:"instances"`
+	Capabilities      []instanceCapabilityOpts      `json:"capabilities,omitempty"`
 }
 
 // dbClusterInstanceCreateOpts represents database cluster instance creation parameters

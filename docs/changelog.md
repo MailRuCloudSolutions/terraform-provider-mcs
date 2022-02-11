@@ -8,6 +8,7 @@ description: |-
 # MCS Provider's changelog
 
 #### v0.6.4
+- Added wait until capability has been applied for `mcs_db_instance`, `mcs_db_cluster` and `mcs_db_cluster_with_shards`.
 - Added validation of dbms existence for `mcs_db_database` and `mcs_db_user`.
 
 #### v0.6.3

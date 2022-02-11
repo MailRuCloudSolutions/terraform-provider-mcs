@@ -11,14 +11,15 @@ import (
 type dbClusterStatus string
 
 var (
-	dbClusterStatusActive   dbClusterStatus = "CLUSTER_ACTIVE"
-	dbClusterStatusBuild    dbClusterStatus = "BUILDING"
-	dbClusterStatusDeleted  dbClusterStatus = "DELETED"
-	dbClusterStatusDeleting dbClusterStatus = "DELETING"
-	dbClusterStatusGrow     dbClusterStatus = "GROWING_CLUSTER"
-	dbClusterStatusResize   dbClusterStatus = "RESIZING_CLUSTER"
-	dbClusterStatusShrink   dbClusterStatus = "SHRINKING_CLUSTER"
-	dbClusterStatusUpdating dbClusterStatus = "UPDATING_CLUSTER"
+	dbClusterStatusActive             dbClusterStatus = "CLUSTER_ACTIVE"
+	dbClusterStatusBuild              dbClusterStatus = "BUILDING"
+	dbClusterStatusDeleted            dbClusterStatus = "DELETED"
+	dbClusterStatusDeleting           dbClusterStatus = "DELETING"
+	dbClusterStatusGrow               dbClusterStatus = "GROWING_CLUSTER"
+	dbClusterStatusResize             dbClusterStatus = "RESIZING_CLUSTER"
+	dbClusterStatusShrink             dbClusterStatus = "SHRINKING_CLUSTER"
+	dbClusterStatusUpdating           dbClusterStatus = "UPDATING_CLUSTER"
+	dbClusterStatusCapabilityApplying dbClusterStatus = "CAPABILITY_APPLYING"
 )
 
 func resourceDatabaseCluster() *schema.Resource {
@@ -287,7 +288,7 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 		FloatingIPEnabled: d.Get("floating_ip_enabled").(bool),
 	}
 
-	message := "unable to determine mcs_db_instance"
+	message := "unable to determine mcs_db_cluster"
 	if v, ok := d.GetOk("datastore"); ok {
 		datastore, err := extractDatabaseDatastore(v.([]interface{}))
 		if err != nil {
@@ -356,6 +357,18 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	createOpts.Instances = instances
 
+	var checkCapabilities *[]instanceCapabilityOpts
+	if capabilities, ok := d.GetOk("capabilities"); ok {
+		capabilitiesOpts, err := extractDatabaseCapabilities(capabilities.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("%s capability", message)
+		}
+		createOpts.Capabilities = capabilitiesOpts
+		checkCapabilities = &capabilitiesOpts
+	} else {
+		checkCapabilities = nil
+	}
+
 	log.Printf("[DEBUG] mcs_db_cluster create options: %#v", createOpts)
 	clust := dbCluster{}
 	clust.Cluster = createOpts
@@ -371,7 +384,7 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbClusterStatusBuild)},
 		Target:     []string{string(dbClusterStatusActive)},
-		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, cluster.ID),
+		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, cluster.ID, checkCapabilities),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,
@@ -388,22 +401,8 @@ func resourceDatabaseClusterCreate(d *schema.ResourceData, meta interface{}) err
 		attachConfigurationOpts.ConfigurationAttach.ConfigurationID = configuration.(string)
 		err := instanceAttachConfigurationGroup(DatabaseV1Client, cluster.ID, &attachConfigurationOpts).ExtractErr()
 		if err != nil {
-			return fmt.Errorf("error attaching configuration group %s to mcs_db_instance %s: %s",
+			return fmt.Errorf("error attaching configuration group %s to mcs_db_cluster %s: %s",
 				configuration, cluster.ID, err)
-		}
-	}
-
-	if capabilities, ok := d.GetOk("capabilities"); ok {
-		capabilitiesOpts, err := extractDatabaseCapabilities(capabilities.([]interface{}))
-		if err != nil {
-			return fmt.Errorf("%s capability", message)
-		}
-		var applyCapabilityOpts dbClusterApplyCapabilityOpts
-		applyCapabilityOpts.ApplyCapability.Capabilities = capabilitiesOpts
-		err = dbClusterAction(DatabaseV1Client, cluster.ID, &applyCapabilityOpts).ExtractErr()
-
-		if err != nil {
-			return fmt.Errorf("error applying capability to mcs_db_cluster %s: %s", cluster.ID, err)
 		}
 	}
 
@@ -463,7 +462,7 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbClusterStatusBuild)},
 		Target:     []string{string(dbClusterStatusActive)},
-		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id()),
+		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id(), nil),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,
@@ -572,12 +571,12 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		old, new := d.GetChange("wal_volume")
 		walVolumeOptsNew, err := extractDatabaseWalVolume(new.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("unable to determine mcs_db_instance wal_volume")
+			return fmt.Errorf("unable to determine mcs_db_cluster wal_volume")
 		}
 
 		walVolumeOptsOld, err := extractDatabaseWalVolume(old.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("unable to determine mcs_db_instance wal_volume")
+			return fmt.Errorf("unable to determine mcs_db_cluster wal_volume")
 		}
 
 		if walVolumeOptsNew.Size != walVolumeOptsOld.Size {
@@ -597,7 +596,7 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
-				return fmt.Errorf("error waiting for mcs_db_instance %s to become ready: %s", d.Id(), err)
+				return fmt.Errorf("error waiting for mcs_db_cluster %s to become ready: %s", d.Id(), err)
 			}
 		}
 
@@ -633,7 +632,7 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		_, newCapabilities := d.GetChange("capabilities")
 		newCapabilitiesOpts, err := extractDatabaseCapabilities(newCapabilities.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("unable to determine mcs_db_instance capability")
+			return fmt.Errorf("unable to determine mcs_db_cluster capability")
 		}
 		var applyCapabilityOpts dbClusterApplyCapabilityOpts
 		applyCapabilityOpts.ApplyCapability.Capabilities = newCapabilitiesOpts
@@ -641,7 +640,21 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		err = dbClusterAction(DatabaseV1Client, d.Id(), &applyCapabilityOpts).ExtractErr()
 
 		if err != nil {
-			return fmt.Errorf("error applying capability to mcs_db_instance %s: %s", d.Id(), err)
+			return fmt.Errorf("error applying capability to mcs_db_cluster %s: %s", d.Id(), err)
+		}
+
+		applyCapabilityClusterConf := &resource.StateChangeConf{
+			Pending:    []string{string(dbClusterStatusCapabilityApplying), string(dbClusterStatusBuild)},
+			Target:     []string{string(dbClusterStatusActive)},
+			Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id(), &newCapabilitiesOpts),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      dbInstanceDelay,
+			MinTimeout: dbInstanceMinTimeout,
+		}
+		log.Printf("[DEBUG] Waiting for cluster to become ready after applying capability")
+		_, err = applyCapabilityClusterConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("error applying capability to mcs_db_cluster %s: %s", d.Id(), err)
 		}
 	}
 
@@ -732,7 +745,7 @@ func resourceDatabaseClusterDelete(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{string(dbClusterStatusActive), string(dbClusterStatusDeleting)},
 		Target:     []string{string(dbClusterStatusDeleted)},
-		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id()),
+		Refresh:    databaseClusterStateRefreshFunc(DatabaseV1Client, d.Id(), nil),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      dbInstanceDelay,
 		MinTimeout: dbInstanceMinTimeout,

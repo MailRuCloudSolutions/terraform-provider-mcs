@@ -111,7 +111,7 @@ func extractDatabaseCapabilities(v []interface{}) ([]instanceCapabilityOpts, err
 	return capabilities, nil
 }
 
-func flattenDatabaseInstanceCapabilities(c []instanceCapabilityOpts) []map[string]interface{} {
+func flattenDatabaseInstanceCapabilities(c []databaseCapability) []map[string]interface{} {
 	capabilities := make([]map[string]interface{}, len(c))
 	for i, capability := range c {
 		capabilities[i] = make(map[string]interface{})
@@ -121,7 +121,7 @@ func flattenDatabaseInstanceCapabilities(c []instanceCapabilityOpts) []map[strin
 	return capabilities
 }
 
-func databaseInstanceStateRefreshFunc(client databaseClient, instanceID string) resource.StateRefreshFunc {
+func databaseInstanceStateRefreshFunc(client databaseClient, instanceID string, capabilitiesOpts *[]instanceCapabilityOpts) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		i, err := instanceGet(client, instanceID).extract()
 		if err != nil {
@@ -131,12 +131,54 @@ func databaseInstanceStateRefreshFunc(client databaseClient, instanceID string) 
 			return nil, "", err
 		}
 
-		if i.Status == "error" {
+		if i.Status == string(dbInstanceStatusError) {
 			return i, i.Status, fmt.Errorf("there was an error creating the database instance")
 		}
 
+		if i.Status == string(dbInstanceStatusActive) {
+			if capabilitiesOpts != nil {
+				instCapabilities, err := instanceGetCapabilities(client, instanceID).extract()
+				if err != nil {
+					return nil, "", fmt.Errorf("error getting instance capabilities: %s", err)
+				}
+
+				capabilitiesReady, err := checkDBMSCapabilities(*capabilitiesOpts, instCapabilities)
+				if err != nil {
+					return nil, "", err
+				}
+				if capabilitiesReady {
+					return i, string(dbInstanceStatusActive), nil
+				} else {
+					return i, string(dbInstanceStatusBuild), nil
+				}
+			}
+		}
 		return i, i.Status, nil
 	}
+}
+
+func checkDBMSCapabilities(neededCapabilities []instanceCapabilityOpts, actualCapabilities []databaseCapability) (bool, error) {
+	if len(neededCapabilities) != len(actualCapabilities) {
+		return false, fmt.Errorf("error applying capabilities")
+	}
+	for _, neededCap := range neededCapabilities {
+		found := false
+		for _, actualCap := range actualCapabilities {
+			if neededCap.Name == actualCap.Name {
+				found = true
+				if actualCap.Status == string(dbCapabilityStatusError) {
+					return false, fmt.Errorf("error applying capabilities")
+				}
+				if actualCap.Status != string(dbCapabilityStatusActive) {
+					return false, nil
+				}
+			}
+		}
+		if !found {
+			return false, fmt.Errorf("error applying capabilities")
+		}
+	}
+	return true, nil
 }
 
 func getDBMSResource(client databaseClient, dbmsID string) (interface{}, error) {
