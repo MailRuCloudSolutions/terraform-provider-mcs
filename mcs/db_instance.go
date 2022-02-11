@@ -95,6 +95,7 @@ func flattenDatabaseInstanceWalVolume(w walVolume) []map[string]interface{} {
 	walvolume := make([]map[string]interface{}, 1)
 	walvolume[0] = make(map[string]interface{})
 	walvolume[0]["size"] = w.Size
+	walvolume[0]["volume_type"] = w.VolumeType
 	return walvolume
 }
 
