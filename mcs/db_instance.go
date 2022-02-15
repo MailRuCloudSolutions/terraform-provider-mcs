@@ -159,8 +159,9 @@ func databaseInstanceStateRefreshFunc(client databaseClient, instanceID string, 
 }
 
 func checkDBMSCapabilities(neededCapabilities []instanceCapabilityOpts, actualCapabilities []databaseCapability) (bool, error) {
+	// this is workaround for situation when capabilities are applied sequentially and not all of them are returned by api
 	if len(neededCapabilities) != len(actualCapabilities) {
-		return false, fmt.Errorf("error applying capabilities")
+		return false, nil
 	}
 	for _, neededCap := range neededCapabilities {
 		found := false
