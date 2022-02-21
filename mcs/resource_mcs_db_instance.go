@@ -221,17 +221,19 @@ func resourceDatabaseInstance() *schema.Resource {
 			},
 
 			"root_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: false,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"replica_of"},
 			},
 
 			"root_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				Computed:  true,
-				ForceNew:  false,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				Computed:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"replica_of"},
 			},
 
 			"availability_zone": {
@@ -554,14 +556,15 @@ func resourceDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	if instance.ReplicaOf != nil {
 		d.Set("replica_of", instance.ReplicaOf.ID)
-	}
-	isRootEnabledResult := instanceRootUserGet(DatabaseV1Client, d.Id())
-	isRootEnabled, err := isRootEnabledResult.extract()
-	if err != nil {
-		return fmt.Errorf("error checking if root user is enabled for instance: %s: %s", d.Id(), err)
-	}
-	if isRootEnabled {
-		d.Set("root_enabled", true)
+	} else {
+		isRootEnabledResult := instanceRootUserGet(DatabaseV1Client, d.Id())
+		isRootEnabled, err := isRootEnabledResult.extract()
+		if err != nil {
+			return fmt.Errorf("error checking if root user is enabled for instance: %s: %s", d.Id(), err)
+		}
+		if isRootEnabled {
+			d.Set("root_enabled", true)
+		}
 	}
 
 	return nil
