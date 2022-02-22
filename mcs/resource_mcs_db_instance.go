@@ -539,7 +539,7 @@ func resourceDatabaseInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("size", instance.Volume.Size)
 	d.Set("configuration_id", instance.ConfigurationID)
 
-	if instance.WalVolume.VolumeID != "" {
+	if instance.WalVolume != nil && instance.WalVolume.VolumeID != "" {
 		var walVolumeType string
 		if v, ok := d.GetOk("wal_volume"); ok {
 			walV, _ := extractDatabaseWalVolume(v.([]interface{}))

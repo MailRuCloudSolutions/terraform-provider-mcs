@@ -436,7 +436,7 @@ func resourceDatabaseClusterRead(d *schema.ResourceData, meta interface{}) error
 	if _, ok := d.GetOk("disk_autoexpand"); ok {
 		d.Set("disk_autoexpand", flattenDatabaseInstanceAutoExpand(cluster.AutoExpand, cluster.MaxDiskSize))
 	}
-	if cluster.Instances[0].WalVolume.VolumeID != "" {
+	if cluster.Instances[0].WalVolume != nil && cluster.Instances[0].WalVolume.VolumeID != "" {
 		var walVolumeType string
 		if v, ok := d.GetOk("wal_volume"); ok {
 			walV, _ := extractDatabaseWalVolume(v.([]interface{}))
