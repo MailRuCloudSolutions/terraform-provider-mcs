@@ -7,6 +7,12 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v.0.6.5
+- Fixed update of `mcs_db_user` password
+- Fixed crash when wal_volume is absent from configuration but remains in state
+- Fixed creation of `mcs_db_instance` without wal_volume for certain datastores
+- Disallowed setting of root_enabled and root_password fields for replicas of `mcs_db_instance`
+
 #### v0.6.4
 - Fixed importing for resources with wal_volume
 - Added wait until capability has been applied for `mcs_db_instance`, `mcs_db_cluster` and `mcs_db_cluster_with_shards`.

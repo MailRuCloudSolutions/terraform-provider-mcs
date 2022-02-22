@@ -284,6 +284,16 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 	var userUpdateParams userUpdateOpts
+
+	if d.HasChange("password") {
+		_, new := d.GetChange("password")
+		userUpdateParams.User.Password = new.(string)
+		err = userUpdate(DatabaseV1Client, dbmsID, userName, &userUpdateParams, dbmsType).ExtractErr()
+		if err != nil {
+			return fmt.Errorf("error updating mcs_db_user: %s", err)
+		}
+	}
+
 	userUpdateParams.User.Name = userName
 
 	if d.HasChange("name") {
@@ -291,33 +301,16 @@ func resourceDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error 
 		userUpdateParams.User.Name = new.(string)
 	}
 
-	if d.HasChange("password") {
-		_, new := d.GetChange("password")
-		userUpdateParams.User.Password = new.(string)
-	}
-
 	if d.HasChange("host") {
 		_, new := d.GetChange("host")
 		userUpdateParams.User.Host = new.(string)
 	}
-	if d.HasChange("name") || d.HasChange("password") || d.HasChange("host") {
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"BUILD"},
-			Target:     []string{"ACTIVE"},
-			Refresh:    databaseUserStateRefreshFunc(DatabaseV1Client, dbmsID, userUpdateParams.User.Name, dbmsType),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      dbUserDelay,
-			MinTimeout: dbUserMinTimeout,
-		}
+	if d.HasChange("name") || d.HasChange("host") {
 		err = userUpdate(DatabaseV1Client, dbmsID, userName, &userUpdateParams, dbmsType).ExtractErr()
 		if err != nil {
 			return fmt.Errorf("error updating mcs_db_user: %s", err)
 		}
 		d.SetId(fmt.Sprintf("%s/%s", dbmsID, userUpdateParams.User.Name))
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("error waiting for mcs_db_user %s to be updated: %s", userName, err)
-		}
 	}
 
 	return resourceDatabaseUserRead(d, meta)
