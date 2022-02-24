@@ -502,10 +502,7 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("volume_size") {
-		old, new := d.GetChange("volume_size")
-		if new.(int) < old.(int) {
-			return fmt.Errorf("the new volume size %d must be larger than the current volume size of %d", new.(int), old.(int))
-		}
+		_, new := d.GetChange("volume_size")
 		var resizeVolumeOpts dbClusterResizeVolumeOpts
 		resizeVolumeOpts.Resize.Volume.Size = new.(int)
 		err := dbClusterAction(DatabaseV1Client, d.Id(), &resizeVolumeOpts).ExtractErr()
@@ -581,9 +578,6 @@ func resourceDatabaseClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if walVolumeOptsNew.Size != walVolumeOptsOld.Size {
-			if walVolumeOptsNew.Size < walVolumeOptsOld.Size {
-				return fmt.Errorf("the new wal volume size %d must be larger than the current volume size of %d", walVolumeOptsNew.Size, walVolumeOptsOld.Size)
-			}
 			var resizeWalVolumeOpts dbClusterResizeWalVolumeOpts
 			resizeWalVolumeOpts.Resize.Volume.Size = walVolumeOptsNew.Size
 			resizeWalVolumeOpts.Resize.Volume.Kind = "wal"

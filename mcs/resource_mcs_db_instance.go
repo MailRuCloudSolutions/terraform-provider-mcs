@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -321,34 +320,6 @@ func resourceDatabaseInstance() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: customdiff.All(
-			customdiff.ValidateChange("size", func(old, new, meta interface{}) error {
-				if new.(int) < old.(int) {
-					return fmt.Errorf("the new volume size %d must be larger than the current volume size of %d", new.(int), old.(int))
-				}
-				return nil
-			}),
-			customdiff.ValidateChange("wal_volume", func(old, new, meta interface{}) error {
-				if len(old.([]interface{})) == 0 {
-					return nil
-				}
-
-				walVolumeOptsNew, err := extractDatabaseWalVolume(new.([]interface{}))
-				if err != nil {
-					return fmt.Errorf("unable to determine mcs_db_instance wal_volume")
-				}
-
-				walVolumeOptsOld, err := extractDatabaseWalVolume(old.([]interface{}))
-				if err != nil {
-					return fmt.Errorf("unable to determine mcs_db_instance wal_volume")
-				}
-
-				if walVolumeOptsNew.Size < walVolumeOptsOld.Size {
-					return fmt.Errorf("the new wal volume size %d must be larger than the current volume size of %d", walVolumeOptsNew.Size, walVolumeOptsOld.Size)
-				}
-				return nil
-			}),
-		),
 	}
 }
 
