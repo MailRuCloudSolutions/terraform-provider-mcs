@@ -7,6 +7,9 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v.0.6.6
+- Added validation for overlapping between cluster and pods subnets
+
 #### v.0.6.5
 - Fixed update of `mcs_db_user` password
 - Fixed crash when wal_volume is absent from configuration but remains in state
