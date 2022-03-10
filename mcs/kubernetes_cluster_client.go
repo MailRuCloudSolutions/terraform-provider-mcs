@@ -24,7 +24,7 @@ type ContainerClient interface {
 	ServiceURL(parts ...string) string
 }
 
-const magnumAPIMicroVersion = "1.22"
+const magnumAPIMicroVersion = "1.24"
 
 var magnumAPIMicroVersionHeader = map[string]string{
 	"MCS-API-Version": fmt.Sprintf("container-infra %s", magnumAPIMicroVersion),
