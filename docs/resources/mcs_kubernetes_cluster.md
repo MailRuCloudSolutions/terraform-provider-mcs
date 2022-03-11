@@ -83,7 +83,6 @@ This resource exports the following attributes:
 * `updated_at` - The time at which cluster was created.
 * `api_address` - COE API address.
 * `cluster_template_id` - The UUID of the V1 Container Infra cluster template.
-* `create_timeout` - The timeout (in minutes) for creating the cluster.
 * `discovery_url` - The URL used for cluster node discovery.
 * `master_flavor` - The UUID of a flavor for the master nodes. 
 * `keypair` - The name of the Compute service SSH keypair.
@@ -91,7 +90,6 @@ This resource exports the following attributes:
                  the cluster.
 * `master_count` - The number of master nodes for the cluster.
 * `master_addresses` - IP addresses of the master node of the cluster.
-* `node_addresses` - IP addresses of the node of the cluster.
 * `stack_id` - UUID of the Orchestration service stack.
 * `network_id` - UUID of the cluster's network.
 * `subnet_id` - UUID of the cluster's subnet.

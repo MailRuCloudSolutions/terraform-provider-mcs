@@ -51,10 +51,6 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"create_timeout": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"discovery_url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -76,11 +72,6 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Computed: true,
 			},
 			"master_addresses": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"node_addresses": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -163,13 +154,11 @@ func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("user_id", c.UserID)
 	d.Set("api_address", c.APIAddress)
 	d.Set("cluster_template_id", c.ClusterTemplateID)
-	d.Set("create_timeout", c.CreateTimeout)
 	d.Set("discovery_url", c.DiscoveryURL)
 	d.Set("master_flavor", c.MasterFlavorID)
 	d.Set("keypair", c.KeyPair)
 	d.Set("master_count", c.MasterCount)
 	d.Set("master_addresses", c.MasterAddresses)
-	d.Set("node_addresses", c.NodeAddresses)
 	d.Set("stack_id", c.StackID)
 	d.Set("network_id", c.NetworkID)
 	d.Set("subnet_id", c.SubnetID)
