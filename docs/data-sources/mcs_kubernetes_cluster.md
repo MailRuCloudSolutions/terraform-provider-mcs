@@ -43,7 +43,6 @@ attributes are exported:
 
 * `api_address` - COE API address.
 * `cluster_template_id` - The UUID of the V1 Container Infra cluster template.
-* `create_timeout` - The timeout (in minutes) for creating the cluster.
 * `created_at` - The time at which cluster was created.
 * `discovery_url` - The URL used for cluster node discovery.
 * `k8s_config` - Kubeconfig for cluster
@@ -55,7 +54,6 @@ attributes are exported:
 * `master_flavor` - The ID of the flavor for the master nodes.
 * `name` - The name of the cluster.
 * `network_id` - UUID of the cluster's network.
-* `node_addresses` - IP addresses of the node of the cluster.
 * `pods_network_cidr` - Network cidr of k8s virtual network
 * `project_id` - The project of the cluster.
 * `stack_id` - UUID of the Orchestration service stack.

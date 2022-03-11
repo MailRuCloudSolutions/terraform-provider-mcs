@@ -155,7 +155,6 @@ type clusterUpgradeOpts struct {
 type cluster struct {
 	APIAddress           string             `json:"api_address"`
 	ClusterTemplateID    string             `json:"cluster_template_id"`
-	CreateTimeout        int                `json:"create_timeout"`
 	CreatedAt            time.Time          `json:"created_at"`
 	DiscoveryURL         string             `json:"discovery_url"`
 	KeyPair              string             `json:"keypair"`
@@ -165,7 +164,6 @@ type cluster struct {
 	MasterAddresses      []string           `json:"master_addresses"`
 	MasterCount          int                `json:"master_count"`
 	Name                 string             `json:"name"`
-	NodeAddresses        []string           `json:"node_addresses"`
 	ProjectID            string             `json:"project_id"`
 	StackID              string             `json:"stack_id"`
 	Status               clusterStatus      `json:"status"`

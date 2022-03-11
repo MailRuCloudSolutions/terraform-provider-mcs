@@ -7,10 +7,13 @@ description: |-
 
 # MCS Provider's changelog
 
-#### v.0.6.6
+#### v0.6.7
+- Removed `node_addresses` and `create_timeout` fields for `resource_mcs_kubernetes_cluster` and `data_mcs_kubernetes_cluster`.
+
+#### v0.6.6
 - Added validation for overlapping between cluster and pods subnets
 
-#### v.0.6.5
+#### v0.6.5
 - Fixed update of `mcs_db_user` password
 - Fixed crash when wal_volume is absent from configuration but remains in state
 - Fixed creation of `mcs_db_instance` without wal_volume for certain datastores

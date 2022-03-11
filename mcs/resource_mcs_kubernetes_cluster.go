@@ -135,11 +135,6 @@ func resourceKubernetesCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"node_addresses": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Computed: true,
-			},
 			"stack_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -303,13 +298,11 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", cluster.Name)
 	d.Set("api_address", cluster.APIAddress)
 	d.Set("cluster_template_id", cluster.ClusterTemplateID)
-	d.Set("create_timeout", cluster.CreateTimeout)
 	d.Set("discovery_url", cluster.DiscoveryURL)
 	d.Set("master_flavor", cluster.MasterFlavorID)
 	d.Set("keypair", cluster.KeyPair)
 	d.Set("master_count", cluster.MasterCount)
 	d.Set("master_addresses", cluster.MasterAddresses)
-	d.Set("node_addresses", cluster.NodeAddresses)
 	d.Set("stack_id", cluster.StackID)
 	d.Set("status", cluster.NewStatus)
 	d.Set("pods_network_cidr", cluster.PodsNetworkCidr)
