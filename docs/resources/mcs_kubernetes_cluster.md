@@ -67,7 +67,7 @@ The following arguments are supported:
 
 * `registry_auth_password` - (Optional) Docker registry access password.
 
-* `availability_zone` - (Required) Zones available for cluster. `DP1` and `MS1` zones are available. **New since v0.3.3**.
+* `availability_zone` - (Required) Zones available for cluster. `GZ1` and `MS1` zones are available. **New since v0.3.3**.
 
 * `region` - (Optional) Region to use for the cluster. Default is a region configured for provider. **New since v0.4.0**.
 

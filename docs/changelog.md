@@ -7,6 +7,9 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.6.8
+- Added `deprecated_at` to `resource_mcs_kubernetes_cluster_template`.
+
 #### v0.6.7
 - Removed `node_addresses` and `create_timeout` fields for `resource_mcs_kubernetes_cluster` and `data_mcs_kubernetes_cluster`.
 
