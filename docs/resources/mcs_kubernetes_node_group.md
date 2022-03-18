@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `autoscaling_enabled` - (Optional) Determines whether the autoscaling is enabled.
 * `availability_zones` - (Optional, **New since v0.5.0**) The list of availability zones of the node group.
-  Zones `MS1` and  `DP1` are available. By default, node group is being created at
+  Zones `MS1` and  `GZ1` are available. By default, node group is being created at
   cluster's zone.
   **Important:** Receiving default AZ add it manually to your main.tf config to sync it with state 
   to avoid node groups force recreation in the future. 

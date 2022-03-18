@@ -186,7 +186,8 @@ type cluster struct {
 
 type clusterTemplate struct {
 	clustertemplates.ClusterTemplate
-	Version string `json:"version"`
+	DeprecatedAt time.Time `json:"deprecated_at"`
+	Version      string    `json:"version"`
 }
 
 type clusterTemplates struct {
