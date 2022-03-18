@@ -132,6 +132,11 @@ func dataSourceKubernetesClusterTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deprecated_at": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -187,6 +192,9 @@ func dataSourceKubernetesClusterTemplateRead(d *schema.ResourceData, meta interf
 	}
 	if err := d.Set("updated_at", ct.UpdatedAt.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Unable to set openstack_containerinfra_clustertemplate_v1 updated_at: %s", err)
+	}
+	if err := d.Set("deprecated_at", ct.CreatedAt.Format(time.RFC3339)); err != nil {
+		log.Printf("[DEBUG] Unable to set openstack_containerinfra_clustertemplate_v1 deprecated_at: %s", err)
 	}
 
 	return nil
