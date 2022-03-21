@@ -18,10 +18,11 @@ const (
 	Postgres    = "postgresql"
 	Clickhouse  = "clickhouse"
 	MySQL       = "mysql"
+	Tarantool   = "tarantool"
 )
 
 func getClusterDatastores() []string {
-	return []string{Galera, Postgres}
+	return []string{Galera, Postgres, Tarantool}
 }
 
 func getClusterWithShardsDatastores() []string {

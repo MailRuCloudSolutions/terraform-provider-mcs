@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 type dbClusterStatus string
@@ -135,16 +136,10 @@ func resourceDatabaseCluster() *schema.Resource {
 							ForceNew: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-								v := val.(string)
-								if v != Galera && v != Postgres {
-									errs = append(errs, fmt.Errorf("datastore type must be one of %v, got: %s", getClusterDatastores(), v))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(getClusterDatastores(), true),
 						},
 					},
 				},

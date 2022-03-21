@@ -91,7 +91,7 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	var dbmsType string
 	if instanceResource, ok := dbmsResp.(*instanceResp); ok {
-		if instanceResource.DataStore.Type == Redis {
+		if isOperationNotSupported(instanceResource.DataStore.Type, Redis, Tarantool) {
 			return fmt.Errorf("operation not supported for this datastore")
 		}
 		if instanceResource.ReplicaOf != nil {
@@ -100,7 +100,7 @@ func resourceDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) er
 		dbmsType = dbmsTypeInstance
 	}
 	if clusterResource, ok := dbmsResp.(*dbClusterResp); ok {
-		if clusterResource.DataStore.Type == Redis {
+		if isOperationNotSupported(clusterResource.DataStore.Type, Redis, Tarantool) {
 			return fmt.Errorf("operation not supported for this datastore")
 		}
 		dbmsType = dbmsTypeCluster

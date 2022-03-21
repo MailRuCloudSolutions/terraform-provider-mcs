@@ -72,3 +72,12 @@ func ensureOnlyOnePresented(d *schema.ResourceData, keys ...string) (string, err
 
 	return keyPresented, nil
 }
+
+func isOperationNotSupported(d string, types ...string) bool {
+	for _, t := range types {
+		if d == t {
+			return true
+		}
+	}
+	return false
+}
