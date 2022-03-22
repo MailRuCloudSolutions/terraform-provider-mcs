@@ -8,7 +8,7 @@ description: |-
 
 # mcs\_db\_cluster (Resource)
 
-Provides a db cluster resource. This can be used to create, modify and delete db cluster for galera_mysql and postgresql datastores.
+Provides a db cluster resource. This can be used to create, modify and delete db cluster for galera_mysql, postgresql, tarantool datastores.
 
 ## Example Usage
 
@@ -42,7 +42,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the cluster. Changing this creates a new cluster
 
 * `datastore` - (Required) Object that represents datastore of the cluster. Changing this creates a new cluster. It has following attributes:
-    * `type` - (Required) Type of the datastore. Changing this creates a new cluster. Type of the datastore can either be "galera_mysql" or "postgresql".
+    * `type` - (Required) Type of the datastore. Changing this creates a new cluster. Type of the datastore can either be "galera_mysql", "postgresql" or "tarantool".
     * `version` - (Required) Version of the datastore. Changing this creates a new cluster.
 
 * `cluster_size` - (Required) The number of instances in the cluster.
@@ -69,7 +69,7 @@ The following arguments are supported:
     * `autoexpand` - Boolean field that indicates whether wal volume autoresize is enabled.
     * `max_disk_size` - Maximum disk size for wal volume autoresize.
 
-* `network` -  Object that represents network of the cluster. Changing this creates a new cluster. It has following attributes: 
+* `network` -  Object that represents network of the cluster. Changing this creates a new cluster. It has following attributes:
     * `uuid` - The id of the network. Changing this creates a new cluster.
     * `port` - The port id of the network. Changing this creates a new cluster.
 

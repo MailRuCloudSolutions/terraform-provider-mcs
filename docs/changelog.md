@@ -7,6 +7,9 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.6.9
+- Added support tarantool datastore
+
 #### v0.6.8
 - Added `deprecated_at` to `resource_mcs_kubernetes_cluster_template`.
 
@@ -41,7 +44,7 @@ description: |-
 - Fixed `fixed_ip_v4` network parameter for `mcs_db_instance`.
 
 #### v0.5.8
-- Removed attribute `ingress_floating_ip` from `mcs_kubernetes_cluster`. 
+- Removed attribute `ingress_floating_ip` from `mcs_kubernetes_cluster`.
 
 #### v0.5.7
 - Forbade using name in `master_flavor` attribute in `mcs_kubernetes_cluster`.
