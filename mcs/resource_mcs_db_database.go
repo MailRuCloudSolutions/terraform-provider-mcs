@@ -34,7 +34,7 @@ func resourceDatabaseDatabase() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      false,
-				Deprecated:    "Please, use dmbs_id attribute instead",
+				Deprecated:    "Please, use dbms_id attribute instead",
 				ConflictsWith: []string{"dbms_id"},
 			},
 
