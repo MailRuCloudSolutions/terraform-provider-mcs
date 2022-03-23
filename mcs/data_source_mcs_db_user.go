@@ -24,7 +24,7 @@ func dataSourceDatabaseUser() *schema.Resource {
 			"instance_id": {
 				Type:       schema.TypeString,
 				Optional:   true,
-				Deprecated: "Please, use dmbs_id attribute instead",
+				Deprecated: "Please, use dbms_id attribute instead",
 			},
 
 			"dbms_id": {
