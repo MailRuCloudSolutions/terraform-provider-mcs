@@ -6,6 +6,9 @@ description: |-
 ---
 
 # MCS Provider's changelog
+#### v0.6.11
+- Update go version to 1.18
+
 #### v0.6.10
 - Documentation typo fixed
 
