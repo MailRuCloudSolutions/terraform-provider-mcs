@@ -1,6 +1,6 @@
 module github.com/MailRuCloudSolutions/terraform-provider-mcs
 
-go 1.17
+go 1.18
 
 require (
 	github.com/gophercloud/gophercloud v0.22.0
