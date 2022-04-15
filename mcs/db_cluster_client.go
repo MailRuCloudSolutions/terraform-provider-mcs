@@ -145,7 +145,7 @@ type dbClusterResp struct {
 
 // dbClusterInstanceResp represents database cluster instance response
 type dbClusterInstanceResp struct {
-	СomputeInstanceID string     `json:"compute_instance_id"`
+	ComputeInstanceID string     `json:"compute_instance_id"`
 	Flavor            *links     `json:"flavor"`
 	GaVersion         string     `json:"ga_version"`
 	ID                string     `json:"id"`

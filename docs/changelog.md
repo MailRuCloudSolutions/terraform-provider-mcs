@@ -7,6 +7,10 @@ description: |-
 
 # MCS Provider's changelog
 
+
+#### v0.6.12
+- Add insecure_registries option
+
 #### v0.6.11
 - Update go version to 1.18
 

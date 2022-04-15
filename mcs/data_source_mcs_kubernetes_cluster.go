@@ -128,6 +128,13 @@ func dataSourceKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"insecure_registries": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -171,6 +178,7 @@ func dataSourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("registry_auth_password", c.RegistryAuthPassword)
 	d.Set("availability_zone", c.AvailabilityZone)
 	d.Set("loadbalancer_subnet_id", c.LoadbalancerSubnetID)
+	d.Set("insecure_registries", c.InsecureRegistries)
 
 	k8sConfig, err := k8sConfigGet(containerInfraClient, c.UUID)
 	if err != nil {

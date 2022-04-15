@@ -28,6 +28,7 @@ const magnumAPIMicroVersion = "1.24"
 
 var magnumAPIMicroVersionHeader = map[string]string{
 	"MCS-API-Version": fmt.Sprintf("container-infra %s", magnumAPIMicroVersion),
+	"X-MCS-Routing":   "alter_prod",
 }
 
 func addMicroVersionHeader(reqOpts *gophercloud.RequestOpts) {
@@ -140,6 +141,7 @@ type clusterCreateOpts struct {
 	RegistryAuthPassword string            `json:"registry_auth_password,omitempty"`
 	AvailabilityZone     string            `json:"availability_zone,omitempty"`
 	LoadbalancerSubnetID string            `json:"loadbalancer_subnet_id,omitempty"`
+	InsecureRegistries   []string          `json:"insecure_registries,omitempty"`
 }
 
 type clusterActionsBaseOpts struct {
@@ -182,6 +184,7 @@ type cluster struct {
 	RegistryAuthPassword string             `json:"registry_auth_password"`
 	AvailabilityZone     string             `json:"availability_zone"`
 	LoadbalancerSubnetID string             `json:"loadbalancer_subnet_id"`
+	InsecureRegistries   []string           `json:"insecure_registries"`
 }
 
 type clusterTemplate struct {

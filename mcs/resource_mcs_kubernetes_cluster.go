@@ -201,6 +201,13 @@ func resourceKubernetesCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"insecure_registries": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -242,6 +249,15 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("master_count if set must be greater or equal 1: %s", err)
 		}
 		createOpts.MasterCount = mCount
+	}
+
+	if registriesRaw, ok := d.GetOk("insecure_registries"); ok {
+		registries := registriesRaw.([]interface{})
+		insecureRegistries := make([]string, 0, len(registries))
+		for _, val := range registries {
+			insecureRegistries = append(insecureRegistries, val.(string))
+		}
+		createOpts.InsecureRegistries = insecureRegistries
 	}
 
 	s, err := clusterCreate(containerInfraClient, &createOpts).Extract()
@@ -314,6 +330,7 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("registry_auth_password", cluster.RegistryAuthPassword)
 	d.Set("availability_zone", cluster.AvailabilityZone)
 	d.Set("region", getRegion(d, config))
+	d.Set("insecure_registries", cluster.InsecureRegistries)
 
 	// Allow to read old api clusters
 	if cluster.NetworkID != "" {

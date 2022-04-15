@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     mcs = {
-      source = "MailRuCloudSolutions/mcs"
+      source  = "MailRuCloudSolutions/mcs"
       version = "~> 0.5.8"
     }
     openstack = {
@@ -56,14 +56,15 @@ resource "mcs_kubernetes_cluster" "k8s-cluster" {
     openstack_networking_router_interface_v2.k8s,
   ]
 
-  name = "k8s-cluster"
+  name                = "k8s-cluster"
   cluster_template_id = data.mcs_kubernetes_clustertemplate.ct.id
   master_flavor       = data.openstack_compute_flavor_v2.k8s.id
   master_count        = 1
 
-  keypair = openstack_compute_keypair_v2.keypair.id
-  network_id = openstack_networking_network_v2.k8s.id
-  subnet_id = openstack_networking_subnet_v2.k8s-subnetwork.id
+  keypair             = openstack_compute_keypair_v2.keypair.id
+  network_id          = openstack_networking_network_v2.k8s.id
+  subnet_id           = openstack_networking_subnet_v2.k8s-subnetwork.id
   floating_ip_enabled = true
-  availability_zone = "MS1"
+  availability_zone   = "MS1"
+  insecure_registries = ["1.2.3.4"]
 }
