@@ -28,7 +28,6 @@ const magnumAPIMicroVersion = "1.24"
 
 var magnumAPIMicroVersionHeader = map[string]string{
 	"MCS-API-Version": fmt.Sprintf("container-infra %s", magnumAPIMicroVersion),
-	"X-MCS-Routing":   "alter_prod",
 }
 
 func addMicroVersionHeader(reqOpts *gophercloud.RequestOpts) {
