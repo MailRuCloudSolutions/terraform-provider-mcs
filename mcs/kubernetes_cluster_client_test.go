@@ -20,23 +20,24 @@ func TestClusterCreateOpts(t *testing.T) {
 	mcount := 2
 
 	createOpts := clusterCreateOpts{
-		ClusterTemplateID: "95663bae-6763-4a53-9424-831975285cc1",
-		Keypair:           "default",
-		Labels:            labels,
-		MasterFlavorID:    "Basic-1-2-20",
-		Name:              "k8s-cluster",
-		AvailabilityZone:  "MS1",
-		MasterCount:       mcount,
-		NetworkID:         "95663bae-6763-4a53-9424-831975285cc1",
-		SubnetID:          "95663bae-6763-4a53-9424-831975285cc1",
-		FloatingIPEnabled: false,
+		ClusterTemplateID:  "95663bae-6763-4a53-9424-831975285cc1",
+		Keypair:            "default",
+		Labels:             labels,
+		MasterFlavorID:     "Basic-1-2-20",
+		Name:               "k8s-cluster",
+		AvailabilityZone:   "MS1",
+		MasterCount:        mcount,
+		NetworkID:          "95663bae-6763-4a53-9424-831975285cc1",
+		SubnetID:           "95663bae-6763-4a53-9424-831975285cc1",
+		FloatingIPEnabled:  false,
+		InsecureRegistries: []string{"1.2.3.4", "6.7.8.9:1234"},
 	}
 
 	b, _ := createOpts.Map()
 
 	assert.IsType(t, map[string]interface{}{}, b["labels"])
 	assert.Len(t, b["labels"], 2)
-	assert.Len(t, b, 10)
+	assert.Len(t, b, 11)
 }
 
 func TestPatchOpts(t *testing.T) {

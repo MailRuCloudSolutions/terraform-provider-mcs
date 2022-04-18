@@ -60,3 +60,4 @@ attributes are exported:
 * `status` - Current state of a cluster.
 * `subnet_id` - UUID of the cluster's subnet.
 * `updated_at` - The time at which cluster was created.
+* `insecure_registries` - Addresses of registries from which you can download images without checking certificates.

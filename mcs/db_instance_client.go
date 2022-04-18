@@ -23,7 +23,7 @@ type databaseClient interface {
 
 // instanceResp represents result of database instance get
 type instanceResp struct {
-	СomputeInstanceID string                  `json:"compute_instance_id"`
+	ComputeInstanceID string                  `json:"compute_instance_id"`
 	Configuration     *configuration          `json:"configuration"`
 	ConfigurationID   string                  `json:"configuration_id"`
 	ID                string                  `json:"id"`

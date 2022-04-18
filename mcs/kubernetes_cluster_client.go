@@ -140,6 +140,7 @@ type clusterCreateOpts struct {
 	RegistryAuthPassword string            `json:"registry_auth_password,omitempty"`
 	AvailabilityZone     string            `json:"availability_zone,omitempty"`
 	LoadbalancerSubnetID string            `json:"loadbalancer_subnet_id,omitempty"`
+	InsecureRegistries   []string          `json:"insecure_registries,omitempty"`
 }
 
 type clusterActionsBaseOpts struct {
@@ -182,6 +183,7 @@ type cluster struct {
 	RegistryAuthPassword string             `json:"registry_auth_password"`
 	AvailabilityZone     string             `json:"availability_zone"`
 	LoadbalancerSubnetID string             `json:"loadbalancer_subnet_id"`
+	InsecureRegistries   []string           `json:"insecure_registries"`
 }
 
 type clusterTemplate struct {
