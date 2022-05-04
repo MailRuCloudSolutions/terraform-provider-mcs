@@ -7,6 +7,8 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.6.13
+- Fix database instances import: databases & users
 
 #### v0.6.12
 - Add insecure_registries option

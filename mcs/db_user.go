@@ -3,10 +3,45 @@ package mcs
 import (
 	"fmt"
 
+	"github.com/gophercloud/gophercloud"
 	db "github.com/gophercloud/gophercloud/openstack/db/v1/databases"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/users"
+	"github.com/gophercloud/gophercloud/pagination"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
+
+// Custom type implementation of gophercloud/users.UserPage
+type DBUserPage struct {
+	pagination.LinkedPageBase
+}
+
+// IsEmpty checks to see whether the collection is empty.
+func (page DBUserPage) IsEmpty() (bool, error) {
+	users, err := ExtractUsers(page)
+	return len(users) == 0, err
+}
+
+// NextPageURL will retrieve the next page URL.
+func (page DBUserPage) NextPageURL() (string, error) {
+	var s struct {
+		Links []gophercloud.Link `json:"links"`
+	}
+	err := page.ExtractInto(&s)
+	if err != nil {
+		return "", err
+	}
+	return gophercloud.ExtractNextURL(s.Links)
+}
+
+// ExtractUsers will convert a generic pagination struct into a more
+// relevant slice of User structs.
+func ExtractUsers(r pagination.Page) ([]users.User, error) {
+	var s struct {
+		Users []users.User `json:"users"`
+	}
+	err := (r.(DBUserPage)).ExtractInto(&s)
+	return s.Users, err
+}
 
 func extractDatabaseUserDatabases(v []interface{}) (db.BatchCreateOpts, error) {
 	Batch := make(db.BatchCreateOpts, len(v))
@@ -58,7 +93,7 @@ func databaseUserExists(client databaseClient, dbmsID string, userName string, d
 		return exists, userObj, err
 	}
 
-	allUsers, err := users.ExtractUsers(pages)
+	allUsers, err := ExtractUsers(pages)
 	if err != nil {
 		return exists, userObj, err
 	}
