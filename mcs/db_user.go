@@ -83,26 +83,24 @@ func databaseUserStateRefreshFunc(client databaseClient, dbmsID string, userName
 	}
 }
 
-func databaseUserExists(client databaseClient, dbmsID string, userName string, dbmsType string) (bool, users.User, error) {
-	var exists bool
+func databaseUserExists(client databaseClient, dbmsID string, userName string, dbmsType string) (bool, *users.User, error) {
 	var err error
 
 	pages, err := userList(client, dbmsID, dbmsType).AllPages()
 	if err != nil {
-		return false, users.User{}, err
+		return false, nil, err
 	}
 
 	allUsers, err := ExtractUsers(pages)
 	if err != nil {
-		return false, users.User{}, err
+		return false, nil, err
 	}
 
 	for _, v := range allUsers {
 		if v.Name == userName {
-			exists = true
-			return exists, v, nil
+			return true, &v, nil
 		}
 	}
 
-	return false, users.User{}, err
+	return false, nil, err
 }

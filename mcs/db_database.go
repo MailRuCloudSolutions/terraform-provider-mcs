@@ -71,25 +71,23 @@ func databaseDatabaseStateRefreshFunc(client databaseClient, dbmsID string, data
 }
 
 func databaseDatabaseExists(client databaseClient, dbmsID string, databaseName string, dbmsType string) (bool, error) {
-	var exists bool
 	var err error
 
 	pages, err := databaseList(client, dbmsID, dbmsType).AllPages()
 	if err != nil {
-		return exists, err
+		return false, err
 	}
 
 	allDatabases, err := ExtractDBs(pages)
 	if err != nil {
-		return exists, err
+		return false, err
 	}
 
 	for _, v := range allDatabases {
 		if v.Name == databaseName {
-			exists = true
-			return exists, nil
+			return true, nil
 		}
 	}
 
-	return exists, err
+	return false, err
 }
