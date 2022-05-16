@@ -51,6 +51,14 @@ func (d *dummyConfig) DatabaseV1Client(region string) (ContainerClient, error) {
 	return nil, args.Error(0)
 }
 
+func (d *dummyConfig) BlockStorageV3Client(region string) (ContainerClient, error) {
+	args := d.Called(region)
+	if r, ok := args.Get(0).(ContainerClient); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(0)
+}
+
 // GetRegion is a dummy method to return region.
 func (d *dummyConfig) GetRegion() string {
 	args := d.Called()

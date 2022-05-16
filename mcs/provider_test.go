@@ -23,6 +23,7 @@ var (
 	osDBDatastoreType          = os.Getenv("OS_DB_DATASTORE_TYPE")
 	osDBShardsDatastoreType    = os.Getenv("OS_DB_SHARDS_DATASTORE_TYPE")
 	osDBShardsDatastoreVersion = os.Getenv("OS_DB_SHARDS_DATASTORE_VERSION")
+	osBSVolumeType             = os.Getenv("OS_BS_VOLUME_TYPE")
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
@@ -56,6 +57,17 @@ func testAccPreCheckKubernetes(t *testing.T) {
 		"OS_NETWORK_ID":       osNetworkID,
 		"OS_SUBNETWORK_ID":    osSubnetworkID,
 		"OS_KEYPAIR_NAME":     osKeypairName,
+	}
+	for k, v := range vars {
+		if v == "" {
+			t.Fatalf("'%s' must be set for acceptance test", k)
+		}
+	}
+}
+
+func testAccPreCheckBlockStorage(t *testing.T) {
+	vars := map[string]interface{}{
+		"OS_BS_VOLUME_TYPE": osBSVolumeType,
 	}
 	for k, v := range vars {
 		if v == "" {
