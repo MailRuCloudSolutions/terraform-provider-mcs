@@ -68,7 +68,7 @@ func databaseUserStateRefreshFunc(client databaseClient, dbmsID string, userName
 			return nil, "", fmt.Errorf("unable to retrieve mcs database users: %s", err)
 		}
 
-		allUsers, err := users.ExtractUsers(pages)
+		allUsers, err := ExtractUsers(pages)
 		if err != nil {
 			return nil, "", fmt.Errorf("unable to extract mcs database users: %s", err)
 		}

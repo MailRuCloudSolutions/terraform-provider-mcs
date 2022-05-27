@@ -7,6 +7,9 @@ description: |-
 
 # MCS Provider's changelog
 
+#### v0.6.14
+- Fix creation of db databases and users
+
 #### v0.6.13
 - Fix database instances import: databases & users
 
