@@ -24,18 +24,34 @@ resource "openstack_networking_network_v2" "db" {
   admin_state_up = true
 }
 
+resource "openstack_networking_subnet_v2" "main" {
+  network_id = openstack_networking_network_v2.db.id
+  cidr       = "10.0.0.0/24"
+  ip_version = 4
+}
+
+resource "openstack_networking_router_v2" "main" {
+  name                = "db_router"
+  external_network_id = var.external_network_id
+}
+
+resource "openstack_networking_router_interface_v2" "main" {
+  router_id = openstack_networking_router_v2.main.id
+  subnet_id = openstack_networking_subnet_v2.main.id
+}
+
 resource "mcs_db_instance" "db-instance" {
-  name        = "db-instance"
+  name = "db-instance"
 
   datastore {
     type    = "mysql"
     version = "5.7"
   }
-  keypair           = openstack_compute_keypair_v2.keypair.id
-  public_access     = true
+  keypair       = openstack_compute_keypair_v2.keypair.id
+  public_access = true
 
-  flavor_id   = data.openstack_compute_flavor_v2.db.id
-  
+  flavor_id = data.openstack_compute_flavor_v2.db.id
+
   size        = 8
   volume_type = "ceph-ssd"
   disk_autoexpand {
